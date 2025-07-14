@@ -1,6 +1,6 @@
 import { CreateUserType } from "../../models/userSchema";
 import { IUserRepository } from "./IUserRepository";
-import prisma from "../../../prisma/prismaInstance";
+import prisma from "../../prisma/prismaInstance";
 import bcrypt from "bcrypt";
 import { randomBytes } from "crypto";
 
