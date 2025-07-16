@@ -1,0 +1,53 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Hardhat Token</title>
+</head>
+<body>
+  <h1>My Hardhat Token</h1>
+
+  <button id="connect">Connect Wallet</button>
+  <p id="account">Not connected</p>
+  <p id="balance">Balance: 0</p>
+
+  <h3>Transfer Tokens</h3>
+  <input type="text" id="to" placeholder="Recipient address" />
+  <input type="number" id="amount" placeholder="Amount" />
+  <button id="transfer">Transfer</button>
+  <p id="transferred">Transferred from owner: ...</p>
+
+  <script type="module" src="index.ts"></script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Test Withdraw</title>
+</head>
+<body>
+  <h2>Withdraw Tokens</h2>
+
+  <form id="withdraw-form">
+    <label for="address">Recipient Address:</label><br />
+    <input type="text" id="address" required /><br /><br />
+
+    <label for="amount">Amount:</label><br />
+    <input type="number" id="amount" required /><br /><br />
+
+    <button type="submit">Withdraw</button>
+  </form>
+
+  <form id="transfered-from-owner">
+    <label for="address2">Recipient Address:</label><br />
+    <input type="text" id="address2" required /><br /><br />
+    <button type="submit">Check</button>
+    <h3 id="transfered"></h3>
+  </form>
+  <p id="status"></p>
+
+  <script type="module" src="./index.ts"></script>
+</body>
+</html>
