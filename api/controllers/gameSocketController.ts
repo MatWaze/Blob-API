@@ -98,12 +98,17 @@ function setupGameBroadcaster(roomId: string, app: TemplatedApp)
 					countdownSeconds: message.state.state === 'countdown' ?
 						Math.ceil(message.state.countdownSeconds) : undefined
 				});
-				
+
 				app.publish(`game:${roomId}`, gameStateMessage);
 			}
 			else if (message.type === 'gameFinished')
 			{
 				await stopGame(roomId, message.gameResult);
+
+				app.publish(`game:${roomId}`, JSON.stringify({
+					type: 'gameFinished',
+					gameResult: message.gameResult
+				}));
 			}
 		}
 		catch (error)
