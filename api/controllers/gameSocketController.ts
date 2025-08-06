@@ -1,7 +1,7 @@
 import { WebSocket, TemplatedApp } from "uWebSockets.js";
 import { WebSocketUserData } from "./roomSocketController.ts";
 import { isUserRoomCreator, getRoom } from "../services/roomService.ts";
-import { createGame, getGameWorker } from "../services/gameSocketService.ts";
+import { createGame, getGameWorker, stopGame } from "../services/gameSocketService.ts";
 
 export function handleStartGame(ws: WebSocket<WebSocketUserData>, roomId: string, userId: string, app: TemplatedApp)
 {
@@ -67,7 +67,7 @@ function setupGameBroadcaster(roomId: string, app: TemplatedApp)
 
 	let gameStartNotificationSent = false;
 
-	worker.on('message', (message) =>
+	worker.on('message', async (message) =>
 	{
 		try
 		{
@@ -83,8 +83,7 @@ function setupGameBroadcaster(roomId: string, app: TemplatedApp)
 					}));
 					gameStartNotificationSent = true;
 				}
-				
-				// Broadcast game state to game channel - include ALL players
+
 				const gameStateMessage = JSON.stringify(
 				{
 					state: message.state.state,
@@ -101,6 +100,10 @@ function setupGameBroadcaster(roomId: string, app: TemplatedApp)
 				});
 				
 				app.publish(`game:${roomId}`, gameStateMessage);
+			}
+			else if (message.type === 'gameFinished')
+			{
+				await stopGame(roomId, message.gameResult);
 			}
 		}
 		catch (error)
