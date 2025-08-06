@@ -1,9 +1,25 @@
 import { Worker } from 'worker_threads';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createGameAsync, getAllGamesAsync } from './gameService';
+import { createDefaultPlacementsAsync, getPlacementsByGameAsync } from './placementService';
+import { createTournamentAsync } from './tournamentService';
+import { addUserToTournamentAsync, setPlacementAsync } from './participationService';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+export interface GameResult
+{
+	players: Array<{
+		id: string;
+		username: string;
+		place: number;
+		playersKicked: number;
+		isActive: boolean;
+	}>;
+	state: 'finished' | 'aborted';
+}
 
 interface GameWorkerData
 {
@@ -17,7 +33,7 @@ const gameWorkers = new Map<string, GameWorkerData>();
 
 export function createGame(roomId: string, players: Array<{id: string, username: string}>): boolean
 {
-	stopGame(roomId);
+	// stopGame(roomId);
 
 	try
 	{
@@ -100,7 +116,7 @@ export function updatePlayerPositionRelative(roomId: string, playerId: string, d
 	return true;
 }
 
-export function stopGame(roomId: string): boolean
+export async function stopGame(roomId: string, gameResult: GameResult): Promise<boolean>
 {
 	const gameData = gameWorkers.get(roomId);
 	if (!gameData) return false;
@@ -110,6 +126,9 @@ export function stopGame(roomId: string): boolean
 		gameData.worker.postMessage({ type: 'stop' });
 		gameData.worker.terminate();
 		console.log(`Game worker stopped for room ${roomId}`);
+
+		if (gameResult && gameResult.state === "finished")
+			await saveGameResults(roomId, gameResult);
 	}
 	catch (error)
 	{
@@ -135,19 +154,71 @@ export function isGameActive(roomId: string): boolean
 	return gameWorkers.has(roomId);
 }
 
-// Clean up inactive games periodically
-setInterval(() =>
+async function saveGameResults(roomId: string, gameResult: GameResult) : Promise<void>
 {
-	const now = new Date();
-	for (const [roomId, gameData] of gameWorkers)
+	try
 	{
-		const timeDiff = now.getTime() - gameData.createdAt.getTime();
-		const maxGameTime = 30 * 60 * 1000;
+		let pongGame;
+		const existingGames = await getAllGamesAsync();
+		pongGame = existingGames.find(game => game.name.toLowerCase() === "pong");
 
-		if (timeDiff > maxGameTime)
+		if (!pongGame)
 		{
-			console.log(`Auto-stopping long-running game in room ${roomId}`);
-			stopGame(roomId);
+			pongGame = await createGameAsync("Pong");
+
+			await createDefaultPlacementsAsync(pongGame.id);
+		}
+
+		const tournament = await createTournamentAsync(pongGame.id);
+
+		if (!tournament)
+		{
+			console.error('Failed to create tournament for game results');
+			return;
+		}
+
+		const placements = await getPlacementsByGameAsync(pongGame.id);
+
+		if (!placements || placements.length === 0)
+		{
+			console.error('No placements found for game');
+			return;
+		}
+
+		const sortedPlayers = gameResult.players
+			.filter(p => p.place !== undefined)
+			.sort((a, b) => (a.place as number) - (b.place as number));
+
+		for (const player of gameResult.players)
+		{
+			const participation = await addUserToTournamentAsync(player.id, tournament.id);
+
+			const placement = placements
+				.find(p => p.name === player.place.toString());
+
+			if (placement)
+				setPlacementAsync(participation.id, placement.id);
 		}
 	}
-}, 5 * 60 * 1000); // Check every 5 minutes
+	catch(error)
+	{
+		console.error('Error saving game results:', error);
+	}
+}
+
+// // Clean up inactive games periodically
+// setInterval(() =>
+// {
+// 	const now = new Date();
+// 	for (const [roomId, gameData] of gameWorkers)
+// 	{
+// 		const timeDiff = now.getTime() - gameData.createdAt.getTime();
+// 		const maxGameTime = 30 * 60 * 1000;
+
+// 		if (timeDiff > maxGameTime)
+// 		{
+// 			console.log(`Auto-stopping long-running game in room ${roomId}`);
+// 			stopGame(roomId);
+// 		}
+// 	}
+// }, 5 * 60 * 1000); // Check every 5 minutes
