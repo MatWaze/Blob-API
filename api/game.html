@@ -311,6 +311,7 @@
                         this.currentRoomId = data.roomId;
                         this.isCreator = data.isCreator || false;
                         this.showCurrentRoom(data.room);
+                        console.log("here");
                         this.connectGame();
                         
                         // Refresh room list to get updated state
@@ -324,6 +325,7 @@
                     }
                 }
 
+                // handle join specifically
                 if (data.userJoined) {
                     this.showCurrentRoom(data.userJoined.room);  // ← Updates UI with new room state
                     
