@@ -71,8 +71,8 @@ export function createGame(roomId: string, players: Array<{id: string, username:
 
 		worker.on('exit', (code) =>
 		{
-			if (code !== 0)
-				console.error(`Worker stopped with exit code ${code} for room ${roomId}`);
+			console.error(`Worker stopped with exit code ${code} for room ${roomId}`);
+			gameWorkers.delete(roomId);
 		});
 
 		gameWorkers.set(roomId,
@@ -123,19 +123,18 @@ export async function stopGame(roomId: string, gameResult: GameResult): Promise<
 
 	try
 	{
-		gameData.worker.postMessage({ type: 'stop' });
-		gameData.worker.terminate();
-		console.log(`Game worker stopped for room ${roomId}`);
-
 		if (gameResult && gameResult.state === "finished")
 			await saveGameResults(roomId, gameResult);
+
+		gameData.worker.postMessage({ type: 'stop' });
+		console.log(`Game worker stopped for room ${roomId}`);
 	}
 	catch (error)
 	{
 		console.error(`Error stopping worker for room ${roomId}:`, error);
 	}
 	
-	gameWorkers.delete(roomId);
+	// gameWorkers.delete(roomId);
 	return true;
 }
 
@@ -184,10 +183,6 @@ async function saveGameResults(roomId: string, gameResult: GameResult) : Promise
 			console.error('No placements found for game');
 			return;
 		}
-
-		const sortedPlayers = gameResult.players
-			.filter(p => p.place !== undefined)
-			.sort((a, b) => (a.place as number) - (b.place as number));
 
 		for (const player of gameResult.players)
 		{
