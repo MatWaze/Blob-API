@@ -368,8 +368,14 @@
 
             handleGameMessage(data) {
                 console.log('Received game message:', data);
-                // Check for both direct state and nested state
-                if (data.state !== undefined || data.ballPosition !== undefined) {
+                
+                if (data.type === 'gameFinished') {
+                    console.log('Game finished with results:', data.gameResult);
+                    this.gameState = { state: 'finished' };
+                    this.overlay.innerHTML = '<div class="countdown">Game Finished!</div>';
+                    // Could also display final rankings here
+                }
+                else if ((data.state !== undefined || data.ballPosition !== undefined)) {
                     this.gameState = data;
                     this.updateGameDisplay();
                     console.log('Game state updated:', this.gameState);
