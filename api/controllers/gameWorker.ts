@@ -219,6 +219,7 @@ if (!isMainThread)
 				else
 				{
 					console.log(`Player ${player.username} was scored on!`);
+					player.place = players.length.toString();
 					player.isActive = false;
 
 					if (gameState.whoHitTheBall)
@@ -230,7 +231,29 @@ if (!isMainThread)
 
 					const remainingPlayers = gameState.players.filter(p => p.isActive);
 					if (remainingPlayers.length < 2)
+					{
+						player.place = '1';
 						gameState.state = 'finished';
+
+						if (parentPort)
+						{
+							parentPort.postMessage({
+								type: 'gameFinished',
+								roomId: gameState.roomId,
+								gameResult:
+								{
+									players: gameState.players.map(p => ({
+										id: p.id,
+										username: p.username,
+										place: p.place,
+										playersKicked: p.playersKicked,
+										isActive: p.isActive
+									})),
+									state: 'finished'
+								}
+							});
+						}
+					}
 					else
 					{
 						gameState.state = 'countdown';
@@ -272,7 +295,6 @@ if (!isMainThread)
 			}
 		}
 	}
-
 
 	calculatePlayerPositions();
 
