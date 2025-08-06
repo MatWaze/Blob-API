@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { ConfirmEmailType, CreateUserType, LoginType } from "../models/userSchema";
+import { ConfirmEmailType, CreateUserType, LoginType } from "../models/userSchema.ts";
 import
 {
 	createUserAsync,
@@ -10,7 +10,9 @@ import
 	setEmailConfirmed,
 	deleteUserAsync
 }
-from "../services/userService";
+from "../services/userService.ts";
+import QueryString from "qs";
+import { saveCookie } from "../services/cookieService.ts";
 
 export async function registerAsync(
 	request: FastifyRequest<{ Body: CreateUserType }>,
@@ -18,7 +20,8 @@ export async function registerAsync(
 )
 {
 	const body = request.body;
-
+	body.authMethod = "EMAIL";
+	console.log(request.body);
 	try
 	{
 		const user = await createUserAsync(body);
@@ -56,6 +59,14 @@ export async function loginAsync(
 		});
 	}
 
+	if (user.authMethod == "GOOGLE")
+	{
+		return response.code(401).send(
+		{
+			message: "Account uses Google Sign-in to log in"
+		});
+	}
+
 	if (!(user?.emailVerified?.isVerified))
 	{
 		return response.code(401).send(
@@ -69,8 +80,11 @@ export async function loginAsync(
 	if (passwordsMatch)
 	{
 		const { password, ...rest } = user;
+		const token = request.jwt.sign(rest);
 
-		return { accessToken: request.jwt.sign(rest) };
+		saveCookie(response, "accessToken", token);
+
+		return response.code(200).send({ message: "Login successful" });
 	}
 
 	return response.code(401).send(

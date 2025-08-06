@@ -1,4 +1,4 @@
-import { CreateUserType } from "../../models/userSchema";
+import { CreateUserType } from "../../models/userSchema.ts";
 
 export interface IUserRepository
 {
@@ -6,6 +6,7 @@ export interface IUserRepository
 	getUserByEmailAsync(email: string) : Promise<any>;
 	getUserByNonceAsync(nonce: string) : Promise<any>;
 	confirmEmailAsync(userId: string) : Promise<void>;
-	createUserAsync(user: CreateUserType) : Promise<any>
-	deleteUserAsync(id: string) : Promise<void>
+	createUserAsync(user: CreateUserType) : Promise<any>;
+	// updateUserAsync(user: any) : Promise<any>;
+	deleteUserAsync(id: string) : Promise<void>;
 }

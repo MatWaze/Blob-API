@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
-import { userSchemas } from "../models/userSchema";
-import { getAllUsersAsync, registerAsync, loginAsync, confirmEmailAsync, removeUserAsync } from "../controllers/userController";
+import { userSchemas } from "../models/userSchema.ts";
+import { getAllUsersAsync, registerAsync, loginAsync, confirmEmailAsync, removeUserAsync } from "../controllers/userController.ts";
+import { googleSignInAsync } from "../controllers/googleOauthController.ts";
 
 async function userRoutes(server: FastifyInstance)
 {
@@ -27,10 +28,10 @@ async function userRoutes(server: FastifyInstance)
 			schema:
 			{
 				body: userSchemas.loginUserModel,
-				response:
-				{
-					200: userSchemas.getLoginUserModel
-				}
+				// response:
+				// {
+				// 	200: userSchemas.getLoginUserModel
+				// }
 			},
 		},
 		loginAsync
@@ -65,6 +66,17 @@ async function userRoutes(server: FastifyInstance)
 	server.delete(
 		"/:id",
 		removeUserAsync
+	)
+
+	server.get(
+		"/oauth/google",
+		{
+			schema:
+			{
+				querystring: userSchemas.googleCodeModel
+			}
+		},
+		googleSignInAsync
 	)
 }
 

@@ -3,16 +3,19 @@ import { z } from 'zod/v4';
 const userBaseModel =
 {
 	email: z.email(),
-	username: z.string({
+	username: z.string(
+	{
 		error: "Username is required",
 	})
 };
 
 const createUserModel = z.object(
 {
-	password: z.string({
+	password: z.string(
+	{
 		error: "Password is required",
 	}),
+	authMethod: z.string(),
 	...userBaseModel
 });
 
@@ -29,7 +32,8 @@ const getUserModel = z.object(
 const loginUserModel = z.object(
 {
 	email: z.email(),
-	password: z.string({
+	password: z.string(
+	{
 		error: "Password is required"
 	})
 });
@@ -44,11 +48,18 @@ const confirmEmailModel = z.object(
 	nonce: z.string()
 });
 
+const googleCodeModel = z.object(
+{
+	code: z.string()
+});
+
 export type CreateUserType = z.infer<typeof createUserModel>;
 
 export type LoginType = z.infer<typeof loginUserModel>;
 
 export type ConfirmEmailType = z.infer<typeof confirmEmailModel>;
+
+export type GoogleCodeType = z.infer<typeof googleCodeModel>;
 
 export const userSchemas =
 {
@@ -56,5 +67,6 @@ export const userSchemas =
 	getUserModel,
 	loginUserModel,
 	getLoginUserModel,
-	confirmEmailModel
+	confirmEmailModel,
+	googleCodeModel
 };

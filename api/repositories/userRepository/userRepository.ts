@@ -1,6 +1,6 @@
-import { CreateUserType } from "../../models/userSchema";
-import { IUserRepository } from "./IUserRepository";
-import prisma from "../../prisma/prismaInstance";
+import { CreateUserType } from "../../models/userSchema.ts";
+import { IUserRepository } from "./IUserRepository.ts";
+import prisma from "../../prisma/prismaInstance.ts";
 import bcrypt from "bcrypt";
 import { randomBytes } from "crypto";
 
@@ -42,26 +42,42 @@ export class userRepository implements IUserRepository
 
 	async createUserAsync(user: CreateUserType): Promise<any>
 	{
-		const { password, ...rest } = user;
+		const { password, authMethod, ...rest } = user;
+		console.log(user);
 		const saltRounds = 12;
 		const salt = await bcrypt.genSalt(saltRounds);
 		
 		const hashedPassword = await bcrypt.hash(password, salt);
 		const nonce = randomBytes(32).toString("hex");
 
-		return await prisma.user.create(
+		switch (authMethod)
 		{
-			data:
-			{
-				...rest,
-				password: hashedPassword,
-				emailVerified:
+			case "GOOGLE":
+				return await prisma.user.create(
 				{
-					create: { nonce }
-				}
-			},
-			include: { emailVerified: true }
-		});
+					data:
+					{
+						...rest,
+						authMethod: authMethod,
+						password: undefined,
+					},
+				});
+			default:
+				return await prisma.user.create(
+				{
+					data:
+					{
+						...rest,
+						password: hashedPassword,
+						authMethod: authMethod,
+						emailVerified:
+						{
+							create: { nonce }
+						}
+					},
+					include: { emailVerified: true }
+				});
+		}
 	}
 
 	async deleteUserAsync(id: string): Promise<void>

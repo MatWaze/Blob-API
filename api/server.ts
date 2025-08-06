@@ -1,20 +1,16 @@
-import Fastify, { FastifyRequest, FastifyReply } from "fastify";
-import userRoutes from "./routes/userRoutes";
-import { userSchemas } from "./models/userSchema";
+import { FastifyRequest, FastifyReply, fastify } from "fastify";
+import userRoutes from "./routes/userRoutes.ts";
 import fjwt, { JWT } from "@fastify/jwt";
 import { serializerCompiler, validatorCompiler, ZodTypeProvider } from "fastify-type-provider-zod";
-
-declare module "fastify"
-{
-	interface FastifyRequest
-	{
-		jwt: JWT;
-	}
-	export interface FastifyInstance
-	{
-		authenticate: any;
-	}
-}
+import fastifyStatic from '@fastify/static';
+import path from 'path';
+import { gameSocketRoutes } from "./routes/gameSocketRoutes.ts";
+import { fastifyCookie } from "@fastify/cookie"
+import { Server } from "socket.io";
+import fastifyCors from "@fastify/cors";
+import fastifyUwsPlugin from '@geut/fastify-uws/plugin'
+import { serverFactory } from '@geut/fastify-uws'
+// add refresh tokens
 
 declare module "@fastify/jwt"
 {
@@ -31,17 +27,28 @@ declare module "@fastify/jwt"
 
 function buildServer()
 {
-	const server = Fastify().withTypeProvider<ZodTypeProvider>();;
+	const server = fastify({serverFactory})
+		.withTypeProvider<ZodTypeProvider>();
+
+	server.register(fastifyCors,
+	{
+		origin: "http://localhost:3000",
+		credentials: true
+	});
 
 	server.setValidatorCompiler(validatorCompiler);
 	server.setSerializerCompiler(serializerCompiler);
 
+	server.register(fastifyCookie);
+	// server.register(fastifySocketIO);
+	server.register(fastifyUwsPlugin);
+
 	server.register(fjwt,
 	{
-		secret: "ndkandnan78duy9sau87dbndsa89u7dsy789adb",
+		secret: "ndkandnan78duy9sau87dbndsa89u7dsy789adbMatWazeisMatevYooo",
 		sign:
 		{
-			expiresIn: "1h"
+			expiresIn: "15m"
 		}
 	});
 
@@ -51,6 +58,15 @@ function buildServer()
 		{
 			try
 			{
+				const token = request.cookies.accessToken;
+
+				if (!token)
+				{
+					return reply.code(401).send({ message: "Missing token" });
+				}
+
+				request.headers.authorization = `Bearer ${token}`;
+
 				await request.jwtVerify();
 			}
 			catch (e)
@@ -66,8 +82,29 @@ function buildServer()
 		return next();
 	});
 
-	server.register(userRoutes, { prefix: 'api/users' })
+	server.register(fastifyStatic, {
+		root: path.resolve('.'), // Points to D:\files\transcendence\api
+		prefix: '/',
+	});
+	server.register(userRoutes, { prefix: 'api/users' });
+	server.register(gameSocketRoutes);
+
+
 	return server;
+}
+
+declare module "fastify"
+{
+	interface FastifyRequest
+	{
+		jwt: JWT;
+	}
+	export interface FastifyInstance
+	{
+		io: Server<{ str: string}>;
+		authenticate: any;
+		ws_authenticate: any;
+	}
 }
 
 export default buildServer

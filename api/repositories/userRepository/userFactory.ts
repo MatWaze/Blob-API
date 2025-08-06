@@ -1,4 +1,4 @@
-import { userRepository } from "./userRepository";
+import { userRepository } from "./userRepository.ts";
 
 const userRepo = new userRepository();
 

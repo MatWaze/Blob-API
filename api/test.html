@@ -1,0 +1,129 @@
+<!-- <div>
+    <a href="" onclick="window.location.href=getGoogleOAuthURL(); return false;">Login with Google</a>
+    Please login
+</div>
+<script>
+    function getGoogleOAuthURL()
+    {
+        const rootUrl = "https://accounts.google.com/o/oauth2/v2/auth";
+
+        const options =
+        {
+            redirect_uri: "http://localhost:3000/api/users/oauth/google",
+            client_id: "924313211927-mq9a80c5307kd925bcq85eqc6furl0n1.apps.googleusercontent.com",
+            access_type: "offline",
+            response_type: "code",
+            prompt: "consent",
+            scope:
+            [
+                "https://www.googleapis.com/auth/userinfo.profile",
+                "https://www.googleapis.com/auth/userinfo.email",
+            ].join(" "),
+        };
+
+        const qs = new URLSearchParams(options);
+
+        const ans = `${rootUrl}?${qs.toString()}`;
+
+        console.log(ans);
+        return ans;
+    }
+</script> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Socket Room Lobby</title>
+	<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+	<style>
+		body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 1rem; }
+		#roomList { margin-top: 1rem; }
+		.room { padding: 0.5rem; border: 1px solid #ccc; margin-bottom: 0.5rem; }
+	</style>
+</head>
+<body>
+	<h1>Room Lobby</h1>
+
+	<div>
+		<h2>Create Room</h2>
+		<label>Entry Fee: <input type="number" id="entryFee" min="0" step="0.01"></label><br>
+		<label>Max Players (optional): <input type="number" id="maxPlayers" min="1"></label><br>
+		<button id="createRoomBtn">Create</button>
+	</div>
+
+	<hr>
+
+	<div>
+		<h2>Available Rooms</h2>
+		<button id="refreshBtn">Refresh List</button>
+		<div id="roomList"></div>
+	</div>
+
+	<script>
+		const socket = io("http://localhost:3000",
+		{
+			transports: ['polling', 'websocket'],
+		});
+
+		const createRoomBtn = document.getElementById('createRoomBtn');
+		const refreshBtn = document.getElementById('refreshBtn');
+		const roomListDiv = document.getElementById('roomList');
+
+		createRoomBtn.onclick = () => {
+			const entryFee = parseFloat(document.getElementById('entryFee').value);
+			const maxPlayers = parseInt(document.getElementById('maxPlayers').value) || undefined;
+
+			socket.emit('createRoom', { entryFee, maxPlayers });
+		};
+
+		socket.on('roomCreated', ({ roomId }) => {
+			alert(`Room created! ID: ${roomId}`);
+			refreshRooms();
+		});
+
+		refreshBtn.onclick = () => {
+			refreshRooms();
+		};
+
+		function refreshRooms() {
+			socket.emit('getRooms');
+		}
+
+		socket.on('roomsList', (rooms) => {
+			roomListDiv.innerHTML = '';
+			if (rooms.length === 0) {
+				roomListDiv.innerText = 'No rooms available.';
+				return;
+			}
+
+			rooms.forEach(room => {
+				const div = document.createElement('div');
+				div.className = 'room';
+				div.innerHTML = `
+					<b>Room ID:</b> ${room.id} <br>
+					<b>Entry Fee:</b> ${room.entryFee} <br>
+					<b>Players:</b> ${room.players.length} ${room.maxPlayers ? `/ ${room.maxPlayers}` : ''} <br>
+					<button onclick="joinRoom('${room.id}')">Join</button>
+				`;
+				roomListDiv.appendChild(div);
+			});
+		});
+
+		function joinRoom(roomId) {
+			socket.emit('joinRoom', { roomId });
+		}
+
+		socket.on('joinedRoom', ({ roomId }) => {
+			alert(`Joined room: ${roomId}`);
+		});
+
+		socket.on('error', msg => {
+			alert(`Error: ${msg}`);
+		});
+
+		// Initial load
+		refreshRooms();
+	</script>
+</body>
+</html>

@@ -1,24 +1,33 @@
-import { CreateUserType } from "../models/userSchema";
-import userRepo from "../repositories/userRepository/userFactory";
+import { CreateUserType } from "../models/userSchema.ts";
+import userRepo from "../repositories/userRepository/userFactory.ts";
 import bcrypt from "bcrypt";
-import { confirmationEmail, getMailClient } from "./emailService";
+import { confirmationEmail, getMailClient } from "./emailService.ts";
+
+export async function sendEmailAsync(usr: any)
+	: Promise<any>
+{
+	const mail = await getMailClient();
+	
+	await mail.sendMail(
+		confirmationEmail(
+			usr.username,
+			usr.email,
+			"http://localhost:3000/api/users",
+			usr.emailVerified.nonce
+		)
+	);
+}
 
 export async function createUserAsync(user: CreateUserType)
 	: Promise<any>
 {
 	try
 	{
+		console.log(user);
 		const usr = await userRepo.createUserAsync(user);
 
-		// Send a confirmation email to the newly created user
-		await (await getMailClient()).sendMail(
-			confirmationEmail(
-				usr.username,
-				usr.email,
-				"http://localhost:3000/api/users",
-				usr.emailVerified.nonce
-			)
-		);
+		if (user.authMethod != "GOOGLE")
+			await sendEmailAsync(usr);
 
 		return usr;
 	}
