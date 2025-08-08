@@ -3,7 +3,12 @@ import { WebSocketUserData } from "./roomSocketController.ts";
 import { isUserRoomCreator, getRoom } from "../services/roomService.ts";
 import { createGame, getGameWorker, stopGame } from "../services/gameSocketService.ts";
 
-export function handleStartGame(ws: WebSocket<WebSocketUserData>, roomId: string, userId: string, app: TemplatedApp)
+export function handleStartGame(
+	ws: WebSocket<WebSocketUserData>,
+	roomId: string,
+	userId: string,
+	app: TemplatedApp
+)
 {
 	if (!isUserRoomCreator(userId, roomId))
 	{
@@ -15,9 +20,9 @@ export function handleStartGame(ws: WebSocket<WebSocketUserData>, roomId: string
 
 		return;
 	}
-	
+
 	const room = getRoom(roomId);
-	
+
 	if (!room)
 	{
 		ws.send(JSON.stringify(
@@ -27,15 +32,15 @@ export function handleStartGame(ws: WebSocket<WebSocketUserData>, roomId: string
 		}));
 		return;
 	}
-	
+
 	const players = Array.from(room.players).map(p =>
 	({
 		id: p.id,
 		username: p.username
 	}));
-	
+
 	const success = createGame(roomId, players);
-	
+
 	if (success)
 	{
 		ws.send(JSON.stringify(
@@ -78,7 +83,7 @@ function setupGameBroadcaster(roomId: string, app: TemplatedApp)
 					console.log(`Sending game start notification to room ${roomId}`);
 					app.publish(roomId, JSON.stringify(
 					{
-						type: 'gameStarted',
+						type: 'started',
 						roomId: roomId
 					}));
 					gameStartNotificationSent = true;
@@ -105,8 +110,8 @@ function setupGameBroadcaster(roomId: string, app: TemplatedApp)
 			{
 				await stopGame(roomId, message.gameResult);
 
-				app.publish(`game:${roomId}`, JSON.stringify({
-					type: 'gameFinished',
+				app.publish(roomId, JSON.stringify({
+					type: 'finished',
 					gameResult: message.gameResult
 				}));
 			}
