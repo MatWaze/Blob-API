@@ -94,6 +94,31 @@ if (!isMainThread)
 		}
 	}
 
+	function sendFinishedNotification(player: GamePlayer)
+	{
+		player.place = '1';
+		gameState.state = 'finished';
+
+		if (parentPort)
+		{
+			parentPort.postMessage({
+				type: 'gameFinished',
+				roomId: gameState.roomId,
+				gameResult:
+				{
+					players: gameState.players.map(p => ({
+						id: p.id,
+						username: p.username,
+						place: p.place,
+						playersKicked: p.playersKicked,
+						isActive: p.isActive
+					})),
+					state: 'finished'
+				}
+			});
+		}
+	}
+
 	function reflectBall(normal: [number, number])
 	{
 		const [vx, vy] = gameState.ballVelocity;
@@ -231,29 +256,7 @@ if (!isMainThread)
 
 					const remainingPlayers = gameState.players.filter(p => p.isActive);
 					if (remainingPlayers.length < 2)
-					{
-						player.place = '1';
-						gameState.state = 'finished';
-
-						if (parentPort)
-						{
-							parentPort.postMessage({
-								type: 'gameFinished',
-								roomId: gameState.roomId,
-								gameResult:
-								{
-									players: gameState.players.map(p => ({
-										id: p.id,
-										username: p.username,
-										place: p.place,
-										playersKicked: p.playersKicked,
-										isActive: p.isActive
-									})),
-									state: 'finished'
-								}
-							});
-						}
-					}
+						sendFinishedNotification(player);
 					else
 					{
 						gameState.state = 'countdown';
@@ -345,12 +348,11 @@ if (!isMainThread)
 					const scaledDelta = message.delta * MOUSE_SENSITIVITY;
 					const tempPos = player.position + scaledDelta;
 
-					// Clamp the position to ensure the paddle stays within the side boundaries.
 					// The valid range for the center of the paddle is [sidePercent, 1.0 - sidePercent].
 					const sidePercent = 0.1;
 					player.position = Math.max(sidePercent, Math.min(1.0 - sidePercent, tempPos));
 					
-					console.log(`Player ${player.id}: position += ${scaledDelta.toFixed(4)} = ${player.position.toFixed(4)}`);
+					// console.log(`Player ${player.id}: position += ${scaledDelta.toFixed(4)} = ${player.position.toFixed(4)}`);
 				}
 			}
 			else if (message.type === 'stop')

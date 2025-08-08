@@ -295,7 +295,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 					const drag = parseFloat(dragString);
 					if (!isNaN(drag))
 					{
-						console.log(`Player ${userData.userId} sent delta: ${drag}`);
+						console.log(`Player ${userData.userId} sent drag: ${drag}`);
 						updatePlayerPositionRelative(roomId, userData.userId, drag);
 					}
 				}

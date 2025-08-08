@@ -1,10 +1,10 @@
 import { Worker } from 'worker_threads';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createGameAsync, getAllGamesAsync } from './gameService';
-import { createDefaultPlacementsAsync, getPlacementsByGameAsync } from './placementService';
-import { createTournamentAsync } from './tournamentService';
-import { addUserToTournamentAsync, setPlacementAsync } from './participationService';
+import { createGameAsync, getAllGamesAsync } from './gameService.ts';
+import { createDefaultPlacementsAsync, getPlacementsByGameAsync } from './placementService.ts';
+import { createTournamentAsync } from './tournamentService.ts';
+import { addUserToTournamentAsync, setPlacementAsync } from './participationService.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
