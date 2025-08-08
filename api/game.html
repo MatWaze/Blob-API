@@ -302,6 +302,11 @@
                         if (currentRoom) {
                             this.isCreator = currentRoom.isCreator;
                             this.showCurrentRoom(currentRoom);
+
+                             if (!this.gameWs || this.gameWs.readyState !== WebSocket.OPEN) {
+                                console.log('Auto-reconnecting to game after page refresh');
+                                this.connectGame();
+                            }
                         }
                     }
                 }
@@ -361,7 +366,7 @@
                 }
 
                 // Same lobby WebSocket onmessage → handleLobbyMessage()
-                if (data.type === 'gameStarted') {
+                if (data.type === 'started') {
                     this.overlay.innerHTML = '<div class="countdown">Game Starting...</div>';  // ← Shows overlay
                 }
             }
