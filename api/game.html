@@ -214,6 +214,7 @@
                 this.isCreator = false;
                 this.gameState = null;
                 this.players = [];
+                this.gameResults = null;
                 
                 this.mouseX = 0;
                 this.mouseY = 0;
@@ -377,8 +378,8 @@
                 if (data.type === 'gameFinished') {
                     console.log('Game finished with results:', data.gameResult);
                     this.gameState = { state: 'finished' };
-                    this.overlay.innerHTML = '<div class="countdown">Game Finished!</div>';
-                    // Could also display final rankings here
+                    this.gameResults = data.gameResult;
+                    this.showGameResults(data.gameResult);
                 }
                 else if ((data.state !== undefined || data.ballPosition !== undefined)) {
                     this.gameState = data;
@@ -387,17 +388,45 @@
                 }
             }
 
-            updateGameDisplay() {
-                if (!this.gameState) return;
+            showGameResults(gameResult) {
+                let resultsHtml = '<div style="background: rgba(0,0,0,0.9); padding: 20px; border-radius: 8px; color: white; max-width: 400px;">';
+                resultsHtml += '<h2 style="color: #00ff00; text-align: center; margin-top: 0;">Game Results</h2>';
+                
+                // Sort players by place
+                const sortedPlayers = [...gameResult.players].sort((a, b) => {
+                    if (a.place === '1') return -1;
+                    if (b.place === '1') return 1;
+                    return parseInt(a.place) - parseInt(b.place);
+                });
+                
+                sortedPlayers.forEach((player, index) => {
+                    const placeEmoji = player.place === '1' ? '🏆' : 
+                                     player.place === '2' ? '🥈' : 
+                                     player.place === '3' ? '🥉' : '📍';
+                    
+                    const statusColor = player.isActive ? '#00ff00' : '#ff4444';
+                    resultsHtml += `
+                        <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 4px;">
+                            <span style="font-size: 20px;">${placeEmoji}</span>
+                            <strong style="color: ${statusColor};">${player.username}</strong>
+                            <br>
+                            <small>Place: ${player.place} | Players eliminated: ${player.playersKicked || 0}</small>
+                        </div>
+                    `;
+                });
+                
+                resultsHtml += '</div>';
+                this.overlay.innerHTML = resultsHtml;
+            }
 
-                console.log('Updating game display with state:', this.gameState.state);
-                if (this.gameState.state === 'countdown') {
-                    this.overlay.innerHTML = `<div class="countdown">${this.gameState.countdownSeconds || 'Starting...'}</div>`;
-                } else if (this.gameState.state === 'playing') {
-                    this.overlay.innerHTML = '';
-                } else if (this.gameState.state === 'finished') {
-                    this.overlay.innerHTML = '<div class="countdown">Game Finished!</div>';
-                }
+            showGameEndRedirectMessage() {
+                const currentContent = this.overlay.innerHTML;
+                this.overlay.innerHTML = currentContent + 
+                    '<div style="background: rgba(255,0,0,0.9); padding: 15px; margin-top: 20px; border-radius: 8px; text-align: center;">' +
+                    '<h3 style="margin: 0; color: white;">Session Expired</h3>' +
+                    '<p style="margin: 10px 0; color: white;">Your session has expired. You will be redirected to login in 10 seconds.</p>' +
+                    '<p style="margin: 0; color: white; font-size: 12px;">You can refresh the page to login again.</p>' +
+                    '</div>';
             }
 
             setupEventListeners() {
