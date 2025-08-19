@@ -1,4 +1,7 @@
+import { number } from "zod/v4";
 import placementRepo from "../repositories/placementRepository/placementFactory.ts";
+
+const MAX_LENGTH: number = 14
 
 export async function getPlacementsByGameAsync(gameId: number)
 {
@@ -52,27 +55,23 @@ export async function createPlacementAsync(gameId: number, name: string)
 	}
 }
 
-export async function createDefaultPlacementsAsync(gameId: number, maxPlayers: number = 4)
+export async function createDefaultPlacementsAsync(gameId: number, gameName: string)
 {
 	try
 	{
-		if (!gameId || gameId <= 0)
-		{
-			throw new Error("Invalid game ID");
-		}
+		let defaultPlacements = [];
 
-		if (maxPlayers < 2)
+		switch (gameName)
 		{
-			throw new Error("Max players must be at least 2");
-		}
+			case "Pong":
+			const placementNames = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"];
 
-		const defaultPlacements = [];
-		const placementNames = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"];
+			for (let i = 0; i < placementNames.length; i++)
+			{
+				const placement = await createPlacementAsync(gameId, placementNames[i]);
+				defaultPlacements.push(placement);
+			}
 
-		for (let i = 0; i < Math.min(maxPlayers, placementNames.length); i++)
-		{
-			const placement = await createPlacementAsync(gameId, placementNames[i]);
-			defaultPlacements.push(placement);
 		}
 
 		return defaultPlacements;
