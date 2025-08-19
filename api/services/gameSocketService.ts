@@ -14,9 +14,10 @@ export interface GameResult
 	players: Array<{
 		id: string;
 		username: string;
-		place: number;
+		place: string;
 		playersKicked: number;
 		isActive: boolean;
+		score: number
 	}>;
 	state: 'finished' | 'aborted';
 }
@@ -124,7 +125,7 @@ export async function stopGame(roomId: string, gameResult: GameResult): Promise<
 	try
 	{
 		if (gameResult && gameResult.state === "finished")
-			await saveGameResults(roomId, gameResult);
+			saveGameResults(gameResult);
 
 		gameData.worker.postMessage({ type: 'stop' });
 		console.log(`Game worker stopped for room ${roomId}`);
@@ -153,19 +154,69 @@ export function isGameActive(roomId: string): boolean
 	return gameWorkers.has(roomId);
 }
 
-async function saveGameResults(roomId: string, gameResult: GameResult) : Promise<void>
+function calculateAllPlayerScores(gameResult: GameResult, totalPrizePool: number = 1000): void
+{
+	const totalPlayers = gameResult.players.length;
+	
+	// Step 1: Calculate Prize Pools
+	const rankPrizePool = totalPrizePool * 0.85;
+	const kicksPrizePool = totalPrizePool * 0.15;
+	
+	// Step 2: Calculate total kicks and distribute kicks prize
+	const totalKicks = totalPlayers - 1; // Winner isn't kicked
+	
+	// Step 3: Calculate tail weights once for all tail players
+	const tailPlayers = gameResult.players.filter(p => +p.place >= 4);
+	const tailPrizePool = rankPrizePool * 0.20;
+	let totalTailWeight = 0;
+	
+	for (const tailPlayer of tailPlayers) {
+		const n = +tailPlayer.place;
+		totalTailWeight += (totalPlayers - n + 1);
+	}
+	
+	// Step 4: Calculate scores for all players
+	for (const player of gameResult.players) {
+		// Calculate kicks prize
+		const playerKicksFraction = totalKicks > 0 ? player.playersKicked / totalKicks : 0;
+		const playerKicksPrize = kicksPrizePool * playerKicksFraction;
+		
+		// Calculate rank prize
+		let playerRankPrize = 0;
+		const placeInt = +player.place;
+
+		if (placeInt === 1) {
+			playerRankPrize = rankPrizePool * 0.50; // 50% for 1st place
+		} else if (placeInt === 2) {
+			playerRankPrize = rankPrizePool * 0.20; // 20% for 2nd place
+		} else if (placeInt === 3) {
+			playerRankPrize = rankPrizePool * 0.10; // 10% for 3rd place
+		} else if (placeInt >= 4) {
+			// Tail calculation
+			const playerWeight = totalPlayers - placeInt + 1;
+			const playerTailFraction = totalTailWeight > 0 ? playerWeight / totalTailWeight : 0;
+			playerRankPrize = tailPrizePool * playerTailFraction;
+		}
+		
+		// Set final score
+		player.score = Math.round(playerRankPrize + playerKicksPrize);
+	}
+}
+
+async function saveGameResults(gameResult: GameResult) : Promise<void>
 {
 	try
 	{
 		let pongGame;
+		let placements;
+
 		const existingGames = await getAllGamesAsync();
 		pongGame = existingGames.find(game => game.name.toLowerCase() === "pong");
 
 		if (!pongGame)
 		{
 			pongGame = await createGameAsync("Pong");
-
-			await createDefaultPlacementsAsync(pongGame.id);
+			placements = await createDefaultPlacementsAsync(pongGame.id, "Pong");
 		}
 
 		const tournament = await createTournamentAsync(pongGame.id);
@@ -176,13 +227,15 @@ async function saveGameResults(roomId: string, gameResult: GameResult) : Promise
 			return;
 		}
 
-		const placements = await getPlacementsByGameAsync(pongGame.id);
+		placements = await getPlacementsByGameAsync(pongGame.id);
 
 		if (!placements || placements.length === 0)
 		{
 			console.error('No placements found for game');
 			return;
 		}
+
+		calculateAllPlayerScores(gameResult);
 
 		for (const player of gameResult.players)
 		{
@@ -202,7 +255,7 @@ async function saveGameResults(roomId: string, gameResult: GameResult) : Promise
 }
 
 // // Clean up inactive games periodically
-// setInterval(() =>
+// setInterval(()
 // {
 // 	const now = new Date();
 // 	for (const [roomId, gameData] of gameWorkers)
