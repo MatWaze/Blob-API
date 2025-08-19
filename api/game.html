@@ -293,6 +293,17 @@
             }
 
             handleLobbyMessage(data) {
+                if (data.userLeft) {
+                    this.showCurrentRoom(data.userLeft.room);  // ← Updates UI with new room state
+                    
+                    // Refresh room list to get updated state
+                    setTimeout(() => {
+                        if (this.lobbyWs && this.lobbyWs.readyState === WebSocket.OPEN) {
+                            this.lobbyWs.send('refresh');
+                        }
+                    }, 100);
+                }
+
                 if (data.rooms) {
                     this.updateRoomList(data.rooms);
                     this.currentRoomId = data.currentRoomId;
@@ -317,7 +328,6 @@
                         this.currentRoomId = data.roomId;
                         this.isCreator = data.isCreator || false;
                         this.showCurrentRoom(data.room);
-                        console.log("here");
                         this.connectGame();
                         
                         // Refresh room list to get updated state
@@ -334,17 +344,6 @@
                 // handle join specifically
                 if (data.userJoined) {
                     this.showCurrentRoom(data.userJoined.room);  // ← Updates UI with new room state
-                    
-                    // Refresh room list to get updated state
-                    setTimeout(() => {
-                        if (this.lobbyWs && this.lobbyWs.readyState === WebSocket.OPEN) {
-                            this.lobbyWs.send('refresh');
-                        }
-                    }, 100);
-                }
-
-                if (data.userLeft) {
-                    this.showCurrentRoom(data.userLeft.room);  // ← Updates UI with new room state
                     
                     // Refresh room list to get updated state
                     setTimeout(() => {
@@ -374,47 +373,53 @@
 
             handleGameMessage(data) {
                 console.log('Received game message:', data);
-                
+
                 if (data.type === 'gameFinished') {
                     console.log('Game finished with results:', data.gameResult);
                     this.gameState = { state: 'finished' };
                     this.gameResults = data.gameResult;
+                    // Clear the map and show results
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                     this.showGameResults(data.gameResult);
                 }
                 else if ((data.state !== undefined || data.ballPosition !== undefined)) {
                     this.gameState = data;
-                    this.updateGameDisplay();
+                    this.updateGameDisplay(); // Add this call to update overlays
                     console.log('Game state updated:', this.gameState);
                 }
             }
 
             showGameResults(gameResult) {
+                // Clear the canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
                 let resultsHtml = '<div style="background: rgba(0,0,0,0.9); padding: 20px; border-radius: 8px; color: white; max-width: 400px;">';
                 resultsHtml += '<h2 style="color: #00ff00; text-align: center; margin-top: 0;">Game Results</h2>';
-                
+
                 // Sort players by place
                 const sortedPlayers = [...gameResult.players].sort((a, b) => {
                     if (a.place === '1') return -1;
                     if (b.place === '1') return 1;
                     return parseInt(a.place) - parseInt(b.place);
                 });
-                
+
                 sortedPlayers.forEach((player, index) => {
                     const placeEmoji = player.place === '1' ? '🏆' : 
                                      player.place === '2' ? '🥈' : 
                                      player.place === '3' ? '🥉' : '📍';
-                    
+
                     const statusColor = player.isActive ? '#00ff00' : '#ff4444';
+                    const underline = player.place === '1' ? 'text-decoration: underline;' : '';
                     resultsHtml += `
                         <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 4px;">
                             <span style="font-size: 20px;">${placeEmoji}</span>
-                            <strong style="color: ${statusColor};">${player.username}</strong>
+                            <strong style="color: ${statusColor}; ${underline}">${player.username}</strong>
                             <br>
                             <small>Place: ${player.place} | Players eliminated: ${player.playersKicked || 0}</small>
                         </div>
                     `;
                 });
-                
+
                 resultsHtml += '</div>';
                 this.overlay.innerHTML = resultsHtml;
             }
@@ -466,19 +471,17 @@
 
                 // Mouse movement for game - only when game is actually playing
                 this.canvas.addEventListener('mousemove', (e) => {
-                    // Only track and send input if game is in playing state
-                    if (!this.gameState || this.gameState.state !== 'playing') {
-                        // Update mouse position for smooth transition when game starts, but don't send
-                        const rect = this.canvas.getBoundingClientRect();
-                        this.mouseX = (e.clientX - rect.left) / rect.width;
-                        return;
-                    }
-
                     const rect = this.canvas.getBoundingClientRect();
                     const newMouseX = (e.clientX - rect.left) / rect.width;
                     
+                    // Always update mouse position for smooth transition
                     const deltaX = newMouseX - this.mouseX;
                     this.mouseX = newMouseX;
+                    
+                    // Only send input if game is in playing state
+                    if (!this.gameState || this.gameState.state !== 'playing') {
+                        return; // Don't send any input during countdown or other states
+                    }
                     
                     // Only send if we have a meaningful delta and game WebSocket is ready
                     const now = Date.now();
@@ -530,6 +533,7 @@
                 
                 ws.onopen = () => {
                     ws.send(JSON.stringify({ roomId: this.currentRoomId }));
+                    this.currentRoomId = null;
                 };
 
                 ws.onmessage = (event) => {
@@ -754,14 +758,24 @@
             drawArena(ctx, canvas) {
                 const centerX = canvas.width / 2;
                 const centerY = canvas.height / 2;
-                const radius = Math.min(canvas.width, canvas.height) / 2 - 20;
+                const radius = 300;
 
-                // Draw outer circle
-                ctx.strokeStyle = '#00ff00';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-                ctx.stroke();
+                // Check if we're in 2-player mode for square arena
+                if (this.gameState && this.gameState.players && this.gameState.players.length === 2) {
+                    // Draw square arena for 2-player mode
+                    ctx.strokeStyle = '#00ff00';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.rect(centerX - radius, centerY - radius * 0.5, radius * 2, radius);
+                    ctx.stroke();
+                } else {
+                    // Draw circular arena for multi-player mode
+                    ctx.strokeStyle = '#00ff00';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
 
                 // Draw center dot
                 ctx.fillStyle = '#00ff00';
@@ -773,7 +787,7 @@
             drawBall(ctx, canvas, ballPos) {
                 const centerX = canvas.width / 2;
                 const centerY = canvas.height / 2;
-                const radius = Math.min(canvas.width, canvas.height) / 2 - 20;
+                const radius = 300;
 
                 const ballX = centerX + ballPos[0] * radius;
                 const ballY = centerY + ballPos[1] * radius;
@@ -790,10 +804,58 @@
                     return;
                 }
 
-                console.log('Drawing players:', players);
                 const centerX = canvas.width / 2;
                 const centerY = canvas.height / 2;
-                const radius = Math.min(canvas.width, canvas.height) / 2 - 20;
+                const radius = 300;
+
+                // Special case for 2 players - use left/right virtual positions (x = -1 and x = 1)
+                if (players.length === 2) {
+                    const paddleWidth = 0.1;
+                    
+                    players.forEach((player, index) => {
+                        // Apply server-side logic: calculateTwoPlayersPositions
+                        const playerDist = player.position - 0.5;
+                        let virtualX, virtualY;
+                        
+                        if (index === 0) {
+                            // Left player
+                            virtualX = -0.7;
+                            virtualY = playerDist;
+                        } else {
+                            // Right player
+                            virtualX = 0.7;
+                            virtualY = playerDist;
+                        }
+
+                        // Map virtual coords to screen (paddle center)
+                        const screenX = centerX + virtualX * radius;
+                        const screenY = centerY + virtualY * radius;
+
+                        // Calculate paddle endpoints (vertical paddle)
+                        const paddleHalfLength = paddleWidth * radius;
+                        const leftX = screenX;
+                        const leftY = screenY - paddleHalfLength;
+                        const rightX = screenX;
+                        const rightY = screenY + paddleHalfLength;
+                        
+                        // Draw paddle using moveTo/lineTo pattern
+                        ctx.strokeStyle = player.isActive ? '#00ff00' : '#ff4444';
+                        ctx.lineWidth = 6;
+                        ctx.beginPath();
+                        ctx.moveTo(leftX, leftY);
+                        ctx.lineTo(rightX, rightY);
+                        ctx.stroke();
+
+                        // Draw player name
+                        ctx.fillStyle = player.isActive ? '#00ff00' : '#ff4444';
+                        ctx.font = '12px Courier New';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(player.username, screenX, screenY - paddleHalfLength - 10);
+                    });
+                    return;
+                }
+
+                // Original multi-player circular arrangement
                 const playerCount = players.length;
                 const alpha = (Math.PI * 2) / playerCount;
                 const height = 0.5 / Math.tan(alpha / 2);
@@ -815,7 +877,7 @@
                     // Draw paddle
                     const screenX = centerX + paddleX * radius;
                     const screenY = centerY + paddleY * radius;
-                    
+
                     const leftX = screenX - paddleWidth * Math.cos(beta) * radius;
                     const leftY = screenY - paddleWidth * Math.sin(beta) * radius;
                     const rightX = screenX + paddleWidth * Math.cos(beta) * radius;
