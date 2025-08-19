@@ -31,7 +31,7 @@ export class userRepository implements IUserRepository
 		});
 	};
 
-	async getUserByEmailAsync(email: string): Promise<any>
+	async getUserByEmailAsync(email: string)
 	{
 		return await prisma.user.findFirst(
 		{
@@ -40,7 +40,7 @@ export class userRepository implements IUserRepository
 		});
 	}
 
-	async createUserAsync(user: CreateUserType): Promise<any>
+	async createUserAsync(user: CreateUserType)
 	{
 		const { password, authMethod, ...rest } = user;
 		console.log(user);

@@ -6,6 +6,11 @@ export function saveCookie(
 	cookie: string
 )
 {
+	response.clearCookie(name);
+
+	const isRefreshToken = name === 'refreshToken';
+	const maxAge = isRefreshToken ? 7 * 24 * 60 * 60 : 15 * 60; // 7 days vs 15 minutes
+
 	response.setCookie(
 		name,
 		cookie,
@@ -14,7 +19,7 @@ export function saveCookie(
 			secure: process.env.NODE_ENV === "production", // send cookie only over HTTPS in prod
 			sameSite: "strict",
 			path: "/",
-			maxAge: 60 * 15
+			maxAge: maxAge
 		}
 	);
 }

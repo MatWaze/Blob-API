@@ -42,9 +42,11 @@ export async function googleSignInAsync(
 		}
 		
 		const { password, ...rest } = user;
-		const token = request.jwt.sign(rest);
+		const accessToken = request.jwt.sign(rest, { expiresIn: '15m' });
+		const refreshToken = request.jwt.sign(rest, { expiresIn: '7d' });
 
-		saveCookie(response, "accessToken", token);
+		saveCookie(response, "accessToken", accessToken);
+		saveCookie(response, "refreshToken", refreshToken);
 
 		return response.code(200).send({ message: "Login successful" });;
 	}

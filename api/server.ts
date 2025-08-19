@@ -1,27 +1,38 @@
-import { FastifyRequest, FastifyReply, fastify } from "fastify";
-import userRoutes from "./routes/userRoutes.ts";
-import fjwt, { JWT } from "@fastify/jwt";
-import { serializerCompiler, validatorCompiler, ZodTypeProvider } from "fastify-type-provider-zod";
+import { FastifyRequest, FastifyReply, fastify } from 'fastify';
+import userRoutes from './routes/userRoutes.ts';
+import fjwt, { FastifyJWT, JWT } from '@fastify/jwt';
+import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
 import fastifyStatic from '@fastify/static';
 import path from 'path';
-import { gameSocketRoutes } from "./routes/gameSocketRoutes.ts";
-import { fastifyCookie } from "@fastify/cookie"
-import { Server } from "socket.io";
-import fastifyCors from "@fastify/cors";
+import { gameSocketRoutes } from './routes/gameSocketRoutes.ts';
+import { fastifyCookie } from '@fastify/cookie'
+import { Server } from 'socket.io';
+import fastifyCors from '@fastify/cors';
 import fastifyUwsPlugin from '@geut/fastify-uws/plugin'
 import { serverFactory } from '@geut/fastify-uws'
-// add refresh tokens
+import { saveCookie } from './services/cookieService.ts';
 
-declare module "@fastify/jwt"
+declare module '@fastify/jwt'
 {
 	interface FastifyJWT
 	{
-		user:
-		{
-			id: number;
-			email: string;
-			name: string;
-		};
+		id: number;
+		email: string;
+		username: string;
+	}
+}
+
+declare module 'fastify'
+{
+	interface FastifyRequest
+	{
+		jwt: JWT;
+	}
+	export interface FastifyInstance
+	{
+		io: Server<{ str: string}>;
+		authenticate: any;
+		refreshAccessToken: any;
 	}
 }
 
@@ -32,7 +43,7 @@ function buildServer()
 
 	server.register(fastifyCors,
 	{
-		origin: "http://localhost:3000",
+		origin: 'http://localhost:3000',
 		credentials: true
 	});
 
@@ -40,20 +51,54 @@ function buildServer()
 	server.setSerializerCompiler(serializerCompiler);
 
 	server.register(fastifyCookie);
-	// server.register(fastifySocketIO);
 	server.register(fastifyUwsPlugin);
 
 	server.register(fjwt,
 	{
-		secret: "ndkandnan78duy9sau87dbndsa89u7dsy789adbMatWazeisMatevYooo",
-		sign:
-		{
-			expiresIn: "15m"
-		}
+		secret: 'ndkandnan78duy9sau87dbndsa89u7dsy789adbMatWazeisMatevYooo'
 	});
 
 	server.decorate(
-		"authenticate",
+		'refreshAccessToken',
+		async (request: FastifyRequest, reply: FastifyReply) =>
+		{
+			const refreshToken = request.cookies.refreshToken;
+			if (!refreshToken)
+			{
+				reply.clearCookie('accessToken');
+				reply.clearCookie('refreshToken');
+				return reply.code(401).send({ message: 'Missing refresh token', needsLogin: true });
+			}
+
+			try
+			{
+				const decoded = server.jwt.verify(refreshToken) as FastifyJWT;
+				
+				const newAccessToken = server.jwt.sign(
+					{ decoded }
+				);
+
+				saveCookie(reply, 'accessToken', newAccessToken);
+
+				return reply.code(200).send({ 
+					message: 'Token refreshed successfully',
+					accessToken: newAccessToken 
+				});
+			}
+			catch (refreshError)
+			{
+				reply.clearCookie('accessToken');
+				reply.clearCookie('refreshToken');
+				return reply.code(401).send({ 
+					message: 'Invalid refresh token', 
+					needsLogin: true 
+				});
+			}
+		}
+	);
+
+	server.decorate(
+		'authenticate',
 		async (request: FastifyRequest, reply: FastifyReply) =>
 		{
 			try
@@ -62,16 +107,21 @@ function buildServer()
 
 				if (!token)
 				{
-					return reply.code(401).send({ message: "Missing token" });
+					return reply.code(401).send({ 
+						message: 'Missing access token', 
+						needsRefresh: true 
+					});
 				}
 
 				request.headers.authorization = `Bearer ${token}`;
-
 				await request.jwtVerify();
 			}
 			catch (e)
 			{
-				return reply.send(e);
+				return reply.code(401).send({ 
+					message: 'Invalid or expired access token', 
+					needsRefresh: true 
+				});
 			}
 		}
 	);
@@ -83,28 +133,13 @@ function buildServer()
 	});
 
 	server.register(fastifyStatic, {
-		root: path.resolve('.'), // Points to D:\files\transcendence\api
+		root: path.resolve('.'),
 		prefix: '/',
 	});
 	server.register(userRoutes, { prefix: 'api/users' });
 	server.register(gameSocketRoutes);
 
-
 	return server;
-}
-
-declare module "fastify"
-{
-	interface FastifyRequest
-	{
-		jwt: JWT;
-	}
-	export interface FastifyInstance
-	{
-		io: Server<{ str: string}>;
-		authenticate: any;
-		ws_authenticate: any;
-	}
 }
 
 export default buildServer
