@@ -4,10 +4,8 @@
 // It will be used by the Solidity compiler to validate its version.
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 // This is the main building block for smart contracts.
-contract Token is ERC20 {
+contract Token {
     // Some string type variables to identify the token.
     string public name = "My Hardhat Token";
     string public symbol = "MHT";

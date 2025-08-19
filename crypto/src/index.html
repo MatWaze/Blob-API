@@ -1,51 +1,51 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>My Hardhat Token</title>
-</head>
-<body>
-  <h1>My Hardhat Token</h1>
-
-  <button id="connect">Connect Wallet</button>
-  <p id="account">Not connected</p>
-  <p id="balance">Balance: 0</p>
-
-  <h3>Transfer Tokens</h3>
-  <input type="text" id="to" placeholder="Recipient address" />
-  <input type="number" id="amount" placeholder="Amount" />
-  <button id="transfer">Transfer</button>
-  <p id="transferred">Transferred from owner: ...</p>
-
-  <script type="module" src="index.ts"></script>
-</body>
-</html> -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Test Withdraw</title>
+  <title>Token Transfer Checker</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+    .transfer-item { background: #f5f5f5; margin: 10px 0; padding: 10px; border-radius: 3px; }
+    .success { color: green; }
+    .error { color: red; }
+    input, button { padding: 8px; margin: 5px; }
+    button { background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+  </style>
 </head>
 <body>
-  <h2>Withdraw Tokens</h2>
+  <h1>Token Transfer Checker</h1>
+  
+  <div class="section">
+    <h2>Contract Information</h2>
+    <div id="contract-info">Loading...</div>
+  </div>
 
-  <form id="withdraw-form">
-    <label for="address">Recipient Address:</label><br />
-    <input type="text" id="address" required /><br /><br />
+  <div class="section">
+    <h2>Check Transfers from Owner</h2>
+    <form id="check-transfers-form">
+      <label for="recipient-address">Recipient Address:</label><br />
+      <input type="text" id="recipient-address" placeholder="0x..." required /><br /><br />
+      <button type="submit">Check Transfers</button>
+    </form>
+    
+    <div id="transfer-results"></div>
+  </div>
 
-    <label for="amount">Amount:</label><br />
-    <input type="number" id="amount" required /><br /><br />
-
-    <button type="submit">Withdraw</button>
-  </form>
-
-  <form id="transfered-from-owner">
-    <label for="address2">Recipient Address:</label><br />
-    <input type="text" id="address2" required /><br /><br />
-    <button type="submit">Check</button>
-    <h3 id="transfered"></h3>
-  </form>
+  <div class="section">
+    <h2>Admin: Send Tokens (Owner Only)</h2>
+    <form id="withdraw-form">
+      <label for="address">Recipient Address:</label><br />
+      <input type="text" id="address" placeholder="0x..." required /><br /><br />
+      
+      <label for="amount">Amount:</label><br />
+      <input type="number" id="amount" required /><br /><br />
+      
+      <button type="submit">Send Tokens</button>
+    </form>
+  </div>
+  
   <p id="status"></p>
 
   <script type="module" src="./index.ts"></script>
