@@ -1,99 +1,13 @@
 import { FastifyInstance } from "fastify";
 import { getUws } from '@geut/fastify-uws';
-import { WebSocket, HttpRequest, WebSocketBehavior, HttpResponse, us_socket_context_t, TemplatedApp } from "uWebSockets.js";
+import { WebSocket, HttpRequest, WebSocketBehavior, HttpResponse, us_socket_context_t } from "uWebSockets.js";
 import { createRoomAsync, joinRoomAsync, getRoomsAsync, leaveRoomAsync, WebSocketUserData, markRoomReadyAsync, markRoomWaitingAsync } from "../controllers/roomSocketController.ts";
 import { StringDecoder } from "string_decoder";
 import { getUserCurrentRoom } from "../services/roomService.ts";
 import { updatePlayerPositionRelative, isGameActive } from "../services/gameSocketService.ts";
-import { handleStartGame } from "../controllers/gameSocketController.ts";
+import { createBaseBehavior, handleStartGame } from "../controllers/gameSocketController.ts";
 
 const decoder = new StringDecoder("utf8");
-
-// Common authentication function
-async function authenticateWebSocket(res: HttpResponse, req: HttpRequest, context: us_socket_context_t, server: FastifyInstance)
-: Promise<{userId: string, username: string} | null>
-{
-	console.log("WebSocket upgrade request received");
-
-	res.onAborted(() =>
-	{
-		console.log("Upgrade request aborted");
-	});
-
-	try
-	{
-		const cookieHeader = req.getHeader('cookie');
-		let token = null;
-		
-		if (cookieHeader)
-		{
-			const cookies = cookieHeader.split(';').reduce((acc, cookie) =>
-			{
-				const [key, value] = cookie.trim().split('=');
-				acc[key] = value;
-				return acc;
-			},
-			{} as Record<string, string>);
-			
-			token = cookies['accessToken'];
-		}
-
-		if (!token)
-		{
-			console.log("No JWT token found in cookies");
-			res.writeStatus('401 Unauthorized');
-			res.end('Authentication required');
-			return null;
-		}
-
-		const decoded: any = await server.jwt.verify(token);
-		const userId = decoded.id;
-		const username = decoded.username || decoded.name;
-
-		if (!userId || !username)
-		{
-			console.log("Invalid JWT token - missing user ID or username");
-			res.writeStatus('401 Unauthorized');
-			res.end('Invalid token - missing required user data');
-			return null;
-		}
-
-		console.log("Authenticated user for WebSocket:", username, `(${userId})`);
-
-		return {
-			userId: userId.toString(),
-			username: username
-		};
-	}
-	catch (error)
-	{
-		console.error("WebSocket authentication error:", error);
-		res.writeStatus('401 Unauthorized');
-		res.end('Authentication failed');
-		return null;
-	}
-}
-
-// Common WebSocket behavior factory
-function createBaseBehavior(server: FastifyInstance): Partial<WebSocketBehavior<WebSocketUserData>>
-{
-	return {
-		upgrade: async (res: HttpResponse, req: HttpRequest, context: us_socket_context_t) =>
-		{
-			const userData = await authenticateWebSocket(res, req, context, server);
-			if (userData)
-			{
-				res.upgrade(
-					userData,
-					req.getHeader('sec-websocket-key'),
-					req.getHeader('sec-websocket-protocol'),
-					req.getHeader('sec-websocket-extensions'),
-					context
-				);
-			}
-		},
-	};
-}
 
 export async function gameSocketRoutes(server: FastifyInstance)
 {
@@ -295,7 +209,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 					const drag = parseFloat(dragString);
 					if (!isNaN(drag))
 					{
-						console.log(`Player ${userData.userId} sent drag: ${drag}`);
+						// console.log(`Player ${userData.userId} sent drag: ${drag}`);
 						updatePlayerPositionRelative(roomId, userData.userId, drag);
 					}
 				}
