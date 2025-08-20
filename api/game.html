@@ -490,7 +490,7 @@
                         this.gameWs.readyState === WebSocket.OPEN && 
                         now - this.lastMouseUpdate > 16) {
                         
-                        const scaledDelta = deltaX * 100;
+                        const scaledDelta = deltaX * 100 * 2;
                         this.gameWs.send(scaledDelta.toString());
                         this.lastMouseUpdate = now;
                         console.log(`Sent delta: ${scaledDelta} (game state: ${this.gameState.state})`);
@@ -819,11 +819,11 @@
                         
                         if (index === 0) {
                             // Left player
-                            virtualX = -0.7;
+                            virtualX = -1;
                             virtualY = playerDist;
                         } else {
                             // Right player
-                            virtualX = 0.7;
+                            virtualX = 1;
                             virtualY = playerDist;
                         }
 

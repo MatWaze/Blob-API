@@ -32,15 +32,13 @@ function calculateTwoPlayersPositions(players: GamePlayer[])
 	const rightPlayerDist = rightPlayer.position - 0.5;
 
 	// leftmost coordinate of the unit circle
-	leftPlayer.x = -1;
-	leftPlayer.y += leftPlayerDist; 
-	
+	leftPlayer.y = leftPlayerDist;
+
 	// rightmost
-	rightPlayer.x = 1;
-	rightPlayer.y += rightPlayerDist; 
+	rightPlayer.y = rightPlayerDist;
 }
 
-export 	function calculatePlayerPositions(gameState: GameState)
+export function calculatePlayerPositions(gameState: GameState)
 {
 	try
 	{
@@ -53,13 +51,19 @@ export 	function calculatePlayerPositions(gameState: GameState)
 			return;
 		}
 
-		const alpha = (Math.PI * 2) / playerCount;
-		const height = 0.5 / (Math.tan(alpha / 2));
-
 		if (activePlayers.length == 2)
+		{
+			if (!activePlayers[0].x)
+				activePlayers[0].x = -1;
+			if (!activePlayers[1].x)
+				activePlayers[1].x = 1;
 			calculateTwoPlayersPositions(activePlayers);
+		}
 		else
 		{
+			const alpha = (Math.PI * 2) / playerCount;
+			const height = 0.5 / (Math.tan(alpha / 2));
+
 			activePlayers.forEach((player, arrayIndex) =>
 			{
 				const distance = player.position - 0.5;
@@ -208,6 +212,7 @@ function handlePaddleCollision(gameState: GameState, player: GamePlayer, ix: num
 	}
 
 	reflectBall(gameState, normal);
+
 	gameState.ballPosition[0] = ix + normal[0] * 0.005;
 	gameState.ballPosition[1] = iy + normal[1] * 0.005;
 	gameState.whoHitTheBall = player;
@@ -216,7 +221,6 @@ function handlePaddleCollision(gameState: GameState, player: GamePlayer, ix: num
 
 function handleGoal(gameState: GameState, player: GamePlayer, players: GamePlayer[], parentPort: any)
 {
-	console.log(`Player ${player.username} was scored on! Players left: ${players.length}`);
 	player.place = players.length.toString();
 	player.isActive = false;
 
@@ -244,80 +248,91 @@ function handleGoal(gameState: GameState, player: GamePlayer, players: GamePlaye
 	}
 }
 
-function checkTwoPlayerCollisions(gameState: GameState, parentPort: any): boolean {
+function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, number], parentPort: any): boolean
+{
 	const ball = gameState.ballPosition as [number, number];
-	const nextBall = getBallNextPosition(gameState);
 	const players = gameState.players.filter(p => p.isActive);
-	
-	if (players.length !== 2) return false;
 
-	// Check boundary collisions first (top and bottom walls)
-	if (nextBall[1] <= -0.5 || nextBall[1] >= 0.5) {
+	if (nextBall[1] <= -0.5 || nextBall[1] >= 0.5)
+	{
 		console.log(`Ball hit ${nextBall[1] <= -0.5 ? 'top' : 'bottom'} boundary`);
-		// Reflect ball vertically off top/bottom walls
+
 		gameState.ballVelocity[1] = -gameState.ballVelocity[1];
 		
-		// Clamp ball position to boundary with small offset
-		if (nextBall[1] <= -0.5) {
+		if (nextBall[1] <= -0.5)
 			gameState.ballPosition[1] = -0.5 + 0.005;
-		} else {
+		else
 			gameState.ballPosition[1] = 0.5 - 0.005;
-		}
 		
 		return true;
 	}
 
 	// Check if ball goes past left or right boundaries (goals)
-	if (nextBall[0] <= -1.1 || nextBall[0] >= 1.1) {
+	if (nextBall[0] <= -1.1 || nextBall[0] >= 1.1)
+	{
 		const scoredOnPlayer = nextBall[0] <= -1.1 ? players.find(p => p.x < 0) : players.find(p => p.x > 0);
-		if (scoredOnPlayer) {
+
+		if (scoredOnPlayer)
+		{
 			console.log(`Ball went past ${nextBall[0] <= -1.1 ? 'left' : 'right'} boundary - goal!`);
 			handleGoal(gameState, scoredOnPlayer, players, parentPort);
 			return true;
 		}
 	}
 
-	// Check paddle collisions - use actual paddle X positions
-	for (const player of players) {
-		// Determine if this is left or right player and use actual X position
-		const isLeftPlayer = player.x < 0;
-		const paddleX = player.x; // Use actual calculated X position (-1 or +1)
-		
-		// Calculate paddle vertical extent based on player position
-		const paddleTop = player.y - PADDLE_SIDE_PERCENT;
-		const paddleBottom = player.y + PADDLE_SIDE_PERCENT;
-		
-		// Check if ball trajectory crosses this paddle's X level
-		if ((isLeftPlayer && ball[0] >= paddleX && nextBall[0] <= paddleX) || 
-			(!isLeftPlayer && ball[0] <= paddleX && nextBall[0] >= paddleX)) {
-			
-			// Calculate Y position where ball crosses paddle X level
-			const dx = nextBall[0] - ball[0];
-			if (Math.abs(dx) < 1e-6) continue; // Avoid division by zero
-			
-			const t = (paddleX - ball[0]) / dx;
-			const crossY = ball[1] + t * (nextBall[1] - ball[1]);
-			
-			// Check if intersection is within ball's path (t between 0 and 1)
-			if (t >= 0 && t <= 1) {
-				// Check if crossY is within paddle bounds
-				if (crossY >= paddleTop && crossY <= paddleBottom) {
-					// Ball hits paddle - reflect horizontally
-					console.log(`Ball hit ${isLeftPlayer ? 'left' : 'right'} player's paddle`);
-					
-					// Reflect ball horizontally
-					gameState.ballVelocity[0] = -gameState.ballVelocity[0];
-					
-					// Move ball to collision point with slight offset
-					gameState.ballPosition[0] = paddleX + (isLeftPlayer ? 0.005 : -0.005);
-					gameState.ballPosition[1] = crossY;
-					gameState.whoHitTheBall = player;
-					
-					return true;
-				}
-			}
-		}
+	function lineSegmentsIntersect(p1: [number, number], p2: [number, number], q1: [number, number], q2: [number, number]): [number, number] | null {
+    // p1-p2 is ball path, q1-q2 is paddle (vertical)
+    const denom = (p2[0] - p1[0]) * (q2[1] - q1[1]) - (p2[1] - p1[1]) * (q2[0] - q1[0]);
+    if (denom === 0) return null; // Parallel or coincident (unlikely for vertical paddle)
+
+    const t = ((q1[0] - p1[0]) * (q2[1] - q1[1]) - (q1[1] - p1[1]) * (q2[0] - q1[0])) / denom;
+    const u = ((q1[0] - p1[0]) * (p2[1] - p1[1]) - (q1[1] - p1[1]) * (p2[0] - p1[0])) / denom;
+
+    if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+        // Intersection at p1 + t * (p2 - p1)
+        return [p1[0] + t * (p2[0] - p1[0]), p1[1] + t * (p2[1] - p1[1])];
+    }
+    return null;
 	}
+
+	players.forEach(p =>
+	{
+		const paddleBottom: [number, number] = [p.x, p.y - PADDLE_SIDE_PERCENT];
+		const paddleTop: [number, number] = [p.x, p.y + PADDLE_SIDE_PERCENT];
+
+		console.log(`bottom: [x: ${paddleBottom[0]}, y: ${paddleBottom[1]}]`);
+		console.log(`top: [x: ${paddleTop[0]}, y: ${paddleTop[1]}]`);
+		console.log(`ball: [x: ${ball[0]}, y: ${ball[1]}]`);
+		console.log(`nextBall: [x: ${nextBall[0]}, y: ${nextBall[1]}]`);
+
+		const intersection = lineSegmentsIntersect(ball, nextBall, paddleBottom, paddleTop);
+
+		if (intersection)
+		{
+			console.log(`Ball hit paddle at player x=${p.x}`);
+
+			// Update ball position to intersection point (to avoid overshoot)
+			gameState.ballPosition = intersection;
+
+			// Reverse x-velocity (bounce)
+			const normal: [number, number] = p.x < 0 ? [1, 0] : [-1, 0]; // Left paddle: face right; Right paddle: face left
+
+			// Reflect ball velocity using the provided function
+			reflectBall(gameState, normal);
+
+			// Nudge to prevent re-collision
+			if (gameState.ballVelocity[0] > 0)
+				gameState.ballPosition[0] += 0.005; // Nudge right
+			else
+				gameState.ballPosition[0] -= 0.005; // Nudge left
+
+			// Optional: Add y-velocity spin based on hit position
+			// const relativeHit = (intersection[1] - p.y) / PADDLE_SIDE_PERCENT; // -1 to 1
+			// gameState.ballVelocity[1] += relativeHit * 0.01; // Adjust spin factor as needed
+
+			return true; // Collision handled
+		}
+	});
 	
 	return false;
 }
@@ -330,14 +345,12 @@ export function checkCollisions(gameState: GameState, parentPort: any)
 	const players = gameState.players.filter(p => p.isActive);
 	if (players.length < 2) return false;
 
-	// Use specialized 2-player collision detection for pong-style gameplay
-	if (players.length === 2) {
-		return checkTwoPlayerCollisions(gameState, parentPort);
-	}
-
-	// Original multi-player collision detection
 	const ball = gameState.ballPosition as [number, number];
 	const nextBall = getBallNextPosition(gameState);
+
+	// Use specialized 2-player collision detection for pong-style gameplay
+	if (players.length === 2)
+		return checkTwoPlayerCollisions(gameState, nextBall, parentPort);
 
 	const activePlayers = players;
 	const playerCount = activePlayers.length;
