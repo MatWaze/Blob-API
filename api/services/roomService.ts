@@ -103,7 +103,7 @@ export function joinRoom(
 
 export function leaveRoom(roomId: string, userId: string): { success: boolean; message?: string } {
 	const room = rooms.get(roomId);
-
+	console.log(`deleting room ${roomId}`);
 	if (!room)
 	{
 		console.log("No room found");
@@ -166,19 +166,35 @@ export function getRoomCreator(roomId: string): RoomPlayer | undefined
 	return Array.from(room.players)[0];
 }
 
-export function getRoom(roomId: string): RoomInfo | undefined {
+export function getRoom(roomId: string): RoomInfo | undefined
+{
+	rooms.forEach(r =>
+	{
+		console.log(`id: ${r.id}, fee: ${r.entryFee}`);
+	});
+
 	return rooms.get(roomId);
 }
 
-export function getAllRooms(): RoomInfo[] {
+export function getRoomFee(roomId: string): number | undefined
+{
+	const room = getRoom(roomId);
+
+	return room?.entryFee;
+}
+
+export function getAllRooms(): RoomInfo[]
+{
 	return Array.from(rooms.values());
 }
 
-export function getRoomCount(): number {
+export function getRoomCount(): number
+{
 	return rooms.size;
 }
 
-export function getUserCount(): number {
+export function getUserCount(): number
+{
 	return userRoomMapping.size;
 }
 
