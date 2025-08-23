@@ -11,7 +11,6 @@ import
 	deleteUserAsync
 }
 from "../services/userService.ts";
-import QueryString from "qs";
 import { saveCookie } from "../services/cookieService.ts";
 
 export async function registerAsync(
