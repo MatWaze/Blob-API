@@ -4,9 +4,10 @@ import { FastifyInstance } from "fastify";
 import { isUserRoomCreator, getRoom } from "../services/roomService.ts";
 import { createGame, getGameWorker, stopGame } from "../services/gameSocketService.ts";
 import { FastifyJWT } from "@fastify/jwt";
+import { GameResult } from "../services/workerService.ts";
 
 async function authenticateWebSocket(res: HttpResponse, req: HttpRequest, server: FastifyInstance)
-: Promise<{userId: string, username: string} | null>
+: Promise<{userId: string, username: string, email: string } | null>
 {
 	console.log("WebSocket upgrade request received");
 
@@ -39,16 +40,17 @@ async function authenticateWebSocket(res: HttpResponse, req: HttpRequest, server
 			{
 				const decoded = server.jwt.verify(accessToken) as FastifyJWT;
 
-				console.log(`access: ${decoded}`);
 				const userId = decoded.id;
+				const email = decoded.email;
 				const username = decoded.username;
 
-				if (userId && username)
+				if (userId && username && email)
 				{
 					console.log("Authenticated user for WebSocket with access token:", username, `(${userId})`);
 					return {
 						userId: userId.toString(),
-						username: username
+						username: username,
+						email: email
 					};
 				}
 			}
@@ -203,7 +205,7 @@ function setupGameBroadcaster(roomId: string, app: TemplatedApp)
 
 				app.publish(roomId, JSON.stringify({
 					type: 'finished',
-					gameResult: message.gameResult
+					gameResult: message.gameResult as GameResult
 				}));
 			}
 		}
