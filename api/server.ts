@@ -206,7 +206,7 @@ async function buildServer()
 	await server.register(fastifyMiddie);
 	await server.register(fastifyCors,
 	{
-		origin: 'http://47618b2a2302.ngrok-free.app',
+		origin: 'http://localhost:3000',
 		credentials: true
 	});
 
