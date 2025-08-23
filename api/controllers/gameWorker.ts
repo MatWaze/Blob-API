@@ -25,9 +25,9 @@ if (!isMainThread)
 
 	let gameState: GameState = workerData.initialState;
 	let isRunning = true;
+	const fee = workerData.fee;
 
 	const MOUSE_SENSITIVITY = 0.001;
-	const PADDLE_SIDE_PERCENT = 0.1;
 
 	console.log(`Game worker initialized for room ${gameState.roomId} with ${gameState.players.length} players`);
 
@@ -81,7 +81,18 @@ if (!isMainThread)
 				{
 					type: 'gameState',
 					roomId: gameState.roomId,
-					state: gameState
+					state: {
+						...gameState,
+						players: gameState.players.map(p => ({
+							id: p.id,
+							username: p.username,
+							position: p.position,
+							isActive: p.isActive,
+							place: p.place,
+							playersKicked: p.playersKicked
+						})),
+						fee: fee
+					},
 				});
 			}
 		}
