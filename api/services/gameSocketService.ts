@@ -31,14 +31,12 @@ export function createGame(roomId: string, players: Array<{id: string, username:
 		{
 			roomId,
 			state: 'countdown',
-			ballPosition: [0, 0] as [number, number],
+			ballPosition: [0, 0],
 			players: players.map((player) =>
 			({
 				id: player.id,
 				username: player.username,
 				position: 0.5,
-				// x: 0,
-				// y: 0,
 				isActive: true,
 				place: undefined,
 				playersKicked: 0,
