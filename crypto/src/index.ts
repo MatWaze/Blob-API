@@ -1,11 +1,10 @@
 import { ethers } from "ethers";
 import abi from "./abis/Blob.json";
 
-// Configuration
 const PRIVATE_KEY = "0x80fbdc7b8f30eab7f5f30a890be53b08a183a1562c1e065481971ef4ddb1c084";
 const RPC_URL = "https://api.avax-test.network/ext/bc/C/rpc";
 const CONTRACT_ADDRESS = "0xC4D983c497E45A614C1D9449A8A8214d08F52E6F";
-const SNOWTRACE_API_KEY = PRIVATE_KEY; // Get free API key from snowtrace.io
+const SNOWTRACE_API_KEY = 'YOUR_API_KEY_HERE'; // Get free API key from snowtrace.io (optional for free tier)
 
 const provider = new ethers.JsonRpcProvider(RPC_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
@@ -68,7 +67,7 @@ async function loadContractInfo() {
 // Fast method using Snowtrace API
 async function getTransfersFromSnowtraceAPI(address: string): Promise<TransferEvent[]> {
   try {
-    const url = `https://api.snowtrace.io/api?module=account&action=tokentx&contractaddress=${CONTRACT_ADDRESS}&address=${address}&startblock=0&endblock=99999999&sort=desc`;
+    const url = `https://api-testnet.snowtrace.io/api?module=account&action=tokentx&contractaddress=${CONTRACT_ADDRESS}&address=${address}&startblock=0&endblock=99999999&sort=desc&apikey=${SNOWTRACE_API_KEY}`;
     
     console.log("Fetching from Snowtrace API...");
     console.log("URL:", url);
@@ -186,7 +185,7 @@ async function getTotalTokensReceivedFromOwner(address: string): Promise<string>
 // Updated fast method with fallback
 async function getTransfersFast(recipientAddress: string): Promise<TransferEvent[]> {
   try {
-    const url = `https://api.snowtrace.io/api?module=account&action=txlist&contractaddress=${CONTRACT_ADDRESS}&address=${recipientAddress}&startblock=0&endblock=99999999&sort=desc`;
+    const url = `https://api-testnet.snowtrace.io/api?module=account&action=tokentx&contractaddress=${CONTRACT_ADDRESS}&address=${recipientAddress}&startblock=0&endblock=99999999&sort=desc&apikey=${SNOWTRACE_API_KEY}`;
     
     console.log("Fetching transfers from Snowtrace API...");
     console.log("URL:", url);
