@@ -1,5 +1,5 @@
 import { isMainThread, parentPort, workerData } from 'worker_threads';
-import { calculatePlayerPositions, checkCollisions, GamePlayer, GameState } from '../services/workerService.ts';
+import { calculatePlayerPositions, checkCollisions, GameState } from '../services/workerService.ts';
 
 if (!isMainThread)
 {
@@ -121,7 +121,7 @@ if (!isMainThread)
 
 					const sidePercent = 0.1;
 					player.position = Math.max(sidePercent, Math.min(1.0 - sidePercent, tempPos));
-					
+
 					// console.log(`Player ${player.id}: position += ${scaledDelta.toFixed(4)} = ${player.position.toFixed(4)}`);
 				}
 			}

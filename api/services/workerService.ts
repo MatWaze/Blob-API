@@ -306,11 +306,12 @@ function lineSegmentsIntersect(p1: [number, number], p2: [number, number], q1: [
 	return null;
 }
 
-function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, number], parentPort: any): boolean {
+function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, number], parentPort: any): boolean
+{
 	const ball = gameState.ballPosition as [number, number];
 	const players = gameState.players.filter(p => p.isActive);
-	const BALL_RADIUS = 0.008; // Increased for better collision detection
-	const FIELD_HALF_WIDTH = 1.1; // Reduced slightly to prevent edge cases
+	const BALL_RADIUS = 0.008;
+	const FIELD_HALF_WIDTH = 1.1;
 	const FIELD_HALF_HEIGHT = 0.5;
 
 	// Collect potential collisions
@@ -318,45 +319,50 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 
 	// Top wall
 	let inter = lineSegmentsIntersect(ball, nextBall, [-FIELD_HALF_WIDTH, FIELD_HALF_HEIGHT], [FIELD_HALF_WIDTH, FIELD_HALF_HEIGHT]);
-	if (inter && inter.t >= 0 && inter.t <= 1) {
+	if (inter && inter.t >= 0 && inter.t <= 1)
 		collisions.push({type: 'wall', ...inter, normal: [0, -1]});
-	}
 
 	// Bottom wall
 	inter = lineSegmentsIntersect(ball, nextBall, [-FIELD_HALF_WIDTH, -FIELD_HALF_HEIGHT], [FIELD_HALF_WIDTH, -FIELD_HALF_HEIGHT]);
-	if (inter && inter.t >= 0 && inter.t <= 1) {
+	if (inter && inter.t >= 0 && inter.t <= 1)
 		collisions.push({type: 'wall', ...inter, normal: [0, 1]});
-	}
 
 	// Left goal
 	inter = lineSegmentsIntersect(ball, nextBall, [-FIELD_HALF_WIDTH, -FIELD_HALF_HEIGHT], [-FIELD_HALF_WIDTH, FIELD_HALF_HEIGHT]);
-	if (inter && inter.t >= 0 && inter.t <= 1) {
+	if (inter && inter.t >= 0 && inter.t <= 1)
+	{
 		const defender = players.find(p => p.x < 0); // Find left player
 		collisions.push({type: 'goal', ...inter, normal: [1, 0], player: defender});
 	}
 
 	// Right goal
 	inter = lineSegmentsIntersect(ball, nextBall, [FIELD_HALF_WIDTH, -FIELD_HALF_HEIGHT], [FIELD_HALF_WIDTH, FIELD_HALF_HEIGHT]);
-	if (inter && inter.t >= 0 && inter.t <= 1) {
+	if (inter && inter.t >= 0 && inter.t <= 1)
+	{
 		const defender = players.find(p => p.x > 0); // Find right player
 		collisions.push({type: 'goal', ...inter, normal: [-1, 0], player: defender});
 	}
 
-	// Paddle collisions - improved logic
-	for (const p of players) {
+	// Paddle collisions
+	for (const p of players)
+	{
 		const paddleHalfHeight = PADDLE_SIDE_PERCENT + BALL_RADIUS;
 		const paddleBottom: [number, number] = [p.x, p.y - paddleHalfHeight];
 		const paddleTop: [number, number] = [p.x, p.y + paddleHalfHeight];
 		
 		const inter = lineSegmentsIntersect(ball, nextBall, paddleBottom, paddleTop);
-		if (inter && inter.t >= 0 && inter.t <= 1) {
+		if (inter && inter.t >= 0 && inter.t <= 1)
+		{
 			// Check if ball is actually approaching the paddle face
 			const ballDirection = [nextBall[0] - ball[0], nextBall[1] - ball[1]];
-			const paddleNormal: [number, number] = p.x < 0 ? [1, 0] : [-1, 0]; // Normal pointing away from paddle
+
+			// Normal pointing away from paddle
+			const paddleNormal: [number, number] = p.x < 0 ? [1, 0] : [-1, 0];
 			
 			// Only register collision if ball is moving toward the paddle
 			const dotProduct = ballDirection[0] * paddleNormal[0] + ballDirection[1] * paddleNormal[1];
-			if (dotProduct < 0) { // Ball moving toward paddle
+			if (dotProduct < 0)
+			{
 				// Clamp intersection point to actual paddle bounds
 				const clampedY = Math.max(p.y - PADDLE_SIDE_PERCENT, Math.min(inter.point[1], p.y + PADDLE_SIDE_PERCENT));
 				const clampedPoint: [number, number] = [inter.point[0], clampedY];
@@ -374,36 +380,39 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 
 	// Find earliest collision
 	if (collisions.length === 0) return false;
-	
+
 	// Sort by t value and take the earliest
 	collisions.sort((a, b) => a.t - b.t);
 	const earliest = collisions[0];
 
 	// Only process if t is reasonable (not too close to 0 to avoid immediate re-collision)
-	if (earliest.t < 0.01) {
+	if (earliest.t < 0.01)
 		// Too close, might be a duplicate collision - skip this frame
 		return false;
-	}
 
 	// Handle collision
 	gameState.ballPosition = earliest.point;
-	
-	if (earliest.type === 'goal') {
+	if (earliest.type === 'goal')
+	{
 		const scoredOn = earliest.player;
-		if (scoredOn) {
+		if (scoredOn)
+		{
 			console.log(`Goal scored on ${scoredOn.username}`);
 			handleGoal(gameState, scoredOn, players, parentPort);
-		} else {
-			// No defender found - bounce off goal line
+		}
+		else
+		{
 			console.log('No defender - bouncing off goal line');
 			reflectBall(gameState, earliest.normal);
 			// Larger nudge to prevent immediate re-collision
 			gameState.ballPosition[0] += earliest.normal[0] * 0.02;
 			gameState.ballPosition[1] += earliest.normal[1] * 0.02;
 		}
-	} else {
+	}
+	else
+	{
 		console.log(`${earliest.type === 'wall' ? 'Wall' : 'Paddle'} collision`);
-		
+
 		// Reflect ball velocity
 		reflectBall(gameState, earliest.normal);
 		
@@ -412,14 +421,15 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 		gameState.ballPosition[0] += earliest.normal[0] * nudge;
 		gameState.ballPosition[1] += earliest.normal[1] * nudge;
 
-		if (earliest.type === 'paddle' && earliest.player) {
+		if (earliest.type === 'paddle' && earliest.player)
+		{
 			// Add spin based on where ball hits paddle
 			const relativeHit = (earliest.point[1] - earliest.player.y) / PADDLE_SIDE_PERCENT;
 			const spinFactor = Math.max(-1, Math.min(1, relativeHit)); // Clamp to [-1, 1]
 			gameState.ballVelocity[1] += spinFactor * 0.015; // Reduced spin for more predictable behavior
 			
 			// Add slight speed increase on paddle hit
-			const speedMultiplier = 1.02;
+			const speedMultiplier = 1.05;
 			gameState.ballVelocity[0] *= speedMultiplier;
 			gameState.ballVelocity[1] *= speedMultiplier;
 			

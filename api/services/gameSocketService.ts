@@ -93,9 +93,7 @@ export function updatePlayerPositionRelative(roomId: string, playerId: string, d
 	const gameData = gameWorkers.get(roomId);
 
 	if (!gameData)
-	{
 		return false;
-	}
 
 	// Send message to a worker
 	gameData.worker.postMessage(

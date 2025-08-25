@@ -1,4 +1,3 @@
-import { GameRepository } from "../repositories/gameRepository/gameRepository.ts";
 import gameRepo from "../repositories/gameRepository/gameFactory.ts";
 
 export async function getAllGamesAsync()

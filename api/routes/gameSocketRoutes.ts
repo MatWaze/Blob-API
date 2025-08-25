@@ -123,9 +123,8 @@ export async function gameSocketRoutes(server: FastifyInstance)
 		close: (ws: WebSocket<WebSocketUserData>) =>
 		{
 			const userData = ws.getUserData();
-			if (userData?.userId) {
+			if (userData?.userId)
 				console.log("Join room WebSocket disconnected:", userData.userId);
-			}
 		}
 	});
 
@@ -141,9 +140,8 @@ export async function gameSocketRoutes(server: FastifyInstance)
 		close: (ws: WebSocket<WebSocketUserData>) =>
 		{
 			const userData = ws.getUserData();
-			if (userData?.userId) {
+			if (userData?.userId)
 				console.log("Leave room WebSocket disconnected:", userData.userId);
-			}
 		}
 	});
 
@@ -207,11 +205,9 @@ export async function gameSocketRoutes(server: FastifyInstance)
 
 					const dragString = decoder.write(Buffer.from(message));
 					const drag = parseFloat(dragString);
+
 					if (!isNaN(drag))
-					{
-						// console.log(`Player ${userData.userId} sent drag: ${drag}`);
 						updatePlayerPositionRelative(roomId, userData.userId, drag);
-					}
 				}
 			}
 		},
