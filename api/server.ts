@@ -113,7 +113,6 @@ function checkAccessTokenMiddleware(req: IncomingMessage, res: ServerResponse & 
 			})().finally(() => next());
 			return;
 		}
-
 		next();
 	}
 	catch (err)
@@ -204,9 +203,29 @@ async function buildServer()
 
 	
 	await server.register(fastifyMiddie);
-	await server.register(fastifyCors,
-	{
-		origin: 'http://localhost:3000',
+
+	const CORS_WHITELIST = [
+		'http://localhost:3000',
+		'http://localhost:3012',
+		'https://your-production-domain.com'
+	];
+
+	await server.register(fastifyCors, {
+	// origin can be a function that fastify-cors calls for each request
+		origin: (origin, callback) => {
+
+			// allow requests with no origin (curl, same-origin, mobile apps)
+			if (!origin) return callback(null, true);
+
+			if (CORS_WHITELIST.includes(origin)) {
+			return callback(null, true);
+			}
+
+			// optional: allow subdomains of example.com
+			// if (/\.example\.com$/.test(origin)) return callback(null, true);
+
+			return callback(new Error('Not allowed by CORS'), false);
+		},
 		credentials: true
 	});
 
