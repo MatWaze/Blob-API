@@ -53,13 +53,22 @@ const googleCodeModel = z.object(
 	code: z.string()
 });
 
+const userId = z.object(
+{
+	userId: z.string()
+});
+
 export type CreateUserType = z.infer<typeof createUserModel>;
+
+export type GetUserType = z.infer<typeof getUserModel>;
 
 export type LoginType = z.infer<typeof loginUserModel>;
 
 export type ConfirmEmailType = z.infer<typeof confirmEmailModel>;
 
 export type GoogleCodeType = z.infer<typeof googleCodeModel>;
+
+export type UserIdType = z.infer<typeof userId>;
 
 export const userSchemas =
 {
