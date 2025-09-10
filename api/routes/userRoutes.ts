@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { userSchemas } from "../models/userSchema.ts";
-import { getAllUsersAsync, registerAsync, loginAsync, confirmEmailAsync, removeUserAsync, refreshTokenAsync, logoutAsync, checkTokenStatusAsync } from "../controllers/userController.ts";
+import { getAllUsersAsync, registerAsync, loginAsync, confirmEmailAsync, removeUserAsync, refreshTokenAsync, logoutAsync, checkTokenStatusAsync, getTokens } from "../controllers/userController.ts";
 import { googleSignInAsync } from "../controllers/googleOauthController.ts";
 
 async function userRoutes(server: FastifyInstance)
@@ -81,7 +81,7 @@ async function userRoutes(server: FastifyInstance)
 
 	// POST api/users/refresh
 	server.post(
-		"/refresh",
+		"/refreshToken",
 		refreshTokenAsync
 	);
 
@@ -95,6 +95,12 @@ async function userRoutes(server: FastifyInstance)
 	server.get(
 		"/token-status",
 		checkTokenStatusAsync
+	);
+
+	// GET api/users/tokens
+	server.get(
+		"/tokens",
+		getTokens
 	);
 }
 
