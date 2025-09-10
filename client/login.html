@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Log in</title>
+  <style>
+    body { 
+        font-family: 'Courier New', monospace; 
+        max-width: 400px; 
+        margin: 50px auto; 
+        background: #1a1a1a;
+        color: #00ff00;
+        padding: 20px;
+    }
+    label { display: block; margin-top: 10px; }
+    input { 
+        width: 100%; 
+        padding: 8px; 
+        margin-top: 5px; 
+        box-sizing: border-box;
+        background: #333;
+        color: #00ff00;
+        border: 1px solid #00ff00;
+    }
+    button { 
+        margin-top: 20px; 
+        padding: 10px; 
+        width: 100%;
+        background: #333;
+        color: #00ff00;
+        border: 1px solid #00ff00;
+        cursor: pointer;
+    }
+    button:hover {
+        background: #00ff00;
+        color: #1a1a1a;
+    }
+    #error { color: red; margin-top: 10px; }
+    #success { color: #00ff00; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Transcendence Login</h1>
+  <form id="loginForm">
+    <label for="email">Email or Username</label>
+    <input type="text" id="email" name="email" required />
+
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" required />
+
+    <button type="submit">Log In</button>
+  </form>
+
+  <div id="error"></div>
+  <div id="success"></div>
+
+  <script>
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    const form = document.getElementById('loginForm');
+    const errorDiv = document.getElementById('error');
+    const successDiv = document.getElementById('success');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      errorDiv.textContent = '';
+      successDiv.textContent = '';
+
+      try {
+        const res = await fetch('http://localhost:4000/api/users/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include', // ← Important for cookies
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          successDiv.textContent = 'Login successful! Loading game...';
+          
+          // Wait a moment for cookie to be set, then read it
+          setTimeout(() => {
+            const sessionId = getCookie('sessionId');
+            console.log('SessionId from cookie:', sessionId);
+            
+            // Send success message to parent window with sessionId
+            window.parent.postMessage({
+              type: 'LOGIN_SUCCESS',
+              sessionId: sessionId, // ← Now we get sessionId from cookie
+              user: data.user
+            }, window.location.origin);
+          }, 100);
+
+        } else {
+          errorDiv.textContent = data.message || 'Login failed';
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        errorDiv.textContent = 'Network error. Please try again.';
+      }
+    });
+  </script>
+</body>
+</html>

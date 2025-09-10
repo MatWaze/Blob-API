@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcendence</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+
+        .iframe-container {
+            width: 100%;
+            height: 100%;
+            border: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .iframe-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .iframe-container.visible {
+            opacity: 1;
+            pointer-events: all;
+            position: relative;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .loading.hidden {
+            display: none;
+        }
+
+        .status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+
+        .status.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="loading" id="loading">
+            <h2>Loading Transcendence...</h2>
+            <p>Initializing application...</p>
+        </div>
+
+        <div class="status hidden" id="status">
+            Not authenticated
+        </div>
+
+        <!-- Login iframe - shown first -->
+        <div class="iframe-container visible" id="loginContainer">
+            <iframe id="loginFrame" src="login.html"></iframe>
+        </div>
+
+        <!-- Game iframe - hidden initially -->
+        <div class="iframe-container hidden" id="gameContainer">
+            <iframe id="gameFrame" src="game.html"></iframe>
+        </div>
+    </div>
+
+    <script>
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        class AppController {
+            constructor() {
+                this.currentSessionId = null;
+                this.currentUser = null;
+                this.isAuthenticated = false;
+                
+                this.loginContainer = document.getElementById('loginContainer');
+                this.gameContainer = document.getElementById('gameContainer');
+                this.loginFrame = document.getElementById('loginFrame');
+                this.gameFrame = document.getElementById('gameFrame');
+                this.loading = document.getElementById('loading');
+                this.status = document.getElementById('status');
+
+                this.setupMessageListener();
+                
+                // Check for existing session before showing login
+                this.checkExistingSession();
+            }
+
+            async checkExistingSession() {
+                this.showLoading('Checking existing session...');
+                
+                try {
+                    // Try to get sessionId from cookie
+                    const sessionId = getCookie('sessionId');
+                    console.log('SessionId from cookie:', sessionId);
+                    
+                    if (sessionId) {
+                        // Call /tokens endpoint - it will read sessionId from cookie
+                        const response = await fetch('http://localhost:4000/api/users/tokens', {
+                            method: 'GET',
+                            credentials: 'include' // ← Important for cookies
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log('Session restored:', data);
+                            
+                            if (data.success) {
+                                this.handleLoginSuccess({
+                                    sessionId: sessionId, // ← Use sessionId from cookie
+                                    user: data.user
+                                });
+                                return;
+                            }
+                        }
+                    }
+                    
+                    console.log('No existing session found');
+                    this.showLogin();
+                    
+                } catch (error) {
+                    console.error('Session check failed:', error);
+                    this.showLogin();
+                }
+            }
+
+            showLogin() {
+                console.log('Showing login screen');
+                this.hideLoading();
+                this.updateStatus('Ready to login');
+                this.loginContainer.classList.add('visible');
+                this.loginContainer.classList.remove('hidden');
+                this.gameContainer.classList.add('hidden');
+                this.gameContainer.classList.remove('visible');
+            }
+
+            setupMessageListener() {
+                window.addEventListener('message', (event) => {
+                    // Security check - only allow messages from same origin
+                    if (event.origin !== window.location.origin) {
+                        return;
+                    }
+
+                    console.log('Parent received message:', event.data);
+
+                    switch (event.data.type) {
+                        case 'LOGIN_SUCCESS':
+                            this.handleLoginSuccess(event.data);
+                            break;
+                        
+                        case 'LOGOUT':
+                            this.handleLogout();
+                            break;
+                        
+                        case 'REQUEST_SESSION':
+                        case 'REQUEST_USER_ID':
+                            this.sendSessionIdToFrame(event.source);
+                            break;
+                        
+                        case 'AUTH_FAILED':
+                            this.handleAuthFailed();
+                            break;
+                        
+                        case 'GAME_READY':
+                            this.updateStatus(`Playing as ${this.currentUser?.username || 'Unknown'}`);
+                            break;
+
+                        case 'UPDATE_STATUS':
+                            this.updateStatus(event.data.message, event.data.type || 'info');
+                            break;
+                    }
+                });
+            }
+
+            handleLoginSuccess(data) {
+                console.log('Login successful:', data);
+                this.currentSessionId = data.sessionId;
+                this.currentUser = data.user;
+                this.isAuthenticated = true;
+                
+                this.updateStatus(`Authenticated as ${data.user.username}`, 'success');
+                this.switchToGame();
+            }
+
+            async handleLogout() {
+                console.log('User logged out');
+                
+                // Call logout endpoint to clear server-side session
+                try {
+                    await fetch('http://localhost:4000/api/users/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
+                
+                this.currentSessionId = null;
+                this.currentUser = null;
+                this.isAuthenticated = false;
+                
+                this.updateStatus('Logged out - please login again');
+                this.switchToLogin();
+            }
+
+            handleAuthFailed() {
+                console.log('Authentication failed');
+                this.updateStatus('Authentication failed - please login', 'error');
+                this.switchToLogin();
+            }
+
+            sendSessionIdToFrame(targetFrame) {
+                if (this.isAuthenticated && this.currentSessionId) {
+                    console.log('Sending sessionId to frame:', this.currentSessionId);
+                    targetFrame.postMessage({
+                        type: 'SESSION_ID_RESPONSE', // ← Changed from USER_ID_RESPONSE
+                        sessionId: this.currentSessionId,
+                        user: this.currentUser
+                    }, window.location.origin);
+                } else {
+                    console.log('Not authenticated, sending NOT_AUTHENTICATED');
+                    targetFrame.postMessage({
+                        type: 'NOT_AUTHENTICATED'
+                    }, window.location.origin);
+                }
+            }
+
+            switchToGame() {
+                console.log('Switching to game...');
+                this.showLoading('Loading game...');
+                
+                setTimeout(() => {
+                    this.loginContainer.classList.remove('visible');
+                    this.loginContainer.classList.add('hidden');
+                    
+                    this.gameContainer.classList.remove('hidden');
+                    this.gameContainer.classList.add('visible');
+                    
+                    // Reload the game iframe to ensure fresh start
+                    this.gameFrame.src = this.gameFrame.src;
+                    
+                    this.hideLoading();
+                }, 500);
+            }
+
+            switchToLogin() {
+                console.log('Switching to login...');
+                this.showLoading('Loading login...');
+                
+                setTimeout(() => {
+                    this.gameContainer.classList.remove('visible');
+                    this.gameContainer.classList.add('hidden');
+                    
+                    this.loginContainer.classList.remove('hidden');
+                    this.loginContainer.classList.add('visible');
+                    
+                    // Reload the login iframe
+                    this.loginFrame.src = this.loginFrame.src;
+                    
+                    this.hideLoading();
+                }, 500);
+            }
+
+            showLoading(message = 'Loading...') {
+                this.loading.querySelector('p').textContent = message;
+                this.loading.classList.remove('hidden');
+            }
+
+            hideLoading() {
+                this.loading.classList.add('hidden');
+            }
+
+            updateStatus(message, type = 'info') {
+                this.status.textContent = message;
+                this.status.className = 'status';
+                if (type === 'success') {
+                    this.status.style.color = '#00ff00';
+                } else if (type === 'error') {
+                    this.status.style.color = '#ff0000';
+                } else {
+                    this.status.style.color = '#00ff00';
+                }
+                this.status.classList.remove('hidden');
+            }
+        }
+
+        // Initialize the app controller
+        window.addEventListener('load', () => {
+            new AppController();
+        });
+    </script>
+</body>
+</html>
