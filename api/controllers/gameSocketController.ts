@@ -5,68 +5,136 @@ import { isUserRoomCreator, getRoom } from "../services/roomService.ts";
 import { createGame, getGameWorker, stopGame } from "../services/gameSocketService.ts";
 import { FastifyJWT } from "@fastify/jwt";
 import { GameResult } from "../services/workerService.ts";
+import { sessionStore } from "../services/sessionStorageService.ts";
+
+// async function authenticateWebSocket(res: HttpResponse, req: HttpRequest, server: FastifyInstance)
+// : Promise<{userId: string, username: string, email: string } | null>
+// {
+// 	console.log("WebSocket upgrade request received");
+// 	console.log("All headers:", Object.fromEntries(
+// 		Object.entries(req).filter(([key]) => key.startsWith('get')).map(([key, fn]) => [
+// 			key.replace('get', '').toLowerCase(), 
+// 			typeof fn === 'function' ? fn.call(req) : fn
+// 		])
+// 	));
+
+// 	const cookieHeader = req.getHeader('cookie');
+// 	console.log("Raw cookie header:", cookieHeader);
+	
+// 	res.onAborted(() =>
+// 	{
+// 		console.log("Upgrade request aborted");
+// 	});
+
+// 	try
+// 	{
+// 		let accessToken = null;
+
+// 		if (cookieHeader)
+// 		{
+// 			const cookies = cookieHeader.split(';').reduce((acc, cookie) =>
+// 			{
+// 				const [key, value] = cookie.trim().split('=');
+// 				acc[key] = value;
+// 				return acc;
+// 			},
+// 			{} as Record<string, string>);
+			
+// 			accessToken = cookies['accessToken'];
+// 		}
+
+// 		if (accessToken)
+// 		{
+// 			try
+// 			{
+// 				const decoded = server.jwt.verify(accessToken) as FastifyJWT;
+
+// 				const userId = decoded.id;
+// 				const email = decoded.email;
+// 				const username = decoded.username;
+
+// 				if (userId && username && email)
+// 				{
+// 					console.log("Authenticated user for WebSocket with access token:", username, `(${userId})`);
+// 					return {
+// 						userId: userId.toString(),
+// 						username: username,
+// 						email: email
+// 					};
+// 				}
+// 			}
+// 			catch (accessTokenError)
+// 			{
+// 				console.log("Access token invalid/expired, trying refresh token");
+// 			}
+// 		}
+
+// 		console.log("No valid tokens found");
+// 		res.writeStatus('401 Unauthorized');
+// 		res.end('Authentication required - please refresh your tokens');
+// 		return null;
+// 	}
+// 	catch (error)
+// 	{
+// 		console.error("WebSocket authentication error:", error);
+// 		res.writeStatus('401 Unauthorized');
+// 		res.end('Authentication failed');
+// 		return null;
+// 	}
+// }
 
 async function authenticateWebSocket(res: HttpResponse, req: HttpRequest, server: FastifyInstance)
 : Promise<{userId: string, username: string, email: string } | null>
 {
 	console.log("WebSocket upgrade request received");
-
-	res.onAborted(() =>
-	{
+	
+	res.onAborted(() => {
 		console.log("Upgrade request aborted");
 	});
 
 	try
 	{
-		const cookieHeader = req.getHeader('cookie');
-		let accessToken = null;
-
-		if (cookieHeader)
+		// Get userId from query parameter
+		const query = req.getQuery();
+		const userId = new URLSearchParams(query).get('userId');
+		
+		if (!userId)
 		{
-			const cookies = cookieHeader.split(';').reduce((acc, cookie) =>
-			{
-				const [key, value] = cookie.trim().split('=');
-				acc[key] = value;
-				return acc;
-			},
-			{} as Record<string, string>);
-			
-			accessToken = cookies['accessToken'];
+			console.log("No user ID found in query");
+			res.writeStatus('401 Unauthorized');
+			res.end('No user ID provided');
+			return null;
 		}
 
-		if (accessToken)
+		const sessionData = sessionStore.getSession(userId);
+		if (!sessionData)
 		{
-			try
-			{
-				const decoded = server.jwt.verify(accessToken) as FastifyJWT;
+			console.log("No active session for user:", userId);
+			res.writeStatus('401 Unauthorized');
+			res.end('No active session');
+			return null;
+		}
 
-				const userId = decoded.id;
-				const email = decoded.email;
-				const username = decoded.username;
-
-				if (userId && username && email)
-				{
-					console.log("Authenticated user for WebSocket with access token:", username, `(${userId})`);
-					return {
-						userId: userId.toString(),
-						username: username,
-						email: email
-					};
-				}
-			}
-			catch (accessTokenError)
-			{
-				console.log("Access token invalid/expired, trying refresh token");
+		// Verify/refresh tokens...
+		if (sessionData.accessToken) {
+			try {
+				const decoded = server.jwt.verify(sessionData.accessToken) as FastifyJWT;
+				console.log("Authenticated via stored token:", sessionData.username, `(${sessionData.userId})`);
+				return {
+					userId: sessionData.userId,
+					username: sessionData.username,
+					email: sessionData.email
+				};
+			} catch (error) {
+				// Token refresh logic stays the same...
 			}
 		}
 
 		console.log("No valid tokens found");
 		res.writeStatus('401 Unauthorized');
-		res.end('Authentication required - please refresh your tokens');
+		res.end('Authentication required');
 		return null;
-	}
-	catch (error)
-	{
+	} catch (error) {
 		console.error("WebSocket authentication error:", error);
 		res.writeStatus('401 Unauthorized');
 		res.end('Authentication failed');

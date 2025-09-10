@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { ConfirmEmailType, CreateUserType, LoginType } from "../models/userSchema.ts";
+import { ConfirmEmailType, CreateUserType, LoginType, UserIdType } from "../models/userSchema.ts";
 import
 {
 	createUserAsync,
@@ -12,6 +12,8 @@ import
 }
 from "../services/userService.ts";
 import { saveCookie } from "../services/cookieService.ts";
+import { sessionStore } from "../services/sessionStorageService.ts";
+import { FastifyJWT } from "@fastify/jwt";
 
 export async function registerAsync(
 	request: FastifyRequest<{ Body: CreateUserType }>,
@@ -82,10 +84,28 @@ export async function loginAsync(
 		const accessToken = request.jwt.sign(rest, { expiresIn: '15m' });
 		const refreshToken = request.jwt.sign(rest, { expiresIn: '7d' });
 
-		saveCookie(response, "accessToken", accessToken);
-		saveCookie(response, "refreshToken", refreshToken);
+		const sessionId = sessionStore.createSession(user.id, user.username, user.email, accessToken, refreshToken);
 
-		return response.code(200).send({ message: "Login successful" });
+		// saveCookie(response, "accessToken", accessToken);
+		// saveCookie(response, "refreshToken", refreshToken);
+
+		response.setCookie('sessionId', sessionId, {
+			httpOnly: false, // ← Client can read this
+			secure: process.env.NODE_ENV === "production",
+			sameSite: "lax",
+			path: "/",
+			maxAge: 7 * 24 * 60 * 60 // 7 days
+		});
+
+		return response.code(200).send(
+		{
+			message: "Login successful",
+			user: {
+				id: user.id,
+				username: user.username,
+				email: user.email
+			}
+		});
 	}
 
 	return response.code(401).send(
@@ -218,4 +238,95 @@ export async function checkTokenStatusAsync(
 		message: 'Invalid token state',
 		needsLogin: true 
 	});
+}
+
+export async function getTokens(
+	request: FastifyRequest<{ Querystring: UserIdType }>,
+	response: FastifyReply
+)
+{
+	try
+	{
+		const sessionId = request.cookies.sessionId;
+
+		if (!sessionId)
+		{
+			return response.code(401).send({
+				success: false,
+				message: 'No active session for user',
+				needsLogin: true
+			});
+		}
+
+		const sessionData = sessionStore.getSession(sessionId);
+
+		if (!sessionData)
+		{
+			return response.code(401).send({
+				success: false,
+				message: 'No session data for this id',
+				needsLogin: true
+			});
+		}
+
+		let accessToken = sessionData.accessToken;
+		
+		if (accessToken)
+		{
+			try
+			{
+				request.jwt.verify(accessToken);
+			}
+			catch (error)
+			{
+				if (sessionData.refreshToken)
+				{
+					try
+					{
+						const decoded = request.jwt.verify(sessionData.refreshToken) as FastifyJWT;
+						
+						accessToken = request.jwt.sign(
+						{
+							id: decoded.id,
+							username: decoded.username,
+							email: decoded.email
+						}, { expiresIn: '15m' });
+
+						sessionStore.updateSessionTokens(sessionId, accessToken);
+						
+						// Also update the cookie
+						saveCookie(response, "accessToken", accessToken);
+						
+					}
+					catch (error)
+					{
+						sessionStore.destroySession(sessionId);
+						return response.code(401).send({
+							success: false,
+							message: `Session problem: ${error}`,
+							needsLogin: true
+						});
+					}
+				}
+			}
+		}
+
+		return response.send({
+			success: true,
+			accessToken: accessToken,
+			user: {
+				id: sessionData.userId,
+				username: sessionData.username,
+				email: sessionData.email
+			}
+		});
+	}
+	catch (error)
+	{
+		console.error("Token retrieval error:", error);
+		return response.code(500).send({
+			success: false,
+			message: 'Internal server error'
+		});
+	}
 }
