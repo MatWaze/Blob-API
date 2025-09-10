@@ -53,9 +53,11 @@ function calculateTwoPlayersPositions(players: GamePlayer[])
 
 	// leftmost coordinate of the unit circle
 	leftPlayer.y = leftPlayerDist;
+	leftPlayer.x = -1;
 
 	// rightmost
 	rightPlayer.y = rightPlayerDist;
+	rightPlayer.x = 1;
 }
 
 export function calculatePlayerPositions(gameState: GameState)
@@ -429,7 +431,7 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 			gameState.ballVelocity[1] += spinFactor * 0.015; // Reduced spin for more predictable behavior
 			
 			// Add slight speed increase on paddle hit
-			const speedMultiplier = 1.05;
+			const speedMultiplier = 1.15;
 			gameState.ballVelocity[0] *= speedMultiplier;
 			gameState.ballVelocity[1] *= speedMultiplier;
 			
