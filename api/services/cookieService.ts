@@ -17,7 +17,7 @@ export function saveCookie(
 		{
 			httpOnly: true,
 			secure: process.env.NODE_ENV === "production", // send cookie only over HTTPS in prod
-			sameSite: "strict",
+			sameSite: "lax",
 			path: "/",
 			maxAge: maxAge
 		}
