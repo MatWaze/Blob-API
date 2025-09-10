@@ -205,8 +205,9 @@ async function buildServer()
 	await server.register(fastifyMiddie);
 
 	const CORS_WHITELIST = [
+		'http://localhost:4000',
+		'http://localhost:3002',
 		'http://localhost:3000',
-		'http://localhost:3012',
 		'https://your-production-domain.com'
 	];
 

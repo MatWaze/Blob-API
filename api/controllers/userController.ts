@@ -11,7 +11,6 @@ import
 	deleteUserAsync
 }
 from "../services/userService.ts";
-import { saveCookie } from "../services/cookieService.ts";
 import { sessionStore } from "../services/sessionStorageService.ts";
 import { FastifyJWT } from "@fastify/jwt";
 
@@ -20,12 +19,11 @@ export async function registerAsync(
 	response: FastifyReply
 )
 {
-	const body = request.body;
-	body.authMethod = "EMAIL";
-	console.log(request.body);
+	const { authMethod, ...body }= request.body;
+
 	try
 	{
-		const user = await createUserAsync(body);
+		const user = await createUserAsync({...body, authMethod: "EMAIL" });
 
 		return response.code(201).send(user);
 	}
@@ -90,7 +88,7 @@ export async function loginAsync(
 		// saveCookie(response, "refreshToken", refreshToken);
 
 		response.setCookie('sessionId', sessionId, {
-			httpOnly: false, // ← Client can read this
+			httpOnly: false,
 			secure: process.env.NODE_ENV === "production",
 			sameSite: "lax",
 			path: "/",
@@ -159,21 +157,22 @@ export async function removeUserAsync(
 	}
 }
 
-export async function refreshTokenAsync(
-	request: FastifyRequest,
-	response: FastifyReply
-)
-{
-	return await request.server.refreshAccessToken(request, response);
-}
+// export async function refreshTokenAsync(
+// 	request: FastifyRequest,
+// 	response: FastifyReply
+// )
+// {
+// 	return await request.server.refreshAccessToken(request, response);
+// }
 
 export async function logoutAsync(
 	request: FastifyRequest,
 	response: FastifyReply
 )
 {
-	response.clearCookie('accessToken');
-	response.clearCookie('refreshToken');
+	// response.clearCookie('accessToken');
+	// response.clearCookie('refreshToken');
+	response.clearCookie('sessionId');
 	return response.code(200).send({ message: "Logged out successfully" });
 }
 
@@ -279,6 +278,7 @@ export async function getTokens(
 			}
 			catch (error)
 			{
+				console.log(`access token error: ${error}`);
 				if (sessionData.refreshToken)
 				{
 					try
@@ -295,7 +295,7 @@ export async function getTokens(
 						sessionStore.updateSessionTokens(sessionId, accessToken);
 						
 						// Also update the cookie
-						saveCookie(response, "accessToken", accessToken);
+						// saveCookie(response, "accessToken", accessToken);
 						
 					}
 					catch (error)

@@ -60,7 +60,7 @@ export async function getGoogleOAuthTokens(
 		code,
 		client_id: "924313211927-mq9a80c5307kd925bcq85eqc6furl0n1.apps.googleusercontent.com",
 		client_secret: "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",
-		redirect_uri: "http://localhost:3000/api/users/oauth/google",
+		redirect_uri: "http://localhost:4000/api/users/oauth/google",
 		grant_type: "authorization_code",
 	};
 

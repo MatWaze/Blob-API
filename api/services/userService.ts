@@ -12,7 +12,7 @@ export async function sendEmailAsync(usr: any)
 		confirmationEmail(
 			usr.username,
 			usr.email,
-			"http://localhost:3000/api/users",
+			"http://localhost:4000/api/users",
 			usr.emailVerified.nonce
 		)
 	);

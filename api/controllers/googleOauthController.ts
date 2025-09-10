@@ -3,7 +3,7 @@ import { randomBytes } from "crypto";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { GoogleCodeType } from "../models/userSchema.ts";
 import { createUserAsync, getUserByEmailAsync } from "../services/userService.ts";
-import { saveCookie } from "../services/cookieService.ts";
+import { sessionStore } from "../services/sessionStorageService.ts";
 
 export async function googleSignInAsync(
 	request: FastifyRequest<{ Querystring: GoogleCodeType }>,
@@ -45,10 +45,27 @@ export async function googleSignInAsync(
 		const accessToken = request.jwt.sign(rest, { expiresIn: '15m' });
 		const refreshToken = request.jwt.sign(rest, { expiresIn: '7d' });
 
-		saveCookie(response, "accessToken", accessToken);
-		saveCookie(response, "refreshToken", refreshToken);
+		const sessionId = sessionStore.createSession(user.id, user.username, user.email, accessToken, refreshToken);
 
-		return response.code(200).send({ message: "Login successful" });;
+		response.setCookie('sessionId', sessionId, {
+			httpOnly: false,
+			secure: process.env.NODE_ENV === "production",
+			sameSite: "lax",
+			path: "/",
+			maxAge: 7 * 24 * 60 * 60 // 7 days
+		});
+		// saveCookie(response, "accessToken", accessToken);
+		// saveCookie(response, "refreshToken", refreshToken);
+
+		return response.code(200).send(
+		{
+			message: "Login successful",
+			user: {
+				id: user.id,
+				username: user.username,
+				email: user.email
+			}
+		});
 	}
 	catch (e)
 	{
