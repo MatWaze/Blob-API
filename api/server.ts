@@ -11,6 +11,7 @@ import fastifyUwsPlugin from '@geut/fastify-uws/plugin'
 import { serverFactory } from '@geut/fastify-uws'
 import { saveCookie } from './services/cookieService.ts';
 import { IncomingMessage, ServerResponse } from 'http';
+import blockChainRoutes from './routes/blockChainRoutes.ts';
 
 let server: FastifyInstance;
 
@@ -249,6 +250,7 @@ async function buildServer()
 	});
 
 	await server.register(userRoutes, { prefix: 'api/users' });
+	await server.register(blockChainRoutes, { prefix: 'api/blockchain' });
 	await server.register(gameSocketRoutes);
 
 	return server;
