@@ -10,7 +10,6 @@ import fastifyCors from '@fastify/cors';
 import fastifyUwsPlugin from '@geut/fastify-uws/plugin'
 import { serverFactory } from '@geut/fastify-uws'
 import { saveCookie } from './services/cookieService.ts';
-import fastifyMiddie from '@fastify/middie';
 import { IncomingMessage, ServerResponse } from 'http';
 
 let server: FastifyInstance;
@@ -202,7 +201,7 @@ async function buildServer()
 	});
 
 	
-	await server.register(fastifyMiddie);
+	// await server.register(fastifyMiddie);
 
 	const CORS_WHITELIST = [
 		'http://localhost:4000',
@@ -230,7 +229,7 @@ async function buildServer()
 		credentials: true
 	});
 
-	server.use(checkAccessTokenMiddleware);
+	// server.use(checkAccessTokenMiddleware);
 
 	server.setValidatorCompiler(validatorCompiler);
 	server.setSerializerCompiler(serializerCompiler);

@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { getUws } from '@geut/fastify-uws';
-import { WebSocket, HttpRequest, WebSocketBehavior, HttpResponse, us_socket_context_t } from "uWebSockets.js";
+import { WebSocket } from "uWebSockets.js";
 import { createRoomAsync, joinRoomAsync, getRoomsAsync, leaveRoomAsync, WebSocketUserData, markRoomReadyAsync, markRoomWaitingAsync } from "../controllers/roomSocketController.ts";
 import { StringDecoder } from "string_decoder";
 import { getUserCurrentRoom } from "../services/roomService.ts";
