@@ -6,7 +6,7 @@ async function main()
 {
 	try
 	{
-		await server.listen({ port: 4000 });
+		await server.listen({ port: process.env.PORT as string | undefined });
 	}
 	catch (e)
 	{
