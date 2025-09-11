@@ -58,8 +58,8 @@ export async function getGoogleOAuthTokens(
 	const values =
 	{
 		code,
-		client_id: "924313211927-mq9a80c5307kd925bcq85eqc6furl0n1.apps.googleusercontent.com",
-		client_secret: "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",
+		client_id: process.env.GOOGLE_CLIENT_ID,
+		client_secret: process.env.GOOGLE_CLIENT_SECRET,
 		redirect_uri: "http://localhost:4000/api/users/oauth/google",
 		grant_type: "authorization_code",
 	};
