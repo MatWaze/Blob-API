@@ -254,7 +254,7 @@ class GameClient {
                     console.log('User logged in, requesting new session...');
                     this.requestSessionIdFromParent();
                     break;
-                    
+
                 case 'USER_LOGGED_OUT': // New event from parent when user logs out
                     console.log('User logged out, cleaning up...');
                     this.handleAuthenticationLost();
