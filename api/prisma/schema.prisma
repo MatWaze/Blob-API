@@ -1,11 +1,11 @@
 generator client {
-	provider = "prisma-client-js"
-	binaryTargets = ["native", "debian-openssl-3.0.x"]
+	provider		= "prisma-client-js"
+	binaryTargets	= ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
-	provider = "sqlite"
-	url      = "file:./data.db"
+	provider	= "sqlite"
+	url			= "file:./data.db"
 }
 
 model User {
@@ -60,4 +60,14 @@ model Participation {
 	user			User		@relation(fields: [userId], references: [id])
 	tournament		Tournament	@relation(fields: [tournamentId], references: [id])
 	placement		Placement?	@relation(fields: [placementId], references: [id])
+}
+
+model Session {
+	id				String	@id @default(uuid())
+	sessionId		String	@unique
+	userId			String
+	username		String
+	email			String
+	accessToken		String
+	refreshToken	String
 }
