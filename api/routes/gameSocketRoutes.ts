@@ -12,7 +12,7 @@ const decoder = new StringDecoder("utf8");
 export async function gameSocketRoutes(server: FastifyInstance)
 {
 	const app = getUws(server);
-	const baseBehavior = createBaseBehavior(server);
+	const baseBehavior = await createBaseBehavior(server);
 
 	// Lobby WebSocket - handle room viewing only
 	app.ws('/ws/lobby',
