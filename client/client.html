@@ -892,7 +892,11 @@
                 this.currentSessionId = null;
                 this.currentUser = null;
                 this.isAuthenticated = false;
-                
+
+                this.gameFrame.contentWindow.postMessage({
+                    type: 'USER_LOGGED_OUT',
+                }, window.location.origin);
+
                 this.updateAuthStatus('Logged out', false);
                 this.updateUserInfo(null);
                 this.disableGameAccess();
