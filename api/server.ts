@@ -63,108 +63,50 @@ function parseCookies(cookieHeader: string | undefined): Record<string, string>
 	}
 }
 
-// middleware signature: (req, res, next)
-function checkAccessTokenMiddleware(req: IncomingMessage, res: ServerResponse & { getHeader?: any; setHeader?: any }, next: (err?: any) => void) {
-	try
-	{
-		const cookies = parseCookies(req.headers.cookie);
-
-		const accessToken = cookies['accessToken'];
-		const refreshToken = cookies['refreshToken'];
-
-		// If there's no access token but a refresh token is present, try to mint a new access token
-		if (!accessToken && refreshToken && server)
-		{
-			(async () =>
-			{
-				try
-				{
-					// verify refresh token using fastify-jwt instance
-					const payload = server!.jwt.verify(refreshToken) as FastifyJWT;
-
-					// create new short-lived access token
-					const newAccessToken = server!.jwt.sign(
-						{ id: payload.id, username: payload.username, email: payload.email },
-						{ expiresIn: '15m' }
-					);
-
-					// set Set-Cookie header on raw response
-					const maxAge = 15 * 60; // 15 minutes in seconds
-					const cookieStr = `accessToken=${encodeURIComponent(newAccessToken)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`;
-
-					// preserve existing Set-Cookie header(s)
-					const existing = res.getHeader && res.getHeader('Set-Cookie');
-					if (existing)
-					{
-						// merge into array
-						const merged = Array.isArray(existing) ? existing.concat(cookieStr) : [existing, cookieStr];
-						res.setHeader('Set-Cookie', merged);
-					}
-					else
-					{
-						res.setHeader && res.setHeader('Set-Cookie', cookieStr);
-					}
-				}
-				catch (err)
-				{
-					// refresh token invalid/expired — do nothing, downstream handlers will handle auth
-					console.log('refresh token verify failed in middleware:', err);
-				}
-			})().finally(() => next());
-			return;
-		}
-		next();
-	}
-	catch (err)
-	{
-		next(err);
-	}
-}
-
 async function buildServer()
 {
 	server = fastify({serverFactory})
 		.withTypeProvider<ZodTypeProvider>();
 
-	server.decorate(
-		'refreshAccessToken',
-		async (request: FastifyRequest, reply: FastifyReply) =>
-		{
-			const refreshToken = request.cookies.refreshToken;
-			if (!refreshToken)
-			{
-				reply.clearCookie('accessToken');
-				reply.clearCookie('refreshToken');
-				return reply.code(401).send({ message: 'Missing refresh token', needsLogin: true });
-			}
+	// server.decorate(
+	// 	'refreshAccessToken',
+	// 	async (request: FastifyRequest, reply: FastifyReply) =>
+	// 	{
+	// 		const refreshToken = request.cookies.refreshToken;
+	// 		if (!refreshToken)
+	// 		{
+	// 			reply.clearCookie('accessToken');
+	// 			reply.clearCookie('refreshToken');
+	// 			return reply.code(401).send({ message: 'Missing refresh token', needsLogin: true });
+	// 		}
 
-			try
-			{
-				const decoded = server.jwt.verify(refreshToken) as FastifyJWT;
+	// 		try
+	// 		{
+	// 			const decoded = server.jwt.verify(refreshToken) as FastifyJWT;
 				
-				const newAccessToken = server.jwt.sign(
-					{ id: decoded.id, username: decoded.username, email: decoded.email }, // Fix: Sign payload directly
-					{ expiresIn: "15m" }
-				);
+	// 			const newAccessToken = server.jwt.sign(
+	// 				{ id: decoded.id, username: decoded.username, email: decoded.email }, // Fix: Sign payload directly
+	// 				{ expiresIn: "15m" }
+	// 			);
 
-				saveCookie(reply, 'accessToken', newAccessToken);
+	// 			saveCookie(reply, 'accessToken', newAccessToken);
 
-				return reply.code(200).send({ 
-					message: 'Token refreshed successfully',
-					accessToken: newAccessToken 
-				});
-			}
-			catch (refreshError)
-			{
-				reply.clearCookie('accessToken');
-				reply.clearCookie('refreshToken');
-				return reply.code(401).send({ 
-					message: 'Invalid refresh token', 
-					needsLogin: true 
-				});
-			}
-		}
-	);
+	// 			return reply.code(200).send({ 
+	// 				message: 'Token refreshed successfully',
+	// 				accessToken: newAccessToken 
+	// 			});
+	// 		}
+	// 		catch (refreshError)
+	// 		{
+	// 			reply.clearCookie('accessToken');
+	// 			reply.clearCookie('refreshToken');
+	// 			return reply.code(401).send({ 
+	// 				message: 'Invalid refresh token', 
+	// 				needsLogin: true 
+	// 			});
+	// 		}
+	// 	}
+	// );
 
 	server.decorate(
 		'authenticate',
