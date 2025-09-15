@@ -5,7 +5,7 @@ import { isUserRoomCreator, getRoom } from "../services/roomService.ts";
 import { createGame, getGameWorker, stopGame } from "../services/gameSocketService.ts";
 import { FastifyJWT } from "@fastify/jwt";
 import { GameResult } from "../services/workerService.ts";
-import { sessionStore } from "../services/sessionStorageService.ts";
+import { getSession } from "../services/sessionService.ts";
 
 // async function authenticateWebSocket(res: HttpResponse, req: HttpRequest, server: FastifyInstance)
 // : Promise<{userId: string, username: string, email: string } | null>
@@ -83,12 +83,16 @@ import { sessionStore } from "../services/sessionStorageService.ts";
 // 	}
 // }
 
-async function authenticateWebSocket(res: HttpResponse, req: HttpRequest, server: FastifyInstance)
-: Promise<{userId: string, username: string, email: string } | null>
+async function authenticateWebSocket(
+	res: HttpResponse,
+	req: HttpRequest,
+	server: FastifyInstance
+) : Promise<{userId: string, username: string, email: string } | null>
 {
 	console.log("WebSocket upgrade request received");
 	
-	res.onAborted(() => {
+	res.onAborted(() =>
+	{
 		console.log("Upgrade request aborted");
 	});
 
@@ -101,23 +105,33 @@ async function authenticateWebSocket(res: HttpResponse, req: HttpRequest, server
 		if (!userId)
 		{
 			console.log("No user ID found in query");
-			res.writeStatus('401 Unauthorized');
-			res.end('No user ID provided');
+
+			res.cork(() =>
+			{
+				res.writeStatus('401 Unauthorized');
+				res.end('No user ID provided');
+			});
+
 			return null;
 		}
 
-		const sessionData = sessionStore.getSession(userId);
+		const sessionData = await getSession(userId);
 		if (!sessionData)
 		{
 			console.log("No active session for user:", userId);
-			res.writeStatus('401 Unauthorized');
-			res.end('No active session');
+			res.cork(() =>
+			{
+				res.writeStatus('401 Unauthorized');
+				res.end('No active session');
+			});
 			return null;
 		}
 
 		// Verify/refresh tokens...
-		if (sessionData.accessToken) {
-			try {
+		if (sessionData.accessToken)
+		{
+			try
+			{
 				const decoded = server.jwt.verify(sessionData.accessToken) as FastifyJWT;
 				console.log("Authenticated via stored token:", sessionData.username, `(${sessionData.userId})`);
 				return {
@@ -125,38 +139,56 @@ async function authenticateWebSocket(res: HttpResponse, req: HttpRequest, server
 					username: sessionData.username,
 					email: sessionData.email
 				};
-			} catch (error) {
+			}
+			catch (error)
+			{
 				// Token refresh logic stays the same...
 			}
 		}
 
 		console.log("No valid tokens found");
-		res.writeStatus('401 Unauthorized');
-		res.end('Authentication required');
+		res.cork(() =>
+		{
+			res.writeStatus('401 Unauthorized');
+			res.end('Authentication required');
+		});
 		return null;
-	} catch (error) {
+	}
+	catch (error)
+	{
 		console.error("WebSocket authentication error:", error);
-		res.writeStatus('401 Unauthorized');
-		res.end('Authentication failed');
+
+		res.cork(() =>
+		{
+			res.writeStatus('401 Unauthorized');
+			res.end('Authentication required');
+		});
 		return null;
 	}
 }
 
-export function createBaseBehavior(server: FastifyInstance): Partial<WebSocketBehavior<WebSocketUserData>>
+export async function createBaseBehavior(server: FastifyInstance): Promise<Partial<WebSocketBehavior<WebSocketUserData>>>
 {
 	return {
 		upgrade: async (res: HttpResponse, req: HttpRequest, context: us_socket_context_t) =>
 		{
+			const secWebSocketKey = req.getHeader('sec-websocket-key');
+			const secWebSocketProtocol = req.getHeader('sec-websocket-protocol');
+			const secWebSocketExtensions = req.getHeader('sec-websocket-extensions');
+
 			const userData = await authenticateWebSocket(res, req, server);
 			if (userData)
 			{
-				res.upgrade(
-					userData,
-					req.getHeader('sec-websocket-key'),
-					req.getHeader('sec-websocket-protocol'),
-					req.getHeader('sec-websocket-extensions'),
-					context
-				);
+				res.cork(() =>
+				{
+					res.upgrade(
+						userData,
+						secWebSocketKey,
+						secWebSocketProtocol,
+						secWebSocketExtensions,
+						context
+					);
+				})
 			}
 		},
 	};

@@ -13,6 +13,8 @@ import
 from "../services/userService.ts";
 import { sessionStore } from "../services/sessionStorageService.ts";
 import { FastifyJWT } from "@fastify/jwt";
+import { removeCookie, setSessionCookie } from "../services/cookieService.ts";
+import { getSession, updateSessionAccessToken } from "../services/sessionService.ts";
 
 export async function registerAsync(
 	request: FastifyRequest<{ Body: CreateUserType }>,
@@ -79,21 +81,7 @@ export async function loginAsync(
 	if (passwordsMatch)
 	{
 		const { password, ...rest } = user;
-		const accessToken = request.jwt.sign(rest, { expiresIn: '15m' });
-		const refreshToken = request.jwt.sign(rest, { expiresIn: '7d' });
-
-		const sessionId = sessionStore.createSession(user.id, user.username, user.email, accessToken, refreshToken);
-
-		// saveCookie(response, "accessToken", accessToken);
-		// saveCookie(response, "refreshToken", refreshToken);
-
-		response.setCookie('sessionId', sessionId, {
-			httpOnly: false,
-			secure: process.env.NODE_ENV === "production",
-			sameSite: "lax",
-			path: "/",
-			maxAge: 7 * 24 * 60 * 60 // 7 days
-		});
+		await setSessionCookie(request, response, rest);
 
 		return response.code(200).send(
 		{
@@ -172,71 +160,8 @@ export async function logoutAsync(
 {
 	// response.clearCookie('accessToken');
 	// response.clearCookie('refreshToken');
-	response.clearCookie('sessionId');
+	removeCookie(response, 'sessionId');
 	return response.code(200).send({ message: "Logged out successfully" });
-}
-
-export async function checkTokenStatusAsync(
-	request: FastifyRequest,
-	response: FastifyReply
-)
-{
-	const accessToken = request.cookies.accessToken;
-	const refreshToken = request.cookies.refreshToken;
-
-	if (!accessToken && !refreshToken)
-	{
-		return response.code(401).send({ 
-			status: 'no_tokens',
-			message: 'No tokens found',
-			needsLogin: true 
-		});
-	}
-
-	// Check access token
-	if (accessToken)
-	{
-		try
-		{
-			await request.server.jwt.verify(accessToken);
-			return response.code(200).send({ 
-				status: 'valid',
-				message: 'Access token is valid' 
-			});
-		}
-		catch (e)
-		{
-			// Access token invalid, check refresh token
-		}
-	}
-
-	// Check refresh token
-	if (refreshToken)
-	{
-		try
-		{
-			await request.server.jwt.verify(refreshToken);
-			return response.code(200).send({ 
-				status: 'needs_refresh',
-				message: 'Access token expired but refresh token valid',
-				needsRefresh: true 
-			});
-		}
-		catch (e)
-		{
-			return response.code(401).send({ 
-				status: 'expired',
-				message: 'Both tokens expired',
-				needsLogin: true 
-			});
-		}
-	}
-
-	return response.code(401).send({ 
-		status: 'invalid',
-		message: 'Invalid token state',
-		needsLogin: true 
-	});
 }
 
 export async function getTokens(
@@ -257,7 +182,7 @@ export async function getTokens(
 			});
 		}
 
-		const sessionData = sessionStore.getSession(sessionId);
+		const sessionData = await getSession(sessionId);
 
 		if (!sessionData)
 		{
@@ -292,15 +217,11 @@ export async function getTokens(
 							email: decoded.email
 						}, { expiresIn: '15m' });
 
-						sessionStore.updateSessionTokens(sessionId, accessToken);
-						
-						// Also update the cookie
-						// saveCookie(response, "accessToken", accessToken);
-						
+						updateSessionAccessToken(sessionId, { accessToken });
 					}
 					catch (error)
 					{
-						sessionStore.destroySession(sessionId);
+						// sessionStore.destroySession(sessionId);
 						return response.code(401).send({
 							success: false,
 							message: `Session problem: ${error}`,
@@ -314,6 +235,7 @@ export async function getTokens(
 		return response.send({
 			success: true,
 			accessToken: accessToken,
+			sessionId: sessionData.sessionId,
 			user: {
 				id: sessionData.userId,
 				username: sessionData.username,
