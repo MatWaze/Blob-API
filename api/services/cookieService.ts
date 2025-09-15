@@ -1,4 +1,7 @@
-import { FastifyReply } from "fastify";
+import { FastifyReply, FastifyRequest } from "fastify";
+import { createSession, deleteSession, deleteSessionByUserId } from "./sessionService";
+import { CreateSessionData } from "../repositories/sessionRepository/sessionRepository";
+
 
 export function saveCookie(
 	response: FastifyReply,
@@ -22,6 +25,46 @@ export function saveCookie(
 			maxAge: maxAge
 		}
 	);
+}
+
+export async function setSessionCookie(
+	request: FastifyRequest,
+	response: FastifyReply,
+	user: any)
+{
+	const accessToken = request.jwt.sign(user, { expiresIn: '15m' });
+	const refreshToken = request.jwt.sign(user, { expiresIn: '7d' });
+
+	await removeSessionCookie(response, user.id);
+
+	const sessionData: CreateSessionData =
+	{
+		userId: user.id,
+		username: user.username,
+		email: user.email,
+		accessToken,
+		refreshToken
+	};
+
+	const session = await createSession(sessionData);
+
+	response.setCookie('sessionId', session.sessionId,
+	{
+		httpOnly: false,
+		secure: process.env.NODE_ENV === "production",
+		sameSite: "lax",
+		path: "/",
+		maxAge: 7 * 24 * 60 * 60
+	});
+}
+
+async function removeSessionCookie(
+	response: FastifyReply,
+	userId: string
+)
+{
+	removeCookie(response, "sessionId");
+	await deleteSessionByUserId(userId);
 }
 
 export function removeCookie(
