@@ -223,7 +223,8 @@ class GameClient {
         this.gameResults = null;
         this.accessToken = null;
         this.sessionId = null; // ← Changed from userId
-        
+        this.isInitialized = false;
+
         this.mouseX = 0;
         this.mouseY = 0;
         this.lastMouseUpdate = 0;
@@ -241,11 +242,22 @@ class GameClient {
                 case 'SESSION_ID_RESPONSE': // ← Changed from USER_ID_RESPONSE
                     this.sessionId = event.data.sessionId;
                     this.user = event.data.user;
-                    this.initializeAuth();
+                    if (!this.isInitialized)
+                       this.initializeAuth();
                     break;
                 
                 case 'NOT_AUTHENTICATED':
                     this.notifyParent('Authentication required', 'error');
+                    break;
+
+                case 'USER_LOGGED_IN': // New event from parent when user logs in
+                    console.log('User logged in, requesting new session...');
+                    this.requestSessionIdFromParent();
+                    break;
+                    
+                case 'USER_LOGGED_OUT': // New event from parent when user logs out
+                    console.log('User logged out, cleaning up...');
+                    this.handleAuthenticationLost();
                     break;
             }
         });
@@ -271,6 +283,7 @@ class GameClient {
                 const data = await response.json();
                 if (data.success) {
                     this.accessToken = data.accessToken;
+                    this.isInitialized = true;
                     this.notifyParent(`Authenticated as ${data.user.username}`, 'success');
                     this.initializeWebSockets();
                     this.setupEventListeners();
@@ -384,11 +397,12 @@ class GameClient {
             // Refresh room list to get updated state
             setTimeout(() => {
                 if (this.lobbyWs && this.lobbyWs.readyState === WebSocket.OPEN) {
-                    this.lobbyWs.send('resh');
+                    this.lobbyWs.send('refresh');
                 }
             }, 100);
         }
 
+        // update room list
         if (data.rooms) {
             this.updateRoomList(data.rooms);
             this.currentRoomId = data.currentRoomId;
@@ -408,12 +422,14 @@ class GameClient {
             }
         }
 
+        // connect to a current game upon refresh
         if (data.success !== undefined) {
             if (data.success && data.roomId) {
                 this.currentRoomId = data.roomId;
                 this.isCreator = data.isCreator || false;
                 this.showCurrentRoom(data.room);
-                this.connectGame();
+                if (this.gameWs)
+                    this.connectGame();
                 
                 // Refresh room list to get updated state
                 setTimeout(() => {
@@ -438,6 +454,7 @@ class GameClient {
             }, 100);
         }
 
+        // change room status
         if (data.roomStateChanged) {
             this.showCurrentRoom(data.roomStateChanged.room);
             this.updateStatus(`Room marked as ${data.roomStateChanged.newState}`, 'success');
@@ -978,6 +995,37 @@ class GameClient {
             ctx.textAlign = 'center';
             ctx.fillText(player.username, screenX, screenY - 20);
         });
+    }
+
+    handleAuthenticationLost() {
+        console.log('Authentication lost, cleaning up...');
+        
+        // Close connections
+        if (this.lobbyWs) {
+            this.lobbyWs.close(1000, 'Authentication lost');
+            this.lobbyWs = null;
+        }
+        if (this.gameWs) {
+            this.gameWs.close(1000, 'Authentication lost');
+            this.gameWs = null;
+        }
+        
+        // Clear state
+        this.sessionId = null;
+        this.accessToken = null;
+        this.currentRoomId = null;
+        this.isCreator = false;
+        this.gameState = null;
+        this.isInitialized = false;
+        
+        // Update UI
+        this.hideCurrentRoom();
+        this.updateStatus('Authentication required', 'error');
+        this.notifyParent('Please log in to play', 'error');
+        
+        // Clear room list
+        document.getElementById('roomList').innerHTML = '';
+        this.overlay.innerHTML = '<div style="text-align: center; color: #ff4444;">Please log in to play</div>';
     }
 }
 

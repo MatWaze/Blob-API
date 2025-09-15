@@ -537,7 +537,7 @@
                         case 'LOGOUT':
                             this.handleLogout();
                             break;
-                        
+
                         case 'REQUEST_SESSION':
                         case 'REQUEST_USER_ID':
                             this.sendSessionToFrame(event.source);
@@ -864,11 +864,13 @@
                 this.currentSessionId = data.sessionId;
                 this.currentUser = data.user;
                 this.isAuthenticated = true;
-                
+
                 this.updateAuthStatus(`Authenticated as ${data.user.username}`, true);
                 this.updateUserInfo(data.user);
                 this.enableGameAccess();
-                
+
+                this.sendSessionToFrame(this.gameFrame.contentWindow);
+
                 // Auto-switch to game after successful login
                 setTimeout(() => {
                     this.showWindow('game');
