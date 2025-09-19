@@ -456,8 +456,12 @@
         <h3>Loading...</h3>
         <p id="loadingMessage">Initializing application...</p>
     </div>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/5.0.1/iframe-resizer.child.js"></script>
     <script>
+        function iframeResize() {
+            iFrameResize({ log: true }, '#gameFrame'); // Initialize resizer
+        }
+            
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
@@ -524,8 +528,8 @@
             setupMessageListener() {
                 window.addEventListener('message', (event) => {
                     // Allow messages from your origin and Babylon.js origin
-                    if (event.origin !== window.location.origin && 
-                        !event.origin.startsWith('http://localhost:')) return;
+                    // if (event.origin !== window.location.origin && 
+                    //     !event.origin.startsWith('http://localhost:')) return;
 
                     console.log('Client received message:', event.data);
 
@@ -540,7 +544,7 @@
 
                         case 'REQUEST_SESSION':
                         case 'REQUEST_USER_ID':
-                            this.sendSessionToFrame(event.source);
+                            this.sendSessionToFrame(this.gameFrame.contentWindow);
                             break;
                         
                         case 'AUTH_FAILED':
@@ -655,7 +659,7 @@
                     
                     // Load game iframe if not already loaded
                     if (!this.gameFrame.src || this.gameFrame.src === window.location.href) {
-                        this.gameFrame.src = 'game.html';
+                        this.gameFrame.src = 'http://localhost:3000';
                     }
                     
                 } else if (windowType === 'babylon') {
@@ -671,7 +675,7 @@
                     
                     // Load Babylon.js project - CHANGE THIS PORT TO YOUR BABYLON PROJECT PORT
                     if (!this.babylonFrame.src || this.babylonFrame.src === window.location.href) {
-                        this.babylonFrame.src = 'http://localhost:3000'; // ← CHANGE THIS TO YOUR BABYLON PROJECT PORT
+                        this.babylonFrame.src = ''; // ← CHANGE THIS TO YOUR BABYLON PROJECT PORT
                     }
                 }
             }
@@ -923,16 +927,17 @@
             sendSessionToFrame(targetFrame) {
                 if (this.isAuthenticated && this.currentSessionId) {
                     console.log('Sending sessionId to frame:', this.currentSessionId);
-                    targetFrame.postMessage({
+                    this.gameFrame.contentWindow.postMessage(
+                    {
                         type: 'SESSION_ID_RESPONSE',
                         sessionId: this.currentSessionId,
                         user: this.currentUser
-                    }, window.location.origin);
+                    }, "*");
                 } else {
                     console.log('Not authenticated, sending NOT_AUTHENTICATED');
-                    targetFrame.postMessage({
+                    this.gameFrame.postMessage({
                         type: 'NOT_AUTHENTICATED'
-                    }, window.location.origin);
+                    }, "*");
                 }
             }
 
