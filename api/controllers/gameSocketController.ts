@@ -5,7 +5,8 @@ import { isUserRoomCreator, getRoom } from "../services/roomService.ts";
 import { createGame, getGameWorker, stopGame } from "../services/gameSocketService.ts";
 import { FastifyJWT } from "@fastify/jwt";
 import { GameResult } from "../services/workerService.ts";
-import { getSession } from "../services/sessionService.ts";
+import { getSession, updateSessionAccessToken } from "../services/sessionService.ts";
+import axios from "axios";
 
 // async function authenticateWebSocket(res: HttpResponse, req: HttpRequest, server: FastifyInstance)
 // : Promise<{userId: string, username: string, email: string } | null>
@@ -98,41 +99,30 @@ async function authenticateWebSocket(
 
 	try
 	{
-		// Get userId from query parameter
 		const query = req.getQuery();
-		const userId = new URLSearchParams(query).get('userId');
-		
-		if (!userId)
-		{
-			console.log("No user ID found in query");
+		const sessionId = new URLSearchParams(query).get('userId');
 
-			res.cork(() =>
-			{
-				res.writeStatus('401 Unauthorized');
-				res.end('No user ID provided');
-			});
+		if (!sessionId)
+		{
+			console.log("No session ID found in query");
 
 			return null;
 		}
 
-		const sessionData = await getSession(userId);
+		const sessionData = await getSession(sessionId);
 		if (!sessionData)
 		{
-			console.log("No active session for user:", userId);
-			res.cork(() =>
-			{
-				res.writeStatus('401 Unauthorized');
-				res.end('No active session');
-			});
+			console.log("No active session for user:", sessionId);
 			return null;
 		}
 
+		let accessToken = sessionData.accessToken
 		// Verify/refresh tokens...
-		if (sessionData.accessToken)
+		if (accessToken)
 		{
 			try
 			{
-				const decoded = server.jwt.verify(sessionData.accessToken) as FastifyJWT;
+				server.jwt.verify(accessToken) as FastifyJWT;
 				console.log("Authenticated via stored token:", sessionData.username, `(${sessionData.userId})`);
 				return {
 					userId: sessionData.userId,
@@ -142,16 +132,35 @@ async function authenticateWebSocket(
 			}
 			catch (error)
 			{
-				// Token refresh logic stays the same...
+				if (sessionData.refreshToken)
+				{
+					try
+					{
+						const decoded = server.jwt.verify(sessionData.refreshToken) as FastifyJWT;
+						
+						accessToken = server.jwt.sign(
+						{
+							id: decoded.id,
+							username: decoded.username,
+							email: decoded.email
+						}, { expiresIn: '15m' });
+
+						updateSessionAccessToken(sessionId, { accessToken });
+						return {
+							userId: sessionData.userId,
+							username: sessionData.username,
+							email: sessionData.email
+						};
+					}
+					catch (error)
+					{
+						// sessionStore.destroySession(sessionId);
+						console.log("No valid tokens found");
+						return null;
+					}
+				}
 			}
 		}
-
-		console.log("No valid tokens found");
-		res.cork(() =>
-		{
-			res.writeStatus('401 Unauthorized');
-			res.end('Authentication required');
-		});
 		return null;
 	}
 	catch (error)
@@ -189,6 +198,15 @@ export async function createBaseBehavior(server: FastifyInstance): Promise<Parti
 						context
 					);
 				})
+			}
+			else if (userData === null)
+			{
+				console.log("No valid tokens found");
+				res.cork(() =>
+				{
+					res.writeStatus('401 Unauthorized');
+					res.end('LOGIN_AGAIN');
+				});
 			}
 		},
 	};

@@ -13,7 +13,7 @@ import
 from "../services/userService.ts";
 import { sessionStore } from "../services/sessionStorageService.ts";
 import { FastifyJWT } from "@fastify/jwt";
-import { removeCookie, setSessionCookie } from "../services/cookieService.ts";
+import { removeCookie, removeSessionCookie, setSessionCookie } from "../services/cookieService.ts";
 import { getSession, updateSessionAccessToken } from "../services/sessionService.ts";
 
 export async function registerAsync(
@@ -21,7 +21,7 @@ export async function registerAsync(
 	response: FastifyReply
 )
 {
-	const { authMethod, ...body }= request.body;
+	const body = request.body;
 
 	try
 	{
@@ -158,14 +158,14 @@ export async function logoutAsync(
 	response: FastifyReply
 )
 {
-	// response.clearCookie('accessToken');
-	// response.clearCookie('refreshToken');
-	removeCookie(response, 'sessionId');
+	const sessionId : string = request.cookies.sessionId!;
+
+	await removeSessionCookie(response, sessionId)
 	return response.code(200).send({ message: "Logged out successfully" });
 }
 
 export async function getTokens(
-	request: FastifyRequest<{ Querystring: UserIdType }>,
+	request: FastifyRequest,
 	response: FastifyReply
 )
 {
@@ -229,10 +229,18 @@ export async function getTokens(
 						});
 					}
 				}
+				else
+				{
+					return response.code(401).send({
+						success: false,
+						message: `Need to re-login.`,
+						needsLogin: true
+					});
+				}
 			}
 		}
 
-		return response.send({
+		return response.code(200).send({
 			success: true,
 			accessToken: accessToken,
 			sessionId: sessionData.sessionId,

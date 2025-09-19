@@ -35,7 +35,7 @@ export async function setSessionCookie(
 	const accessToken = request.jwt.sign(user, { expiresIn: '15m' });
 	const refreshToken = request.jwt.sign(user, { expiresIn: '7d' });
 
-	await removeSessionCookie(response, user.id);
+	await removeSessionCookieByUserId(response, user.id);
 
 	const sessionData: CreateSessionData =
 	{
@@ -58,7 +58,7 @@ export async function setSessionCookie(
 	});
 }
 
-async function removeSessionCookie(
+async function removeSessionCookieByUserId(
 	response: FastifyReply,
 	userId: string
 )
@@ -67,9 +67,18 @@ async function removeSessionCookie(
 	await deleteSessionByUserId(userId);
 }
 
+export async function removeSessionCookie(
+	response: FastifyReply,
+	sessionId: string
+)
+{
+	removeCookie(response, "sessionId");
+	await deleteSession(sessionId);
+}
+
 export function removeCookie(
 	response: FastifyReply,
-	name: string
+	name: string,
 )
 {
 	response.clearCookie(name);

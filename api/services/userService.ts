@@ -18,8 +18,14 @@ export async function sendEmailAsync(usr: any)
 	);
 }
 
-export async function createUserAsync(user: CreateUserType)
-	: Promise<any>
+export async function createUserAsync(user:
+	{
+		email: string,
+		username: string,
+		password: string,
+		authMethod: string
+	}
+) : Promise<any>
 {
 	try
 	{

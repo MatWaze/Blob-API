@@ -148,7 +148,7 @@ async function buildServer()
 
 	const CORS_WHITELIST = [
 		'http://localhost:4000',
-		'http://localhost:3002',
+		'http://localhost:3065',
 		'http://localhost:3000',
 		'https://your-production-domain.com'
 	];

@@ -347,10 +347,10 @@ export async function markRoomReadyAsync(
 			return;
 		}
 
-		ws.send(JSON.stringify({
-			success: true,
-			message: "Room marked as ready"
-		}));
+		// ws.send(JSON.stringify({
+		// 	success: true,
+		// 	message: "Room marked as ready"
+		// }));
 
 		// Get updated room and send direct update to the requesting client
 		const room = getAllRooms().find(r => r.id === data.roomId);
@@ -375,23 +375,23 @@ export async function markRoomReadyAsync(
 			}));
 
 			// Also publish to room subscribers
-			app.publish(data.roomId, JSON.stringify({
-				roomStateChanged: {
-					roomId: data.roomId,
-					newState: "ready",
-					room: {
-						id: room.id,
-						entryFee: room.entryFee,
-						players: Array.from(room.players).map((player: RoomPlayer) => ({
-							id: player.id,
-							username: player.username
-						})),
-						maxPlayers: room.maxPlayers,
-						state: room.state,
-						createdAt: room.createdAt.toISOString()
-					}
-				}
-			}));
+			// app.publish(data.roomId, JSON.stringify({
+			// 	roomStateChanged: {
+			// 		roomId: data.roomId,
+			// 		newState: "ready",
+			// 		room: {
+			// 			id: room.id,
+			// 			entryFee: room.entryFee,
+			// 			players: Array.from(room.players).map((player: RoomPlayer) => ({
+			// 				id: player.id,
+			// 				username: player.username
+			// 			})),
+			// 			maxPlayers: room.maxPlayers,
+			// 			state: room.state,
+			// 			createdAt: room.createdAt.toISOString()
+			// 		}
+			// 	}
+			// }));
 		}
 
 		console.log(`Room ${data.roomId} marked as ready by ${userId}`);
@@ -437,10 +437,10 @@ export async function markRoomWaitingAsync(
 			return;
 		}
 
-		ws.send(JSON.stringify({
-			success: true,
-			message: "Room marked as waiting"
-		}));
+		// ws.send(JSON.stringify({
+		// 	success: true,
+		// 	message: "Room marked as waiting"
+		// }));
 
 		// Notify all room members of state change
 		const room = getAllRooms().find(r => r.id === data.roomId);

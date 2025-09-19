@@ -63,10 +63,10 @@ async function userRoutes(server: FastifyInstance)
 	);
 
 	// DELETE api/users/{id}
-	server.delete(
-		"/:id",
-		removeUserAsync
-	)
+	// server.delete(
+	// 	"/:id",
+	// 	removeUserAsync
+	// )
 
 	server.get(
 		"/oauth/google",

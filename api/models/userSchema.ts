@@ -15,7 +15,6 @@ const createUserModel = z.object(
 	{
 		error: "Password is required",
 	}),
-	authMethod: z.string(),
 	...userBaseModel
 });
 
