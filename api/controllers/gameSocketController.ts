@@ -6,7 +6,6 @@ import { createGame, getGameWorker, stopGame } from "../services/gameSocketServi
 import { FastifyJWT } from "@fastify/jwt";
 import { GameResult } from "../services/workerService.ts";
 import { getSession, updateSessionAccessToken } from "../services/sessionService.ts";
-import axios from "axios";
 
 // async function authenticateWebSocket(res: HttpResponse, req: HttpRequest, server: FastifyInstance)
 // : Promise<{userId: string, username: string, email: string } | null>
@@ -95,6 +94,7 @@ async function authenticateWebSocket(
 	res.onAborted(() =>
 	{
 		console.log("Upgrade request aborted");
+		return null;
 	});
 
 	try
@@ -145,7 +145,7 @@ async function authenticateWebSocket(
 							email: decoded.email
 						}, { expiresIn: '15m' });
 
-						updateSessionAccessToken(sessionId, { accessToken });
+						await updateSessionAccessToken(sessionId, { accessToken });
 						return {
 							userId: sessionData.userId,
 							username: sessionData.username,
@@ -322,7 +322,6 @@ function setupGameBroadcaster(roomId: string, app: TemplatedApp)
 				await stopGame(roomId, message.gameResult);
 
 				app.publish(roomId, JSON.stringify({
-					type: 'finished',
 					gameResult: message.gameResult as GameResult
 				}));
 			}
