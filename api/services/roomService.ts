@@ -10,6 +10,7 @@ export type RoomPlayer =
 
 export type RoomInfo = {
 	id: string;
+	name: string;
 	entryFee: number;
 	players: Set<RoomPlayer>;
 	maxPlayers: number;
@@ -24,7 +25,8 @@ export function createRoom(
 	entryFee: number,
 	creatorUserId: string,
 	creatorUsername: string,
-	maxPlayers: number
+	maxPlayers: number,
+	name: string
 ): { success: boolean; room?: RoomInfo; message?: string }
 {
 	if (userRoomMapping.has(creatorUserId))
@@ -39,11 +41,12 @@ export function createRoom(
 	const id = randomBytes(12).toString("hex");
 	const room: RoomInfo = {
 		id,
+		name,
 		entryFee,
 		players: new Set(),
 		maxPlayers,
 		createdAt: new Date(),
-		state: "waiting"
+		state: "waiting",
 	};
 
 	rooms.set(id, room);

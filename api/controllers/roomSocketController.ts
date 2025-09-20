@@ -39,7 +39,13 @@ export async function createRoomAsync(
 
 	try
 	{
-		const result = createRoom(data.entryFee, userId, username, data.maxPlayers);
+		const result = createRoom(
+			data.entryFee,
+			userId,
+			username,
+			data.maxPlayers,
+			data.name
+		);
 		
 		if (!result.success)
 		{
@@ -67,6 +73,7 @@ export async function createRoomAsync(
 			isCreator: true,
 			room: {
 				id: room.id,
+				name: room.name,
 				entryFee: room.entryFee,
 				players: Array.from(room.players).map((player: RoomPlayer) => ({
 					id: player.id,
@@ -141,6 +148,7 @@ export async function joinRoomAsync(
 			isCreator: isUserRoomCreator(userId, data.roomId),
 			room: room ? {
 				id: room.id,
+				name: room.id,
 				entryFee: room.entryFee,
 				players: Array.from(room.players).map((player: RoomPlayer) => ({
 					id: player.id,
@@ -153,24 +161,25 @@ export async function joinRoomAsync(
 		}));
 		
 		// Notify other room members - simple notification with updated room state
-		app.publish(data.roomId, JSON.stringify(
-		{
-			userJoined: {
-				userId: userId,
-				username: username,
-				room: room ? {
-					id: room.id,
-					entryFee: room.entryFee,
-					players: Array.from(room.players).map((player: RoomPlayer) => ({
-						id: player.id,
-						username: player.username
-					})),
-					maxPlayers: room.maxPlayers,
-					state: room.state,
-					createdAt: room.createdAt.toISOString()
-				} : null
-			}
-		}));
+		// app.publish(data.roomId, JSON.stringify(
+		// {
+		// 	userJoined: {
+		// 		userId: userId,
+		// 		username: username,
+		// 		room: room ? {
+		// 			id: room.id,
+		// 			name: room.name,
+		// 			entryFee: room.entryFee,
+		// 			players: Array.from(room.players).map((player: RoomPlayer) => ({
+		// 				id: player.id,
+		// 				username: player.username
+		// 			})),
+		// 			maxPlayers: room.maxPlayers,
+		// 			state: room.state,
+		// 			createdAt: room.createdAt.toISOString()
+		// 		} : null
+		// 	}
+		// }));
 		
 		console.log(`${username} (${userId}) joined room: ${data.roomId}`);
 	}
@@ -243,6 +252,7 @@ export async function leaveRoomAsync(
 					username: username,
 					room: {
 						id: room.id,
+						name: room.name,
 						entryFee: room.entryFee,
 						players: Array.from(room.players).map((player: RoomPlayer) =>
 						({
@@ -287,6 +297,7 @@ export async function getRoomsAsync(ws: WebSocket<WebSocketUserData>)
 				const creator = getRoomCreator(room.id);
 				return {
 					id: room.id,
+					name: room.name,
 					entryFee: room.entryFee,
 					players: Array.from(room.players).map((player: RoomPlayer) =>
 					({
@@ -362,6 +373,7 @@ export async function markRoomReadyAsync(
 					newState: "ready",
 					room: {
 						id: room.id,
+						name: room.name,
 						entryFee: room.entryFee,
 						players: Array.from(room.players).map((player: RoomPlayer) => ({
 							id: player.id,
@@ -452,6 +464,7 @@ export async function markRoomWaitingAsync(
 					newState: "waiting",
 					room: {
 						id: room.id,
+						name: room.name,
 						entryFee: room.entryFee,
 						players: Array.from(room.players).map((player: RoomPlayer) => ({
 							id: player.id,
