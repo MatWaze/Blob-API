@@ -20,7 +20,7 @@ export interface WebSocketUserData
 	roomId?: string;
 }
 
-export async function createRoomAsync(
+export function createRoomAsync(
 	ws: WebSocket<WebSocketUserData>,
 	data: any,
 )
@@ -98,7 +98,7 @@ export async function createRoomAsync(
 	}
 }
 
-export async function joinRoomAsync(
+export function joinRoomAsync(
 	ws: WebSocket<WebSocketUserData>,
 	data: any,
 	app: TemplatedApp
@@ -144,7 +144,6 @@ export async function joinRoomAsync(
 		ws.send(JSON.stringify(
 		{
 			success: true,
-			roomId: data.roomId,
 			isCreator: isUserRoomCreator(userId, data.roomId),
 			room: room ? {
 				id: room.id,
@@ -194,7 +193,7 @@ export async function joinRoomAsync(
 	}
 }
 
-export async function leaveRoomAsync(
+export function leaveRoomAsync(
 	ws: WebSocket<WebSocketUserData>,
 	data: any,
 	app: TemplatedApp
@@ -233,37 +232,36 @@ export async function leaveRoomAsync(
 
 		// Unsubscribe from the room channel
 		ws.unsubscribe(data.roomId);
-
-		// Simple success response - no hardcoded types
-		ws.send(JSON.stringify(
-		{
-			success: true,
-			roomId: data.roomId
-		}));
 		
 		// Notify remaining room members - simple notification
 		const room = getAllRooms().find(r => r.id === data.roomId);
 		if (room)
 		{
-			app.publish(data.roomId, JSON.stringify(
+			// app.publish(data.roomId, JSON.stringify(
+			// {
+			// 	userLeft: {
+			// 		userId: userId,
+			// 		username: username,
+			// 		room: {
+			// 			id: room.id,
+			// 			name: room.name,
+			// 			entryFee: room.entryFee,
+			// 			players: Array.from(room.players).map((player: RoomPlayer) =>
+			// 			({
+			// 				id: player.id,
+			// 				username: player.username
+			// 			})),
+			// 			maxPlayers: room.maxPlayers,
+			// 			state: room.state,
+			// 			createdAt: room.createdAt.toISOString()
+			// 		}
+			// 	}
+			// }));
+		// Simple success response - no hardcoded types
+			ws.send(JSON.stringify(
 			{
-				userLeft: {
-					userId: userId,
-					username: username,
-					room: {
-						id: room.id,
-						name: room.name,
-						entryFee: room.entryFee,
-						players: Array.from(room.players).map((player: RoomPlayer) =>
-						({
-							id: player.id,
-							username: player.username
-						})),
-						maxPlayers: room.maxPlayers,
-						state: room.state,
-						createdAt: room.createdAt.toISOString()
-					}
-				}
+				success: true,
+				room: room
 			}));
 		}
 		
@@ -280,7 +278,7 @@ export async function leaveRoomAsync(
 	}
 }
 
-export async function getRoomsAsync(ws: WebSocket<WebSocketUserData>)
+export function getRoomsAsync(ws: WebSocket<WebSocketUserData>)
 {
 	const userData = ws.getUserData();
 	const userId = userData?.userId;
@@ -327,7 +325,7 @@ export async function getRoomsAsync(ws: WebSocket<WebSocketUserData>)
 	}
 }
 
-export async function markRoomReadyAsync(
+export function markRoomReadyAsync(
 	ws: WebSocket<WebSocketUserData>,
 	data: any,
 	app: TemplatedApp
@@ -418,7 +416,7 @@ export async function markRoomReadyAsync(
 	}
 }
 
-export async function markRoomWaitingAsync(
+export function markRoomWaitingAsync(
 	ws: WebSocket<WebSocketUserData>,
 	data: any,
 	app: TemplatedApp
