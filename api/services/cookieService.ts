@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { createSession, deleteSession, deleteSessionByUserId } from "./sessionService";
-import { CreateSessionData } from "../repositories/sessionRepository/sessionRepository";
+import { createSession, deleteSession, deleteSessionByUserId } from "./sessionService.ts";
+import { CreateSessionData } from "../repositories/sessionRepository/sessionRepository.ts";
 
 
 export function saveCookie(

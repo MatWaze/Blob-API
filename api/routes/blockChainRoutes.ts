@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { getTransfersSnowrtraceAsync } from "../controllers/blockChainController";
+import { getTransfersSnowrtraceAsync } from "../controllers/blockChainController.ts";
 
 async function blockChainRoutes(server: FastifyInstance)
 {

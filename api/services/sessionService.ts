@@ -1,5 +1,5 @@
-import sessionRepo from "../repositories/sessionRepository/sessionFactory";
-import { CreateSessionData, GetSessionEntity, UpdateSessionTokenData } from "../repositories/sessionRepository/sessionRepository";
+import sessionRepo from "../repositories/sessionRepository/sessionFactory.ts";
+import { CreateSessionData, GetSessionEntity, UpdateSessionTokenData } from "../repositories/sessionRepository/sessionRepository.ts";
 
 export async function createSession(data: CreateSessionData) : Promise<GetSessionEntity>
 {	
