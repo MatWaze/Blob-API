@@ -224,7 +224,7 @@ export function handleStartGame(
 		ws.send(JSON.stringify(
 		{
 			success: false,
-			error: "Only room creator can start game" 
+			message: "Only room creator can start game" 
 		}));
 
 		return;
@@ -237,7 +237,7 @@ export function handleStartGame(
 		ws.send(JSON.stringify(
 		{
 			success: false,
-			error: "Room not found"
+			message: "Room not found"
 		}));
 		return;
 	}
@@ -247,6 +247,16 @@ export function handleStartGame(
 		id: p.id,
 		username: p.username
 	}));
+
+	// check if there are enough players in the game
+	if (players.length < room.maxPlayers / 2)
+	{
+		ws.send(JSON.stringify(
+		{
+			success: false,
+			message: "Not enough players to start the game. Must be at least half of the maximum player count."
+		}))
+	}
 
 	const success = createGame(roomId, players);
 
@@ -265,7 +275,7 @@ export function handleStartGame(
 		ws.send(JSON.stringify(
 		{
 			success: false,
-			error: "Failed to start game"
+			message: "Failed to start game"
 		}));
 	}
 }
@@ -287,16 +297,16 @@ function setupGameBroadcaster(roomId: string, app: TemplatedApp)
 		{
 			if (message.type === 'gameState')
 			{
-				if (!gameStartNotificationSent)
-				{
-					console.log(`Sending game start notification to room ${roomId}`);
-					app.publish(roomId, JSON.stringify(
-					{
-						type: 'started',
-						roomId: roomId
-					}));
-					gameStartNotificationSent = true;
-				}
+				// if (!gameStartNotificationSent)
+				// {
+				// 	console.log(`Sending game start notification to room ${roomId}`);
+				// 	app.publish(roomId, JSON.stringify(
+				// 	{
+				// 		type: 'started',
+				// 		roomId: roomId
+				// 	}));
+				// 	gameStartNotificationSent = true;
+				// }
 
 				const gameStateMessage = JSON.stringify(
 				{
