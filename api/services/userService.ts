@@ -6,16 +6,23 @@ import { confirmationEmail, getMailClient } from "./emailService.ts";
 export async function sendEmailAsync(usr: any)
 	: Promise<any>
 {
-	const mail = await getMailClient();
-	
-	await mail.sendMail(
-		confirmationEmail(
-			usr.username,
-			usr.email,
-			"http://localhost:4000/api/users",
-			usr.emailVerified.nonce
-		)
-	);
+	try
+	{
+		const mail = await getMailClient();
+		
+		await mail.sendMail(
+			confirmationEmail(
+				usr.username,
+				usr.email,
+				"http://localhost:4000/api/users",
+				usr.emailVerified.nonce
+			)
+		);
+	}
+	catch (error)
+	{
+		console.log(error);
+	}
 }
 
 export async function createUserAsync(user:
@@ -60,30 +67,78 @@ export async function deleteUserAsync(id: string)
 export async function getUserByEmailAsync(email: string)
 	: Promise<any>
 {
-	return await userRepo.getUserByEmailAsync(email);
+	try
+	{
+		return await userRepo.getUserByEmailAsync(email);
+	}
+	catch (error)
+	{
+		console.log(error);
+	}
+}
+
+export async function getUserByWalletAddress(address: string)
+	: Promise<any>
+{
+	try
+	{
+		return await userRepo.getUserByWalletAddress(address);
+	}
+	catch (error)
+	{
+		console.log(error);
+	}
 }
 
 export async function getUserByNonceAsync(nonce: string)
+	: Promise<any>
 {
-	return await userRepo.getUserByNonceAsync(nonce);
+	try
+	{
+		return await userRepo.getUserByNonceAsync(nonce);
+	}
+	catch (error)
+	{
+		console.log(error);
+	}
 }
 
 export async function getUsersAsync() : Promise<any>
 {
-	return await userRepo.getUsersAsync();
+	try
+	{
+		return await userRepo.getUsersAsync();
+	}
+	catch (error)
+	{
+		console.log(error);
+	}
 }
 
 export async function verifyPassword(
 	providedPass: string,
 	realPass: string
-)
-	: Promise<boolean>
+) : Promise<any>
 {
-	return await bcrypt.compare(providedPass, realPass);
+	try
+	{
+		return await bcrypt.compare(providedPass, realPass);
+	}
+	catch (error)
+	{
+		console.log(error);
+	}
 }
 
 export async function setEmailConfirmed(user: any)
 	: Promise<void>
 {
-	await userRepo.confirmEmailAsync(user.id);
+	try
+	{
+		await userRepo.confirmEmailAsync(user.id);
+	}
+	catch (error)
+	{
+		console.log(error);
+	}
 }
