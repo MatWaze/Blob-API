@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { ConfirmEmailType, CreateUserType, LoginType, UserIdType } from "../models/userSchema.ts";
+import { ConfirmEmailType, CreateUserType, LoginType } from "../models/userSchema.ts";
 import
 {
 	createUserAsync,
@@ -11,9 +11,8 @@ import
 	deleteUserAsync
 }
 from "../services/userService.ts";
-import { sessionStore } from "../services/sessionStorageService.ts";
 import { FastifyJWT } from "@fastify/jwt";
-import { removeCookie, removeSessionCookie, setSessionCookie } from "../services/cookieService.ts";
+import { removeSessionCookie, setSessionCookie } from "../services/cookieService.ts";
 import { getSession, updateSessionAccessToken } from "../services/sessionService.ts";
 
 export async function registerAsync(
