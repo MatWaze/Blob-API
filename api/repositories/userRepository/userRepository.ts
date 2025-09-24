@@ -6,6 +6,17 @@ import { randomBytes } from "crypto";
 
 export class userRepository implements IUserRepository
 {
+	async getUserByWalletAddress(address: string) : Promise<any>
+	{
+		return await prisma.user.findFirst(
+		{
+			where:
+			{
+				walletAddress: address
+			}
+		});
+	}
+
 	async getUserByNonceAsync(nonce: string): Promise<any>
 	{
 		return await prisma.user.findFirst(
@@ -15,7 +26,7 @@ export class userRepository implements IUserRepository
 				emailVerified: { nonce: nonce }
 			},
 			include: { emailVerified: true }
-		})
+		});
 	}
 
 	async getUsersAsync(): Promise<any>
@@ -40,7 +51,12 @@ export class userRepository implements IUserRepository
 		});
 	}
 
-	async createUserAsync(user: CreateUserType)
+	async createUserAsync(user: {
+		email: string,
+		username: string,
+		password: string,
+		authMethod: string
+	})
 	{
 		const { password, authMethod, ...rest } = user;
 		console.log(user);
