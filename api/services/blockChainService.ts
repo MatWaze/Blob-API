@@ -4,15 +4,6 @@ import { config } from "dotenv";
 
 config();
 
-const PRIVATE_KEY = process.env.PRIVATE_KEY as string;
-const RPC_URL = process.env.RPC_URL as string;
-const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS as string;
-const SNOWTRACE_API_KEY = process.env.SNOWTRACE_API_KEY as string;
-
-// Setup providers and contracts
-const provider = new ethers.JsonRpcProvider(RPC_URL);
-const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
-
 export interface TransferEvent
 {
 	from: string;
@@ -23,18 +14,34 @@ export interface TransferEvent
 	timestamp: string;
 }
 
-// Contract ABI for Transfer events (minimal)
-const TRANSFER_EVENT_ABI = [
-	"event Transfer(address indexed from, address indexed to, uint256 value)",
-	"function decimals() view returns (uint8)"
-];
+const PRIVATE_KEY = process.env.PRIVATE_KEY as string;
+const RPC_URL = process.env.RPC_URL as string;
+const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS as string;
+const SNOWTRACE_API_KEY = process.env.SNOWTRACE_API_KEY as string;
+
+// Setup providers and contracts
+const provider = new ethers.JsonRpcProvider(RPC_URL);
+const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+const contract = new ethers.Contract(CONTRACT_ADDRESS, abi.abi, provider);
+
+contract.on("Transfer", (from: string, to: string, amount) =>
+{
+	console.log("someone sent Blobcoin");
+	console.log(`to: ${to}`);
+	console.log(`from: ${from}`);
+
+	if (to === wallet.address)
+	{
+		console.log("sending to the owner");
+		console.log(to, amount, from);
+	}
+});
 
 // Helper function to get contract decimals
 async function getDecimals(contractAddress: string): Promise<number>
 {
 	try
 	{
-		const contract = new ethers.Contract(contractAddress, TRANSFER_EVENT_ABI, provider);
 		return await contract.decimals();
 	}
 	catch (error)
