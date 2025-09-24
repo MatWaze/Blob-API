@@ -32,7 +32,8 @@ contract.on("Transfer", (from: string, to: string, amount) =>
 
 	if (to === wallet.address)
 	{
-		console.log("sending to the owner");
+		// TODO: Top up the player's balance
+		// depending on the amount they sent to the owner
 		console.log(to, amount, from);
 	}
 });
