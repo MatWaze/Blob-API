@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
 import abi from "../abis/Blob.json";
 import { config } from "dotenv";
+import { getUserByWalletAddress } from "./userService";
 
 config();
 
@@ -20,21 +21,21 @@ const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS as string;
 const SNOWTRACE_API_KEY = process.env.SNOWTRACE_API_KEY as string;
 
 // Setup providers and contracts
-const provider = new ethers.JsonRpcProvider(RPC_URL);
+const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 const contract = new ethers.Contract(CONTRACT_ADDRESS, abi.abi, provider);
+const decimals = await contract.decimals();
 
-contract.on("Transfer", (from: string, to: string, amount) =>
+contract.on("Transfer", async (from: string, to: string, amount: ethers.BigNumber) =>
 {
-	console.log("someone sent Blobcoin");
-	console.log(`to: ${to}`);
-	console.log(`from: ${from}`);
-
 	if (to === wallet.address)
 	{
-		// TODO: Top up the player's balance
+		console.log("someone sent Blobcoin to the owner ");
+		// TODO: Top up the user's balance
 		// depending on the amount they sent to the owner
-		console.log(to, amount, from);
+		const formattedAmount = ethers.utils.formatUnits(amount, decimals);
+		const user = await getUserByWalletAddress(from);
+		console.log(`[Deposit] Received ${formattedAmount} tokens from ${from}`);
 	}
 });
 
@@ -43,7 +44,7 @@ async function getDecimals(contractAddress: string): Promise<number>
 {
 	try
 	{
-		return await contract.decimals();
+		return await contract.utils.decimals();
 	}
 	catch (error)
 	{
@@ -82,7 +83,7 @@ export async function getTransfersSnowTrace(recipientAddress: string): Promise<T
 		return ownerTransfers.map((tx: any) => ({
 			from: tx.from,
 			to: tx.to,
-			amount: ethers.formatUnits(tx.value, decimals),
+			amount: ethers.utils.formatUnits(tx.value, decimals),
 			blockNumber: parseInt(tx.blockNumber),
 			transactionHash: tx.hash,
 			timestamp: new Date(parseInt(tx.timeStamp) * 1000).toISOString()
@@ -136,7 +137,7 @@ export async function getTransfersEthersProvider(recipientAddress: string): Prom
 					data: log.data
 				});
 				
-				const amount = ethers.formatUnits(parsedLog!.args[2], decimals);
+				const amount = ethers.utils.formatUnits(parsedLog!.args[2], decimals);
 				
 				transfers.push({
 					from: owner,
@@ -198,7 +199,7 @@ export async function getBalance(address: string): Promise<string>
 		const contract = new ethers.Contract(CONTRACT_ADDRESS, abi.abi, provider);
 		const balance = await contract.balanceOf(address);
 		const decimals = await getDecimals(CONTRACT_ADDRESS);
-		return ethers.formatUnits(balance, decimals);
+		return ethers.utils.formatUnits(balance, decimals);
 	}
 	catch (error)
 	{
@@ -213,7 +214,7 @@ export async function sendTokens(toAddress: string, amount: string): Promise<str
 	{
 		const contract = new ethers.Contract(CONTRACT_ADDRESS, abi.abi, wallet);
 		const decimals = await getDecimals(CONTRACT_ADDRESS);
-		const amountInWei = ethers.parseUnits(amount, decimals);
+		const amountInWei = ethers.utils.parseUnits(amount, decimals);
 		
 		const tx = await contract.transfer(toAddress, amountInWei);
 		await tx.wait();
