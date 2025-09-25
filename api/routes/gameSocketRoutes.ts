@@ -1,11 +1,12 @@
 import { FastifyInstance } from "fastify";
 import { getUws } from '@geut/fastify-uws';
 import { WebSocket } from "uWebSockets.js";
-import { createRoomAsync, joinRoomAsync, getRoomsAsync, leaveRoomAsync, WebSocketUserData, markRoomReadyAsync, markRoomWaitingAsync } from "../controllers/roomSocketController.ts";
+import { create, join, getRooms, leave, markRoomAsReady, markRoomAsWaiting } from "../controllers/roomSocketController.ts";
 import { StringDecoder } from "string_decoder";
 import { getUserCurrentRoom } from "../services/roomService.ts";
 import { updatePlayerPositionRelative, isGameActive } from "../services/gameSocketService.ts";
 import { createBaseBehavior, handleStartGame } from "../controllers/gameSocketController.ts";
+import { WebSocketUserData } from "../controllers/roomSocketController.ts";
 
 const decoder = new StringDecoder("utf8");
 
@@ -32,11 +33,11 @@ export async function gameSocketRoutes(server: FastifyInstance)
 				}
 				console.log("Lobby WebSocket connected for user:", userData.userId);
 			}
-			getRoomsAsync(ws);
+			getRooms(ws);
 		},
 		message: (ws: WebSocket<WebSocketUserData>, message: ArrayBuffer) =>
 		{
-			getRoomsAsync(ws);
+			getRooms(ws);
 		},
 		close: (ws: WebSocket<WebSocketUserData>) =>
 		{
@@ -58,7 +59,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 			{
 				const roomId = getUserCurrentRoom(userData.userId);
 				if (roomId)
-					markRoomReadyAsync(ws, { roomId }, app);
+					markRoomAsReady(ws, { roomId }, app);
 				else
 					ws.send(JSON.stringify({ success: false, error: "Not in any room" }));
 			}
@@ -81,7 +82,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 			{
 				const roomId = getUserCurrentRoom(userData.userId);
 				if (roomId)
-					markRoomWaitingAsync(ws, { roomId }, app);
+					markRoomAsWaiting(ws, { roomId }, app);
 				else
 					ws.send(JSON.stringify({ success: false, error: "Not in any room" }));
 			}
@@ -101,7 +102,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 		message: (ws: WebSocket<WebSocketUserData>, message: ArrayBuffer) =>
 		{
 			const data = JSON.parse(decoder.write(Buffer.from(message)));
-			createRoomAsync(ws, data);
+			create(ws, data);
 		},
 		close: (ws: WebSocket<WebSocketUserData>) =>
 		{
@@ -118,7 +119,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 		message: (ws: WebSocket<WebSocketUserData>, message: ArrayBuffer) =>
 		{
 			const data = JSON.parse(decoder.write(Buffer.from(message)));
-			joinRoomAsync(ws, data, app);
+			join(ws, data);
 		},
 		close: (ws: WebSocket<WebSocketUserData>) =>
 		{
@@ -135,7 +136,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 		message: (ws: WebSocket<WebSocketUserData>, message: ArrayBuffer) =>
 		{
 			const data = JSON.parse(decoder.write(Buffer.from(message)));
-			leaveRoomAsync(ws, data, app);
+			leave(ws, data, app);
 		},
 		close: (ws: WebSocket<WebSocketUserData>) =>
 		{
@@ -169,7 +170,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 		}
 	});
 
-	// Game play WebSocket
+	// Play Game WebSocket
 	app.ws('/ws/game/:roomId',
 	{
 		...baseBehavior,
