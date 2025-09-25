@@ -5,20 +5,11 @@ import { createGameAsync, getAllGamesAsync } from './gameService.ts';
 import { createDefaultPlacementsAsync, getPlacementsByGameAsync } from './placementService.ts';
 import { createTournamentAsync } from './tournamentService.ts';
 import { addUserToTournamentAsync, setPlacementAsync } from './participationService.ts';
-import { GameResult } from './workerService.ts';
+import { GameResult, GameWorkerData } from '../models/gameModels.ts';
 import { getRoomFee } from './roomService.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-interface GameWorkerData
-{
-	worker: Worker;
-	roomId: string;
-	players: Array<{id: string, username: string}>;
-	createdAt: Date;
-}
-
 const gameWorkers = new Map<string, GameWorkerData>();
 
 export function createGame(roomId: string, players: Array<{id: string, username: string}>): boolean
