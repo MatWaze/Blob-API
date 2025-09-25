@@ -1,26 +1,25 @@
 import { WebSocket, TemplatedApp } from "uWebSockets.js";
+import { RoomInfo, RoomPlayer } from "../models/roomModels.ts";
 import {
 	createRoom,
 	getAllRooms,
 	joinRoom,
-	RoomInfo,
 	leaveRoom,
 	getUserCurrentRoom,
 	isUserRoomCreator,
 	getRoomCreator,
-	RoomPlayer,
 	markRoomReady,
 	markRoomWaiting
 } from "../services/roomService.ts";
 
-export interface WebSocketUserData
+interface WebSocketUserData
 {
 	userId: string;
 	username: string;
 	roomId?: string;
-}
+};
 
-export function createRoomAsync(
+export function create(
 	ws: WebSocket<WebSocketUserData>,
 	data: any,
 )
@@ -29,8 +28,10 @@ export function createRoomAsync(
 	const userId = userData?.userId;
 	const username = userData?.username;
 
-	if (!userId || !username) {
-		ws.send(JSON.stringify({
+	if (!userId || !username)
+	{
+		ws.send(JSON.stringify(
+		{
 			success: false,
 			error: "User not authenticated or missing username" 
 		}));
@@ -98,10 +99,9 @@ export function createRoomAsync(
 	}
 }
 
-export function joinRoomAsync(
+export function join(
 	ws: WebSocket<WebSocketUserData>,
-	data: any,
-	app: TemplatedApp
+	data: any
 )
 {
 	const userData = ws.getUserData();
@@ -193,7 +193,7 @@ export function joinRoomAsync(
 	}
 }
 
-export function leaveRoomAsync(
+export function leave(
 	ws: WebSocket<WebSocketUserData>,
 	data: any,
 	app: TemplatedApp
@@ -278,7 +278,7 @@ export function leaveRoomAsync(
 	}
 }
 
-export function getRoomsAsync(ws: WebSocket<WebSocketUserData>)
+export function getRooms(ws: WebSocket<WebSocketUserData>)
 {
 	const userData = ws.getUserData();
 	const userId = userData?.userId;
@@ -325,7 +325,7 @@ export function getRoomsAsync(ws: WebSocket<WebSocketUserData>)
 	}
 }
 
-export function markRoomReadyAsync(
+export function markRoomAsReady(
 	ws: WebSocket<WebSocketUserData>,
 	data: any,
 	app: TemplatedApp
@@ -416,7 +416,7 @@ export function markRoomReadyAsync(
 	}
 }
 
-export function markRoomWaitingAsync(
+export function markRoomAsWaiting(
 	ws: WebSocket<WebSocketUserData>,
 	data: any,
 	app: TemplatedApp
@@ -487,3 +487,5 @@ export function markRoomWaitingAsync(
 		}));
 	}
 }
+export { WebSocketUserData };
+
