@@ -202,7 +202,7 @@ export async function getTokens(
 			}
 			catch (error)
 			{
-				console.log(`access token error: ${error}`);
+				console.log(error);
 				if (sessionData.refreshToken)
 				{
 					try
@@ -216,7 +216,7 @@ export async function getTokens(
 							email: decoded.email
 						}, { expiresIn: '15m' });
 
-						updateSessionAccessToken(sessionId, { accessToken });
+						await updateSessionAccessToken(sessionId, { accessToken });
 					}
 					catch (error)
 					{
