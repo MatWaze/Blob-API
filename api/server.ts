@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply, fastify, FastifyInstance } from 'fastify';
 import userRoutes from './routes/userRoutes.ts';
-import fjwt, { FastifyJWT, JWT } from '@fastify/jwt';
+import fjwt, { JWT } from '@fastify/jwt';
 import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
 import fastifyStatic from '@fastify/static';
 import path from 'path';
@@ -9,8 +9,6 @@ import { fastifyCookie } from '@fastify/cookie'
 import fastifyCors from '@fastify/cors';
 import fastifyUwsPlugin from '@geut/fastify-uws/plugin'
 import { serverFactory } from '@geut/fastify-uws'
-import { saveCookie } from './services/cookieService.ts';
-import { IncomingMessage, ServerResponse } from 'http';
 import blockChainRoutes from './routes/blockChainRoutes.ts';
 
 let server: FastifyInstance;
@@ -38,75 +36,10 @@ declare module 'fastify'
 	}
 }
 
-function parseCookies(cookieHeader: string | undefined): Record<string, string>
-{
-	if (!cookieHeader)
-	{
-		console.log("No cookies found in request");
-		return {};
-	}
-
-	try
-	{
-		return cookieHeader.split(";").reduce((acc, cookie) =>
-		{
-			const [key, value] = cookie.trim().split("=");
-			if (key && value)
-				acc[key] = value;
-			return acc;
-		}, {} as Record<string, string>);
-	}
-	catch (error)
-	{
-		console.error("Error parsing cookies:", error);
-		return {};
-	}
-}
-
 async function buildServer()
 {
 	server = fastify({serverFactory})
 		.withTypeProvider<ZodTypeProvider>();
-
-	// server.decorate(
-	// 	'refreshAccessToken',
-	// 	async (request: FastifyRequest, reply: FastifyReply) =>
-	// 	{
-	// 		const refreshToken = request.cookies.refreshToken;
-	// 		if (!refreshToken)
-	// 		{
-	// 			reply.clearCookie('accessToken');
-	// 			reply.clearCookie('refreshToken');
-	// 			return reply.code(401).send({ message: 'Missing refresh token', needsLogin: true });
-	// 		}
-
-	// 		try
-	// 		{
-	// 			const decoded = server.jwt.verify(refreshToken) as FastifyJWT;
-				
-	// 			const newAccessToken = server.jwt.sign(
-	// 				{ id: decoded.id, username: decoded.username, email: decoded.email }, // Fix: Sign payload directly
-	// 				{ expiresIn: "15m" }
-	// 			);
-
-	// 			saveCookie(reply, 'accessToken', newAccessToken);
-
-	// 			return reply.code(200).send({ 
-	// 				message: 'Token refreshed successfully',
-	// 				accessToken: newAccessToken 
-	// 			});
-	// 		}
-	// 		catch (refreshError)
-	// 		{
-	// 			reply.clearCookie('accessToken');
-	// 			reply.clearCookie('refreshToken');
-	// 			return reply.code(401).send({ 
-	// 				message: 'Invalid refresh token', 
-	// 				needsLogin: true 
-	// 			});
-	// 		}
-	// 	}
-	// );
 
 	server.decorate(
 		'authenticate',
@@ -143,9 +76,6 @@ async function buildServer()
 		return next();
 	});
 
-	
-	// await server.register(fastifyMiddie);
-
 	const CORS_WHITELIST = [
 		'http://localhost:4000',
 		'http://localhost:3065',
@@ -154,15 +84,15 @@ async function buildServer()
 	];
 
 	await server.register(fastifyCors, {
-	// origin can be a function that fastify-cors calls for each request
+		// origin can be a function that fastify-cors calls for each request
 		origin: (origin, callback) => {
 
 			// allow requests with no origin (curl, same-origin, mobile apps)
-			if (!origin) return callback(null, true);
+			if (!origin)
+				return callback(null, true);
 
-			if (CORS_WHITELIST.includes(origin)) {
-			return callback(null, true);
-			}
+			if (CORS_WHITELIST.includes(origin))
+				return callback(null, true);
 
 			// optional: allow subdomains of example.com
 			// if (/\.example\.com$/.test(origin)) return callback(null, true);
@@ -171,8 +101,6 @@ async function buildServer()
 		},
 		credentials: true
 	});
-
-	// server.use(checkAccessTokenMiddleware);
 
 	server.setValidatorCompiler(validatorCompiler);
 	server.setSerializerCompiler(serializerCompiler);
@@ -186,7 +114,8 @@ async function buildServer()
 	});
 
 
-	await server.register(fastifyStatic, {
+	await server.register(fastifyStatic,
+	{
 		root: path.resolve('.'),
 		prefix: '/',
 	});
