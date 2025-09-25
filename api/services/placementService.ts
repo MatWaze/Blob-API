@@ -1,4 +1,3 @@
-import { number } from "zod/v4";
 import placementRepo from "../repositories/placementRepository/placementFactory.ts";
 
 const MAX_LENGTH: number = 14
