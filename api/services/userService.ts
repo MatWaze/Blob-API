@@ -1,4 +1,3 @@
-import { CreateUserType } from "../models/userSchema.ts";
 import userRepo from "../repositories/userRepository/userFactory.ts";
 import bcrypt from "bcrypt";
 import { confirmationEmail, getMailClient } from "./emailService.ts";
