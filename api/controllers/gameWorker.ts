@@ -1,5 +1,6 @@
 import { isMainThread, parentPort, workerData } from 'worker_threads';
-import { calculatePlayerPositions, checkCollisions, GameState } from '../services/workerService.ts';
+import { calculatePlayerPositions, checkCollisions } from '../services/workerService.ts';
+import { GameState } from '../models/gameModels.ts';
 
 if (!isMainThread)
 {

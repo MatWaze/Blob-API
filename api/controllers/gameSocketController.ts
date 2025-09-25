@@ -4,7 +4,7 @@ import { FastifyInstance } from "fastify";
 import { isUserRoomCreator, getRoom } from "../services/roomService.ts";
 import { createGame, getGameWorker, stopGame } from "../services/gameSocketService.ts";
 import { FastifyJWT } from "@fastify/jwt";
-import { GameResult } from "../services/workerService.ts";
+import { GameResult } from "../models/gameModels.ts";
 import { getSession, updateSessionAccessToken } from "../services/sessionService.ts";
 
 // async function authenticateWebSocket(res: HttpResponse, req: HttpRequest, server: FastifyInstance)
