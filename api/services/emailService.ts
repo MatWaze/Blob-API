@@ -50,7 +50,7 @@ export const confirmationEmail = (
 				Click the link below to confirm your email.
 			</p>
 			<a
-				href="${apiBaseUrl}/email/confirm?tok=${tok}"
+				href="${apiBaseUrl}/email/confirm?nonce=${tok}"
 				style="
 				text-decoration: none;
 				background-color: #164293ff;
