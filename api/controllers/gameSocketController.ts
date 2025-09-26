@@ -99,8 +99,9 @@ async function authenticateWebSocket(
 
 	try
 	{
+		// console.log(req.getHeader('cookie'));
 		const query = req.getQuery();
-		const sessionId = new URLSearchParams(query).get('userId');
+		const sessionId = new URLSearchParams(query).get('sId');
 
 		if (!sessionId)
 		{
@@ -219,16 +220,16 @@ export function handleStartGame(
 	app: TemplatedApp
 )
 {
-	if (!isUserRoomCreator(userId, roomId))
-	{
-		ws.send(JSON.stringify(
-		{
-			success: false,
-			message: "Only room creator can start game" 
-		}));
+	// if (!isUserRoomCreator(userId, roomId))
+	// {
+	// 	ws.send(JSON.stringify(
+	// 	{
+	// 		success: false,
+	// 		message: "Only room creator can start game" 
+	// 	}));
 
-		return;
-	}
+	// 	return;
+	// }
 
 	const room = getRoom(roomId);
 
@@ -242,23 +243,29 @@ export function handleStartGame(
 		return;
 	}
 
-	const players = Array.from(room.players).map(p =>
-	({
-		id: p.id,
-		username: p.username
-	}));
-
-	// check if there are enough players in the game
-	if (players.length < room.maxPlayers / 2)
+	room.players.forEach(p =>
 	{
-		ws.send(JSON.stringify(
+		if (!p.isReady)
 		{
-			success: false,
-			message: "Not enough players to start the game. Must be at least half of the maximum player count."
-		}))
-	}
+			ws.send(JSON.stringify(
+			{
+				success: false,
+				message: `Player ${p.username} is not ready yet.`
+			}))
+			return;
+		}
+	});
+	// check if there are enough players in the game
+	// if (players.length < room.maxPlayers / 2)
+	// {
+	// 	ws.send(JSON.stringify(
+	// 	{
+	// 		success: false,
+	// 		message: "Not enough players to start the game. Must be at least half of the maximum player count."
+	// 	}))
+	// }
 
-	const success = createGame(roomId, players);
+	const success = createGame(roomId, Array.from(room.players));
 
 	if (success)
 	{
