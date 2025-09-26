@@ -38,7 +38,7 @@ export async function googleSignInAsync(
 				authMethod: "GOOGLE"
 			});
 		}
-		
+
 		const { password, ...rest } = user;
 
 		await setSessionCookie(request, response, rest);
