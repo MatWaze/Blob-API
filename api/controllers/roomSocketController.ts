@@ -368,14 +368,16 @@ export function markRoomAsReady(
 			ws.send(JSON.stringify({
 				roomStateChanged: {
 					roomId: data.roomId,
-					newState: "ready",
+					// newState: "ready",
 					room: {
 						id: room.id,
 						name: room.name,
 						entryFee: room.entryFee,
-						players: Array.from(room.players).map((player: RoomPlayer) => ({
+						players: Array.from(room.players).map((player: RoomPlayer) => (
+						{
 							id: player.id,
-							username: player.username
+							username: player.username,
+							isReady: player.isReady
 						})),
 						maxPlayers: room.maxPlayers,
 						state: room.state,
@@ -459,14 +461,15 @@ export function markRoomAsWaiting(
 			app.publish(data.roomId, JSON.stringify({
 				roomStateChanged: {
 					roomId: data.roomId,
-					newState: "waiting",
+					// newState: "waiting",
 					room: {
 						id: room.id,
 						name: room.name,
 						entryFee: room.entryFee,
 						players: Array.from(room.players).map((player: RoomPlayer) => ({
 							id: player.id,
-							username: player.username
+							username: player.username,
+							isReady: player.isReady
 						})),
 						maxPlayers: room.maxPlayers,
 						state: room.state,
