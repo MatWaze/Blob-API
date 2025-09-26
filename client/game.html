@@ -316,7 +316,7 @@ class GameClient {
 		}
 
 		// Use sessionId in WebSocket URL
-		this.lobbyWs = new WebSocket(`ws://localhost:4000/ws/lobby?userId=${this.sessionId}`);
+		this.lobbyWs = new WebSocket(`ws://localhost:4000/ws/lobby?sId=${this.sessionId}`);
 		
 		this.lobbyWs.onopen = () => {
 			this.updateStatus('Connected to lobby', 'success');
@@ -354,7 +354,7 @@ class GameClient {
 		}
 
 		// Use sessionId in WebSocket URL
-		this.gameWs = new WebSocket(`ws://localhost:4000/ws/game/${this.currentRoomId}?userId=${this.sessionId}`);
+		this.gameWs = new WebSocket(`ws://localhost:4000/ws/game/${this.currentRoomId}?sId=${this.sessionId}`);
 		
 		this.gameWs.onopen = () => {
 			console.log('Game WebSocket connected');
@@ -587,7 +587,7 @@ class GameClient {
 	}
 
 	createRoom(entryFee, maxPlayers) {
-		const ws = new WebSocket(`ws://localhost:4000/ws/room/create?userId=${this.sessionId}`);
+		const ws = new WebSocket(`ws://localhost:4000/ws/room/create?sId=${this.sessionId}`);
 		
 		ws.onopen = () => {
 			ws.send(JSON.stringify({ entryFee, maxPlayers }));
@@ -605,7 +605,7 @@ class GameClient {
 	}
 
 	joinRoom(roomId) {
-		const ws = new WebSocket(`ws://localhost:4000/ws/room/join?userId=${this.sessionId}`);
+		const ws = new WebSocket(`ws://localhost:4000/ws/room/join?sId=${this.sessionId}`);
 		
 		ws.onopen = () => {
 			ws.send(JSON.stringify({ roomId }));
@@ -625,7 +625,7 @@ class GameClient {
 	leaveRoom() {
 		if (!this.currentRoomId) return;
 
-		const ws = new WebSocket(`ws://localhost:4000/ws/room/leave?userId=${this.sessionId}`);
+		const ws = new WebSocket(`ws://localhost:4000/ws/room/leave?sId=${this.sessionId}`);
 		
 		ws.onopen = () => {
 			ws.send(JSON.stringify({ roomId: this.currentRoomId }));
@@ -655,7 +655,7 @@ class GameClient {
 	startGame() {
 		if (!this.currentRoomId) return;
 
-		const ws = new WebSocket(`ws://localhost:4000/ws/game/${this.currentRoomId}/start?userId=${this.sessionId}`);
+		const ws = new WebSocket(`ws://localhost:4000/ws/game/${this.currentRoomId}/start?sId=${this.sessionId}`);
 		
 		ws.onopen = () => {
 			ws.send('start');
@@ -675,7 +675,7 @@ class GameClient {
 	markRoomReady() {
 		if (!this.currentRoomId) return;
 
-		const ws = new WebSocket(`ws://localhost:4000/ws/room/markReady?userId=${this.sessionId}`);
+		const ws = new WebSocket(`ws://localhost:4000/ws/room/markReady?sId=${this.sessionId}`);
 		
 		ws.onopen = () => {
 			ws.send('ready');
@@ -700,7 +700,7 @@ class GameClient {
 		if (!this.currentRoomId) return;
 
 		// Use dedicated endpoint - no room ID needed, server determines it
-		const ws = new WebSocket(`ws://localhost:4000/ws/room/markWaiting?userId=${this.sessionId}`);
+		const ws = new WebSocket(`ws://localhost:4000/ws/room/markWaiting?sId=${this.sessionId}`);
 		
 		ws.onopen = () => {
 			ws.send('waiting'); // Simple message, server validates everything
