@@ -202,7 +202,6 @@ export async function getTokens(
 			}
 			catch (error)
 			{
-				console.log(error);
 				if (sessionData.refreshToken)
 				{
 					try
