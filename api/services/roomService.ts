@@ -26,7 +26,7 @@ export function createRoom(
 		id,
 		name,
 		entryFee,
-		players: new Set(),
+		players: new Set<RoomPlayer>(),
 		maxPlayers,
 		createdAt: new Date(),
 		state: "waiting",
@@ -37,7 +37,8 @@ export function createRoom(
 	// Always auto-join creator
 	const creatorPlayer: RoomPlayer = {
 		id: creatorUserId,
-		username: creatorUsername
+		username: creatorUsername,
+		isReady: false
 	};
 	room.players.add(creatorPlayer);
 	userRoomMapping.set(creatorUserId, id);
@@ -75,7 +76,8 @@ export function joinRoom(
 
 	const player: RoomPlayer = {
 		id: userId,
-		username: username
+		username: username,
+		isReady: false
 	};
 
 	room.players.add(player);
@@ -97,7 +99,7 @@ export function leaveRoom(roomId: string, userId: string): { success: boolean; m
 	}
 
 	// Find and remove the player
-	const playerToRemove = Array.from(room.players).find(p => p.id === userId);
+	const playerToRemove = getPlayerFromRoom(room, userId);
 	if (!playerToRemove) {
 		return { success: false, message: "You are not in this room" };
 	}
@@ -190,15 +192,23 @@ export function markRoomReady(roomId: string, userId: string): { success: boolea
 	if (!room)
 		return { success: false, message: "Room not found" };
 
-	if (!isUserRoomCreator(userId, roomId))
-		return { success: false, message: "Only room creator can mark room as ready" };
+	// if (!isUserRoomCreator(userId, roomId))
+	// 	return { success: false, message: "Only room creator can mark room as ready" };
 
 	if (room.players.size < 2)
 		return { success: false, message: "Need at least 2 players to mark room as ready" };
 
-	room.state = "ready";
-	console.log(`Room ${roomId} marked as ready by creator ${userId}`);
-	return { success: true };
+	const usr : RoomPlayer | undefined = getPlayerFromRoom(room, userId);
+	
+	if (usr)
+	{
+		usr.isReady = true;
+
+		console.log(`Player ${userId} marked as ready`);
+		return { success: true, message: "marked ready" };
+	}
+
+	return { success: false, message: "not marked ready" };
 }
 
 export function markRoomWaiting(roomId: string, userId: string): { success: boolean; message?: string }
@@ -207,10 +217,24 @@ export function markRoomWaiting(roomId: string, userId: string): { success: bool
 	if (!room)
 		return { success: false, message: "Room not found" };
 
-	if (!isUserRoomCreator(userId, roomId))
-		return { success: false, message: "Only room creator can mark room as waiting" };
+	// if (!isUserRoomCreator(userId, roomId))
+	// 	return { success: false, message: "Only room creator can mark room as waiting" };
 
-	room.state = "waiting";
-	console.log(`Room ${roomId} marked as waiting by creator ${userId}`);
-	return { success: true };
+	const usr : RoomPlayer | undefined = getPlayerFromRoom(room, userId);
+
+	if (usr)
+	{
+		usr.isReady = false;
+
+		console.log(`Player ${userId} marked as waiting`);
+		return { success: true, message: "marked waiting" };
+	}
+
+	return { success: false, message: "not marked as waiting" };
+}
+
+function getPlayerFromRoom(room: RoomInfo, userId: string)
+	: RoomPlayer | undefined
+{
+	return Array.from(room.players).find(p => p.id === userId)
 }
