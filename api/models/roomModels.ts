@@ -2,8 +2,9 @@ export type RoomState = "waiting" | "ready";
 
 export type RoomPlayer =
 {
-	id: string;
-	username: string;
+	id:			string;
+	username:	string;
+	isReady:	boolean;
 };
 
 export type RoomInfo =
