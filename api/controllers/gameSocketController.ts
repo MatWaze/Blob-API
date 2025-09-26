@@ -83,6 +83,17 @@ import { getSession, updateSessionAccessToken } from "../services/sessionService
 // 	}
 // }
 
+function getSessionCookie(req: HttpRequest, cookie: string)
+{
+	const value = `; ${cookie}`;
+	const parts = value.split(`sessionId=`);
+
+	if (parts.length === 2)
+		return parts.pop()!.split(';').shift();
+
+	return null;
+}
+
 async function authenticateWebSocket(
 	res: HttpResponse,
 	req: HttpRequest,
@@ -100,8 +111,13 @@ async function authenticateWebSocket(
 	try
 	{
 		// console.log(req.getHeader('cookie'));
-		const query = req.getQuery();
-		const sessionId = new URLSearchParams(query).get('sId');
+		var sessionId = getSessionCookie(req, req.getHeader('cookie'));
+		// console.log(`sessionId: ${sessionId}`);
+		if (!sessionId)
+		{
+			const query = req.getQuery();
+			sessionId = new URLSearchParams(query).get('sId');
+		}
 
 		if (!sessionId)
 		{
