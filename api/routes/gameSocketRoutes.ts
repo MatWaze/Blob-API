@@ -150,7 +150,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 			const userData = ws.getUserData();
 			if (userData?.userId)
 				console.log("Join room WebSocket disconnected:", userData.userId);
-		}
+		} 
 	});
 
 	// Room leaving WebSocket
@@ -160,7 +160,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 		message: (ws: WebSocket<WebSocketUserData>, message: ArrayBuffer) =>
 		{
 			const data = JSON.parse(decoder.write(Buffer.from(message)));
-			leave(ws, data, app);
+			leave(ws, data);
 		},
 		close: (ws: WebSocket<WebSocketUserData>) =>
 		{
