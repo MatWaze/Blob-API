@@ -6,8 +6,6 @@ import {
 	joinRoom,
 	leaveRoom,
 	getUserCurrentRoom,
-	isUserRoomCreator,
-	getRoomCreator,
 	markRoomReady,
 	markRoomWaiting
 } from "../services/roomService.ts";
@@ -66,24 +64,10 @@ export function create(
 		// ws.subscribe(`game:${room.id}`);
 		// console.log(`Creator ${userId} subscribed to room ${room.id}`);
 
-		// Simple success response - no hardcoded types
 		ws.send(JSON.stringify(
 		{
 			success: true,
 			roomId: roomId,
-			// isCreator: true,
-			// room: {
-			// 	// id: room.id,
-			// 	name: room.name,
-			// 	entryFee: room.entryFee,
-			// 	// players: Array.from(room.players).map((player: RoomPlayer) => ({
-			// 	// 	id: player.id,
-			// 	// 	username: player.username
-			// 	// })),
-			// 	maxPlayers: room.maxPlayers,
-			// 	state: room.state,
-			// 	// createdAt: room.createdAt.toISOString()
-			// }
 		}));
 		
 		console.log(`Room created by ${username} (${userId})`);
@@ -137,34 +121,11 @@ export function join(
 		// ws.subscribe(`game:${data.roomId}`);
 		// console.log(`User ${userId} subscribed to room ${data.roomId}`);
 
-		// Simple success response - no hardcoded types
 		ws.send(JSON.stringify(
 		{
 			success: true,
 			roomId: data.roomId
-			// isCreator: isUserRoomCreator(userId, data.roomId)
 		}));
-		
-		// Notify other room members - simple notification with updated room state
-		// app.publish(data.roomId, JSON.stringify(
-		// {
-		// 	userJoined: {
-		// 		userId: userId,
-		// 		username: username,
-		// 		room: room ? {
-		// 			id: room.id,
-		// 			name: room.name,
-		// 			entryFee: room.entryFee,
-		// 			players: Array.from(room.players).map((player: RoomPlayer) => ({
-		// 				id: player.id,
-		// 				username: player.username
-		// 			})),
-		// 			maxPlayers: room.maxPlayers,
-		// 			state: room.state,
-		// 			createdAt: room.createdAt.toISOString()
-		// 		} : null
-		// 	}
-		// }));
 		
 		console.log(`${username} (${userId}) joined room: ${data.roomId}`);
 	}
@@ -181,8 +142,7 @@ export function join(
 
 export function leave(
 	ws: WebSocket<WebSocketUserData>,
-	data: any,
-	app: TemplatedApp
+	data: any
 )
 {
 	console.log(data);
@@ -217,7 +177,6 @@ export function leave(
 
 		// Unsubscribe from the room channel
 		ws.unsubscribe(data.roomId);
-		
 		// Notify remaining room members - simple notification
 		// const room = getAllRooms().find(r => r.id === data.roomId);
 		// if (room)
@@ -225,12 +184,11 @@ export function leave(
 			// Simple success response - no hardcoded types
 			ws.send(JSON.stringify(
 			{
-				success: true,
-				// room: room
+				success: true
 			}));
 		// }
 		
-		console.log(`${username || userId} left room: ${data.roomId}`);
+		console.log(`${username} left room: ${data.roomId}`);
 	}
 	catch (err)
 	{
@@ -322,12 +280,6 @@ export function markRoomAsReady(
 			return;
 		}
 
-		// ws.send(JSON.stringify({
-		// 	success: true,
-		// 	message: "Room marked as ready"
-		// }));
-
-		// Get updated room and send direct update to the requesting client
 		// const room = getAllRooms().find(r => r.id === data.roomId);
 		// if (room) {
 			// Send roomStateChanged directly to this WebSocket
@@ -351,25 +303,6 @@ export function markRoomAsReady(
 					// }
 				}
 			}));
-
-			// Also publish to room subscribers
-			// app.publish(data.roomId, JSON.stringify({
-			// 	roomStateChanged: {
-			// 		roomId: data.roomId,
-			// 		newState: "ready",
-			// 		room: {
-			// 			id: room.id,
-			// 			entryFee: room.entryFee,
-			// 			players: Array.from(room.players).map((player: RoomPlayer) => ({
-			// 				id: player.id,
-			// 				username: player.username
-			// 			})),
-			// 			maxPlayers: room.maxPlayers,
-			// 			state: room.state,
-			// 			createdAt: room.createdAt.toISOString()
-			// 		}
-			// 	}
-			// }));
 		// }
 
 		console.log(`Room ${data.roomId} marked as ready by ${userId}`);
@@ -414,11 +347,6 @@ export function markRoomAsWaiting(
 			}));
 			return;
 		}
-
-		// ws.send(JSON.stringify({
-		// 	success: true,
-		// 	message: "Room marked as waiting"
-		// }));
 
 		// Notify all room members of state change
 		// const room = getAllRooms().find(r => r.id === data.roomId);
