@@ -3,7 +3,7 @@ import { getUws } from '@geut/fastify-uws';
 import { WebSocket } from "uWebSockets.js";
 import { create, join, getRooms, leave, markRoomAsReady, markRoomAsWaiting } from "../controllers/roomSocketController.ts";
 import { StringDecoder } from "string_decoder";
-import { getUserCurrentRoom } from "../services/roomService.ts";
+import { getRoomDetails, getUserCurrentRoom } from "../services/roomService.ts";
 import { updatePlayerPositionRelative, isGameActive } from "../services/gameSocketService.ts";
 import { createBaseBehavior, handleStartGame } from "../controllers/gameSocketController.ts";
 import { WebSocketUserData } from "../controllers/roomSocketController.ts";
@@ -45,6 +45,30 @@ export async function gameSocketRoutes(server: FastifyInstance)
 
 			if (userData?.userId)
 				console.log("Lobby WebSocket disconnected:", userData.userId);
+		}
+	});
+
+	// Get room details
+	app.ws('/ws/room/:roomId/details',
+	{
+		...baseBehavior,
+		message: (ws: WebSocket<WebSocketUserData>) =>
+		{
+			const roomIdFromUrl = ws.getParameter(0);
+
+			if (roomIdFromUrl)
+			{
+				const room = getRoomDetails(roomIdFromUrl);
+
+				if (room)
+					ws.send(JSON.stringify(room));
+			}
+		},
+		close: (ws: WebSocket<WebSocketUserData>) =>
+		{
+			const userData = ws.getUserData();
+			if (userData?.userId)
+				console.log("Room Details WebSocket disconnected");
 		}
 	});
 
@@ -153,14 +177,12 @@ export async function gameSocketRoutes(server: FastifyInstance)
 		message: (ws: WebSocket<WebSocketUserData>, message: ArrayBuffer) =>
 		{
 			const userData = ws.getUserData();
-			if (userData?.userId)
-			{
-				const roomId = getUserCurrentRoom(userData.userId);
-				if (roomId)
-					handleStartGame(ws, roomId, userData.userId, app);
-				else
-					ws.send(JSON.stringify({ success: false, error: "Not in any room" }));
-			}
+			const roomId = ws.getParameter(0);
+
+			if (userData.userId && roomId)
+				handleStartGame(ws, roomId, userData.userId, app);
+			else
+				ws.send(JSON.stringify({ success: false, error: "Not in any room" }));
 		},
 		close: (ws: WebSocket<WebSocketUserData>) =>
 		{
@@ -171,7 +193,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 	});
 
 	// Play Game WebSocket
-	app.ws('/ws/game/:roomId',
+	app.ws('/ws/game',
 	{
 		...baseBehavior,
 		open: (ws: WebSocket<WebSocketUserData>) =>

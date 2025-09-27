@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
-import { RoomInfo, RoomPlayer } from "../models/roomModels";
+import { RoomDetails, RoomInfo, RoomPlayer } from "../models/roomModels";
 
-const rooms = new Map<string, RoomInfo>();
+export const rooms = new Map<string, RoomInfo>();
 const userRoomMapping = new Map<string, string>(); // userId -> roomId
 
 export function createRoom(
@@ -10,7 +10,7 @@ export function createRoom(
 	creatorUsername: string,
 	maxPlayers: number,
 	name: string
-): { success: boolean; room?: RoomInfo; message?: string }
+): { success: boolean; message?: string; roomId?: string; }
 {
 	if (userRoomMapping.has(creatorUserId))
 	{
@@ -44,7 +44,7 @@ export function createRoom(
 	userRoomMapping.set(creatorUserId, id);
 
 	console.log(`Room ${id} created by ${creatorUsername} (${creatorUserId})`);
-	return { success: true, room };
+	return { success: true, roomId: id };
 }
 
 export function joinRoom(
@@ -154,19 +154,23 @@ export function getRoomCreator(roomId: string): RoomPlayer | undefined
 	return Array.from(room.players)[0];
 }
 
-export function getRoom(roomId: string): RoomInfo | undefined
+export function getRoomDetails(roomId: string): RoomDetails | undefined
 {
-	rooms.forEach(r =>
-	{
-		console.log(`id: ${r.id}, fee: ${r.entryFee}`);
-	});
+	const room = rooms.get(roomId);
 
-	return rooms.get(roomId);
+	if (!room)
+		return undefined;
+
+	return {
+		players: room.players,
+		creator: getRoomCreator(roomId),
+		createdAt: room.createdAt
+	};
 }
 
 export function getRoomFee(roomId: string): number | undefined
 {
-	const room = getRoom(roomId);
+	const room = rooms.get(roomId);
 
 	return room?.entryFee;
 }

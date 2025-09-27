@@ -59,34 +59,34 @@ export function create(
 			return;
 		}
 
-		const room = result.room!;
+		const roomId = result.roomId!;
 		
 		// Subscribe this WebSocket (which could be lobby or create connection) to the room
-		ws.subscribe(room.id);
-		ws.subscribe(`game:${room.id}`);
-		console.log(`Creator ${userId} subscribed to room ${room.id}`);
+		// ws.subscribe(room.id);
+		// ws.subscribe(`game:${room.id}`);
+		// console.log(`Creator ${userId} subscribed to room ${room.id}`);
 
 		// Simple success response - no hardcoded types
 		ws.send(JSON.stringify(
 		{
 			success: true,
-			roomId: room.id,
-			isCreator: true,
-			room: {
-				id: room.id,
-				name: room.name,
-				entryFee: room.entryFee,
-				players: Array.from(room.players).map((player: RoomPlayer) => ({
-					id: player.id,
-					username: player.username
-				})),
-				maxPlayers: room.maxPlayers,
-				state: room.state,
-				createdAt: room.createdAt.toISOString()
-			}
+			roomId: roomId,
+			// isCreator: true,
+			// room: {
+			// 	// id: room.id,
+			// 	name: room.name,
+			// 	entryFee: room.entryFee,
+			// 	// players: Array.from(room.players).map((player: RoomPlayer) => ({
+			// 	// 	id: player.id,
+			// 	// 	username: player.username
+			// 	// })),
+			// 	maxPlayers: room.maxPlayers,
+			// 	state: room.state,
+			// 	// createdAt: room.createdAt.toISOString()
+			// }
 		}));
 		
-		console.log(`Room created by ${username} (${userId}): ${room.id}`);
+		console.log(`Room created by ${username} (${userId})`);
 	}
 	catch (err)
 	{
@@ -120,7 +120,6 @@ export function join(
 
 	try
 	{
-		console.log(data.roomId);
 		const result = joinRoom(data.roomId, userId, username);
 		
 		if (!result.success)
@@ -134,29 +133,16 @@ export function join(
 		}
 		
 		// Subscribe to the room
-		ws.subscribe(data.roomId);
-		ws.subscribe(`game:${data.roomId}`);
-		console.log(`User ${userId} subscribed to room ${data.roomId}`);
+		// ws.subscribe(data.roomId);
+		// ws.subscribe(`game:${data.roomId}`);
+		// console.log(`User ${userId} subscribed to room ${data.roomId}`);
 
-		const room = getAllRooms().find(r => r.id === data.roomId);
-		
 		// Simple success response - no hardcoded types
 		ws.send(JSON.stringify(
 		{
 			success: true,
-			isCreator: isUserRoomCreator(userId, data.roomId),
-			room: room ? {
-				id: room.id,
-				name: room.id,
-				entryFee: room.entryFee,
-				players: Array.from(room.players).map((player: RoomPlayer) => ({
-					id: player.id,
-					username: player.username
-				})),
-				maxPlayers: room.maxPlayers,
-				state: room.state,
-				createdAt: room.createdAt.toISOString()
-			} : null
+			roomId: data.roomId
+			// isCreator: isUserRoomCreator(userId, data.roomId)
 		}));
 		
 		// Notify other room members - simple notification with updated room state
@@ -217,7 +203,6 @@ export function leave(
 
 	try
 	{
-		console.log(data.roomId);
 		const result = leaveRoom(data.roomId, userId);
 
 		if (!result.success)
@@ -234,36 +219,16 @@ export function leave(
 		ws.unsubscribe(data.roomId);
 		
 		// Notify remaining room members - simple notification
-		const room = getAllRooms().find(r => r.id === data.roomId);
-		if (room)
-		{
-			// app.publish(data.roomId, JSON.stringify(
-			// {
-			// 	userLeft: {
-			// 		userId: userId,
-			// 		username: username,
-			// 		room: {
-			// 			id: room.id,
-			// 			name: room.name,
-			// 			entryFee: room.entryFee,
-			// 			players: Array.from(room.players).map((player: RoomPlayer) =>
-			// 			({
-			// 				id: player.id,
-			// 				username: player.username
-			// 			})),
-			// 			maxPlayers: room.maxPlayers,
-			// 			state: room.state,
-			// 			createdAt: room.createdAt.toISOString()
-			// 		}
-			// 	}
-			// }));
-		// Simple success response - no hardcoded types
+		// const room = getAllRooms().find(r => r.id === data.roomId);
+		// if (room)
+		// {
+			// Simple success response - no hardcoded types
 			ws.send(JSON.stringify(
 			{
 				success: true,
-				room: room
+				// room: room
 			}));
-		}
+		// }
 		
 		console.log(`${username || userId} left room: ${data.roomId}`);
 	}
@@ -290,28 +255,29 @@ export function getRooms(ws: WebSocket<WebSocketUserData>)
 		// Direct rooms array - no hardcoded message types
 		ws.send(JSON.stringify(
 		{
+			currentRoomId: currentRoomId,
 			rooms: getAllRooms().map((room: RoomInfo) =>
 			{
-				const creator = getRoomCreator(room.id);
+				// const creator = getRoomCreator(room.id);
 				return {
 					id: room.id,
 					name: room.name,
 					entryFee: room.entryFee,
-					players: Array.from(room.players).map((player: RoomPlayer) =>
-					({
-						id: player.id,
-						username: player.username
-					})),
+					count: room.players.size,
+					// players: Array.from(room.players).map((player: RoomPlayer) =>
+					// ({
+					// 	id: player.id,
+					// 	username: player.username
+					// })),
 					maxPlayers: room.maxPlayers,
 					state: room.state,
-					createdAt: room.createdAt.toISOString(),
-					createdBy: creator?.id,
-					creatorUsername: creator?.username,
-					isCurrentRoom: currentRoomId === room.id,
-					isCreator: userId ? isUserRoomCreator(userId, room.id) : false
+					// createdAt: room.createdAt.toISOString(),
+					// createdBy: creator?.id,
+					// creatorUsername: creator?.username,
+					// isCurrentRoom: currentRoomId === room.id,
+					// isCreator: userId ? isUserRoomCreator(userId, room.id) : false
 				};
-			}),
-			currentRoomId: currentRoomId
+			})
 		}));
 	}
 	catch (err)
@@ -362,27 +328,27 @@ export function markRoomAsReady(
 		// }));
 
 		// Get updated room and send direct update to the requesting client
-		const room = getAllRooms().find(r => r.id === data.roomId);
-		if (room) {
+		// const room = getAllRooms().find(r => r.id === data.roomId);
+		// if (room) {
 			// Send roomStateChanged directly to this WebSocket
 			ws.send(JSON.stringify({
 				roomStateChanged: {
 					roomId: data.roomId,
 					// newState: "ready",
-					room: {
-						id: room.id,
-						name: room.name,
-						entryFee: room.entryFee,
-						players: Array.from(room.players).map((player: RoomPlayer) => (
-						{
-							id: player.id,
-							username: player.username,
-							isReady: player.isReady
-						})),
-						maxPlayers: room.maxPlayers,
-						state: room.state,
-						createdAt: room.createdAt.toISOString()
-					}
+					// room: {
+					// 	// id: room.id,
+					// 	name: room.name,
+					// 	entryFee: room.entryFee,
+					// 	// players: Array.from(room.players).map((player: RoomPlayer) => (
+					// 	// {
+					// 	// 	id: player.id,
+					// 	// 	username: player.username,
+					// 	// 	isReady: player.isReady
+					// 	// })),
+					// 	maxPlayers: room.maxPlayers,
+					// 	state: room.state,
+					// 	// createdAt: room.createdAt.toISOString()
+					// }
 				}
 			}));
 
@@ -404,7 +370,7 @@ export function markRoomAsReady(
 			// 		}
 			// 	}
 			// }));
-		}
+		// }
 
 		console.log(`Room ${data.roomId} marked as ready by ${userId}`);
 	}
@@ -455,29 +421,29 @@ export function markRoomAsWaiting(
 		// }));
 
 		// Notify all room members of state change
-		const room = getAllRooms().find(r => r.id === data.roomId);
-		if (room)
-		{
-			app.publish(data.roomId, JSON.stringify({
+		// const room = getAllRooms().find(r => r.id === data.roomId);
+		// if (room)
+		// {
+			ws.send(JSON.stringify({
 				roomStateChanged: {
 					roomId: data.roomId,
 					// newState: "waiting",
-					room: {
-						id: room.id,
-						name: room.name,
-						entryFee: room.entryFee,
-						players: Array.from(room.players).map((player: RoomPlayer) => ({
-							id: player.id,
-							username: player.username,
-							isReady: player.isReady
-						})),
-						maxPlayers: room.maxPlayers,
-						state: room.state,
-						createdAt: room.createdAt.toISOString()
-					}
+					// room: {
+					// 	id: room.id,
+					// 	name: room.name,
+					// 	entryFee: room.entryFee,
+					// 	// players: Array.from(room.players).map((player: RoomPlayer) => ({
+					// 	// 	id: player.id,
+					// 	// 	username: player.username,
+					// 	// 	isReady: player.isReady
+					// 	// })),
+					// 	maxPlayers: room.maxPlayers,
+					// 	state: room.state,
+					// 	// createdAt: room.createdAt.toISOString()
+					// }
 				}
 			}));
-		}
+		// }
 
 		console.log(`Room ${data.roomId} marked as waiting by ${userId}`);
 	}

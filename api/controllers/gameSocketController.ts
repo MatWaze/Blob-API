@@ -1,7 +1,7 @@
 import { WebSocket, TemplatedApp, HttpResponse, HttpRequest, WebSocketBehavior, us_socket_context_t } from "uWebSockets.js";
 import { WebSocketUserData } from "./roomSocketController.ts";
 import { FastifyInstance } from "fastify";
-import { isUserRoomCreator, getRoom } from "../services/roomService.ts";
+import { getRoomDetails, rooms } from "../services/roomService.ts";
 import { createGame, getGameWorker, stopGame } from "../services/gameSocketService.ts";
 import { FastifyJWT } from "@fastify/jwt";
 import { GameResult } from "../models/gameModels.ts";
@@ -247,7 +247,7 @@ export function handleStartGame(
 	// 	return;
 	// }
 
-	const room = getRoom(roomId);
+	const room = rooms.get(roomId);
 
 	if (!room)
 	{
@@ -312,7 +312,7 @@ function setupGameBroadcaster(roomId: string, app: TemplatedApp)
 		return;
 	}
 
-	let gameStartNotificationSent = false;
+	// let gameStartNotificationSent = false;
 
 	worker.on('message', async (message) =>
 	{

@@ -11,9 +11,16 @@ export type RoomInfo =
 {
 	id: string;
 	name: string;
-	entryFee: number;
 	players: Set<RoomPlayer>;
+	entryFee: number;
 	maxPlayers: number;
 	createdAt: Date;
 	state: RoomState;
 };
+
+export type RoomDetails =
+{
+	players: Set<RoomPlayer>;
+	creator:	RoomPlayer | undefined;
+	createdAt: Date;
+}
