@@ -230,10 +230,9 @@ export async function createBaseBehavior(server: FastifyInstance): Promise<Parti
 }
 
 export function handleStartGame(
+	app: TemplatedApp,
 	ws: WebSocket<WebSocketUserData>,
 	roomId: string,
-	userId: string,
-	app: TemplatedApp
 )
 {
 	// if (!isUserRoomCreator(userId, roomId))
@@ -251,11 +250,11 @@ export function handleStartGame(
 
 	if (!room)
 	{
-		ws.send(JSON.stringify(
-		{
-			success: false,
-			message: "Room not found"
-		}));
+		// ws.send(JSON.stringify(
+		// {
+		// 	success: false,
+		// 	message: "Room not found"
+		// }));
 		return;
 	}
 
@@ -263,11 +262,11 @@ export function handleStartGame(
 	{
 		if (!p.isReady)
 		{
-			ws.send(JSON.stringify(
-			{
-				success: false,
-				message: `Player ${p.username} is not ready yet.`
-			}))
+			// ws.send(JSON.stringify(
+			// {
+			// 	success: false,
+			// 	message: `Player ${p.username} is not ready yet.`
+			// }))
 			return;
 		}
 	});
@@ -285,13 +284,13 @@ export function handleStartGame(
 
 	if (success)
 	{
-		ws.send(JSON.stringify(
-		{
-			success: true,
-			message: "Game started"
-		}));
-		setupGameBroadcaster(roomId, app);
-		console.log(`Game started in room ${roomId} by ${userId}`);
+		// ws.send(JSON.stringify(
+		// {
+		// 	success: true,
+		// 	message: "Game started"
+		// }));
+		setupGameBroadcaster(app, ws, roomId);
+		// console.log(`Game started in room ${roomId} by ${userId}`);
 	}
 	else
 	{
@@ -303,7 +302,11 @@ export function handleStartGame(
 	}
 }
 
-function setupGameBroadcaster(roomId: string, app: TemplatedApp)
+function setupGameBroadcaster(
+	app: TemplatedApp,
+	ws: WebSocket<WebSocketUserData>,
+	roomId: string
+)
 {
 	const worker = getGameWorker(roomId);
 	if (!worker)
@@ -348,15 +351,17 @@ function setupGameBroadcaster(roomId: string, app: TemplatedApp)
 						Math.ceil(message.state.countdownSeconds) : undefined
 				});
 
-				app.publish(`game:${roomId}`, gameStateMessage);
+				app.publish(`game69:${roomId}`, gameStateMessage);
 			}
 			else if (message.type === 'gameFinished')
 			{
 				await stopGame(roomId, message.gameResult);
 
-				app.publish(roomId, JSON.stringify({
+				app.publish(`room69:${roomId}`, JSON.stringify({
 					gameResult: message.gameResult as GameResult
 				}));
+
+				ws.subscribe("lobby69");
 			}
 		}
 		catch (error)

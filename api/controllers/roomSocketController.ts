@@ -7,10 +7,11 @@ import {
 	leaveRoom,
 	getUserCurrentRoom,
 	markRoomReady,
-	markRoomWaiting
+	markRoomWaiting,
+	getRoomDetails
 } from "../services/roomService.ts";
 
-interface WebSocketUserData
+export interface WebSocketUserData
 {
 	userId: string;
 	username: string;
@@ -18,21 +19,22 @@ interface WebSocketUserData
 };
 
 export function create(
+	app: TemplatedApp,
 	ws: WebSocket<WebSocketUserData>,
+	userData: WebSocketUserData,
 	data: any,
 )
 {
-	const userData = ws.getUserData();
 	const userId = userData?.userId;
 	const username = userData?.username;
 
 	if (!userId || !username)
 	{
-		ws.send(JSON.stringify(
-		{
-			success: false,
-			error: "User not authenticated or missing username" 
-		}));
+		// ws.send(JSON.stringify(
+		// {
+		// 	success: false,
+		// 	error: "User not authenticated or missing username" 
+		// }));
 		return;
 	}
 
@@ -48,11 +50,11 @@ export function create(
 		
 		if (!result.success)
 		{
-			ws.send(JSON.stringify(
-			{
-				success: false,
-				error: result.message
-			}));
+			// ws.send(JSON.stringify(
+			// {
+			// 	success: false,
+			// 	error: result.message
+			// }));
 
 			return;
 		}
@@ -60,14 +62,24 @@ export function create(
 		const roomId = result.roomId!;
 		
 		// Subscribe this WebSocket (which could be lobby or create connection) to the room
-		// ws.subscribe(room.id);
-		// ws.subscribe(`game:${room.id}`);
+		ws.subscribe(`room69:${roomId}`);
+		ws.subscribe(`game69:${roomId}`);
+
+		// unsubscribe from the lobby channel to stop getting other rooms updates
+		ws.unsubscribe("lobby69");
+
+		getRooms(app, userData);
+		getRoom(app, userData, { roomId });
 		// console.log(`Creator ${userId} subscribed to room ${room.id}`);
 
+		// set currentRoomId in the client
 		ws.send(JSON.stringify(
 		{
-			success: true,
-			roomId: roomId,
+			createRoom:
+			{
+				success: true,
+				roomId: roomId
+			}
 		}));
 		
 		console.log(`Room created by ${username} (${userId})`);
@@ -75,30 +87,31 @@ export function create(
 	catch (err)
 	{
 		console.error("Create room error:", err);
-		ws.send(JSON.stringify(
-		{
-			success: false,
-			error: "Failed to create room" 
-		}));
+		// ws.send(JSON.stringify(
+		// {
+		// 	success: false,
+		// 	error: "Failed to create room" 
+		// }));
 	}
 }
 
 export function join(
+	app: TemplatedApp,
 	ws: WebSocket<WebSocketUserData>,
+	userData: WebSocketUserData,
 	data: any
 )
 {
-	const userData = ws.getUserData();
 	const userId = userData?.userId;
 	const username = userData?.username;
 
 	if (!userId || !username)
 	{
-		ws.send(JSON.stringify(
-		{
-			success: false,
-			error: "User not authenticated or missing username" 
-		}));
+		// ws.send(JSON.stringify(
+		// {
+		// 	success: false,
+		// 	error: "User not authenticated or missing username" 
+		// }));
 		return;
 	}
 
@@ -108,23 +121,33 @@ export function join(
 		
 		if (!result.success)
 		{
-			ws.send(JSON.stringify(
-			{
-				success: false,
-				error: result.message
-			}));
+			// ws.send(JSON.stringify(
+			// {
+			// 	success: false,
+			// 	error: result.message
+			// }));
 			return;
 		}
-		
+
 		// Subscribe to the room
-		// ws.subscribe(data.roomId);
-		// ws.subscribe(`game:${data.roomId}`);
+		ws.subscribe(`room69:${data.roomId}`);
+		ws.subscribe(`game69:${data.roomId}`);
+
 		// console.log(`User ${userId} subscribed to room ${data.roomId}`);
+
+		// unsubscribe from the lobby channel to stop getting other rooms updates
+		ws.unsubscribe("lobby69");
+
+		getRooms(app, userData);
+		getRoom(app, userData, data);
 
 		ws.send(JSON.stringify(
 		{
-			success: true,
-			roomId: data.roomId
+			joinRoom:
+			{
+				success: true,
+				roomId: data.roomId
+			}
 		}));
 		
 		console.log(`${username} (${userId}) joined room: ${data.roomId}`);
@@ -132,31 +155,31 @@ export function join(
 	catch (err)
 	{
 		console.error("Join room error:", err);
-		ws.send(JSON.stringify(
-		{
-			success: false,
-			error: "Failed to join room"
-		}));
+		// ws.send(JSON.stringify(
+		// {
+		// 	success: false,
+		// 	error: "Failed to join room"
+		// }));
 	}
 }
 
 export function leave(
+	app: TemplatedApp,
 	ws: WebSocket<WebSocketUserData>,
+	userData: WebSocketUserData,
 	data: any
 )
 {
-	console.log(data);
-	const userData = ws.getUserData();
 	const userId = userData?.userId;
 	const username = userData?.username;
 
 	if (!userId)
 	{
-		ws.send(JSON.stringify(
-		{
-			success: false,
-			error: "User not authenticated"
-		}));
+		// ws.send(JSON.stringify(
+		// {
+		// 	success: false,
+		// 	error: "User not authenticated"
+		// }));
 
 		return;
 	}
@@ -167,27 +190,41 @@ export function leave(
 
 		if (!result.success)
 		{
-			ws.send(JSON.stringify(
-			{
-				success: false,
-				error: result.message
-			}));
+			// ws.send(JSON.stringify(
+			// {
+			// 	success: false,
+			// 	error: result.message
+			// }));
 			return;
 		}
 
 		// Unsubscribe from the room channel
-		ws.unsubscribe(data.roomId);
+		ws.unsubscribe(`room69:${data.roomId}`);
+		ws.unsubscribe(`game69:${data.roomId}`);
+
+		getRooms(app, userData);
+		getRoom(app, userData, data);
+
 		// Notify remaining room members - simple notification
 		// const room = getAllRooms().find(r => r.id === data.roomId);
 		// if (room)
 		// {
 			// Simple success response - no hardcoded types
-			ws.send(JSON.stringify(
+			// ws.send(JSON.stringify(
+			// {
+			// 	success: true
+			// }));
+		// }
+		ws.send(JSON.stringify(
+		{
+			leaveRoom:
 			{
 				success: true
-			}));
-		// }
-		
+			}
+		}));
+		// resubscribe to the lobby channel
+		ws.subscribe("lobby69");
+
 		console.log(`${username} left room: ${data.roomId}`);
 	}
 	catch (err)
@@ -201,39 +238,51 @@ export function leave(
 	}
 }
 
-export function getRooms(ws: WebSocket<WebSocketUserData>)
+export function getRoom(
+	app: TemplatedApp,
+	userData: WebSocketUserData,
+	data: any
+)
 {
-	const userData = ws.getUserData();
+	const userId = userData?.userId;
+
+	try
+	{
+		const room = getRoomDetails(data.roomId);
+
+		if (room)
+			app.publish(`room69:${data.roomId}`, JSON.stringify(room));
+	}
+	catch (err)
+	{
+		console.log(err);
+	}
+}
+
+export function getRooms(
+	app: TemplatedApp,
+	userData: WebSocketUserData
+)
+{
 	const userId = userData?.userId;
 
 	try
 	{
 		const currentRoomId = userId ? getUserCurrentRoom(userId) : undefined;
-		
-		// Direct rooms array - no hardcoded message types
-		ws.send(JSON.stringify(
+
+		console.log("retrieving rooms");
+		app.publish("lobby69", JSON.stringify(
 		{
-			currentRoomId: currentRoomId,
+			// currentRoomId: currentRoomId,
 			rooms: getAllRooms().map((room: RoomInfo) =>
 			{
-				// const creator = getRoomCreator(room.id);
 				return {
 					id: room.id,
 					name: room.name,
 					entryFee: room.entryFee,
 					count: room.players.size,
-					// players: Array.from(room.players).map((player: RoomPlayer) =>
-					// ({
-					// 	id: player.id,
-					// 	username: player.username
-					// })),
 					maxPlayers: room.maxPlayers,
 					state: room.state,
-					// createdAt: room.createdAt.toISOString(),
-					// createdBy: creator?.id,
-					// creatorUsername: creator?.username,
-					// isCurrentRoom: currentRoomId === room.id,
-					// isCreator: userId ? isUserRoomCreator(userId, room.id) : false
 				};
 			})
 		}));
@@ -241,29 +290,29 @@ export function getRooms(ws: WebSocket<WebSocketUserData>)
 	catch (err)
 	{
 		console.error("Get rooms error:", err);
-		ws.send(JSON.stringify(
-		{
-			success: false,
-			error: "Failed to get rooms"
-		}));
+		// ws.send(JSON.stringify(
+		// {
+		// 	success: false,
+		// 	error: "Failed to get rooms"
+		// }));
 	}
 }
 
 export function markRoomAsReady(
+	app: TemplatedApp,
 	ws: WebSocket<WebSocketUserData>,
+	userData: WebSocketUserData,
 	data: any,
-	app: TemplatedApp
 )
 {
-	const userData = ws.getUserData();
 	const userId = userData?.userId;
 
 	if (!userId)
 	{
-		ws.send(JSON.stringify({
-			success: false,
-			error: "User not authenticated"
-		}));
+		// ws.send(JSON.stringify({
+		// 	success: false,
+		// 	error: "User not authenticated"
+		// }));
 		return;
 	}
 
@@ -273,19 +322,20 @@ export function markRoomAsReady(
 		
 		if (!result.success)
 		{
-			ws.send(JSON.stringify({
-				success: false,
-				error: result.message
-			}));
+			// ws.send(JSON.stringify({
+			// 	success: false,
+			// 	error: result.message
+			// }));
 			return;
 		}
 
+		getRoom(app, userData, data);
 		// const room = getAllRooms().find(r => r.id === data.roomId);
 		// if (room) {
 			// Send roomStateChanged directly to this WebSocket
-			ws.send(JSON.stringify({
-				roomStateChanged: {
-					roomId: data.roomId,
+			// ws.send(JSON.stringify({
+			// 	roomStateChanged: {
+			// 		roomId: data.roomId,
 					// newState: "ready",
 					// room: {
 					// 	// id: room.id,
@@ -301,8 +351,8 @@ export function markRoomAsReady(
 					// 	state: room.state,
 					// 	// createdAt: room.createdAt.toISOString()
 					// }
-				}
-			}));
+			// 	}
+			// }));
 		// }
 
 		console.log(`Room ${data.roomId} marked as ready by ${userId}`);
@@ -310,28 +360,28 @@ export function markRoomAsReady(
 	catch (err)
 	{
 		console.error("Mark room ready error:", err);
-		ws.send(JSON.stringify({
-			success: false,
-			error: "Failed to mark room as ready"
-		}));
+		// ws.send(JSON.stringify({
+		// 	success: false,
+		// 	error: "Failed to mark room as ready"
+		// }));
 	}
 }
 
 export function markRoomAsWaiting(
+	app: TemplatedApp,
 	ws: WebSocket<WebSocketUserData>,
+	userData: WebSocketUserData,
 	data: any,
-	app: TemplatedApp
 )
 {
-	const userData = ws.getUserData();
 	const userId = userData?.userId;
 
 	if (!userId)
 	{
-		ws.send(JSON.stringify({
-			success: false,
-			error: "User not authenticated"
-		}));
+		// ws.send(JSON.stringify({
+		// 	success: false,
+		// 	error: "User not authenticated"
+		// }));
 		return;
 	}
 
@@ -341,20 +391,21 @@ export function markRoomAsWaiting(
 		
 		if (!result.success)
 		{
-			ws.send(JSON.stringify({
-				success: false,
-				error: result.message
-			}));
+			// ws.send(JSON.stringify({
+			// 	success: false,
+			// 	error: result.message
+			// }));
 			return;
 		}
 
+		getRoom(app, userData, data);
 		// Notify all room members of state change
 		// const room = getAllRooms().find(r => r.id === data.roomId);
 		// if (room)
 		// {
-			ws.send(JSON.stringify({
-				roomStateChanged: {
-					roomId: data.roomId,
+			// ws.send(JSON.stringify({
+			// 	roomStateChanged: {
+			// 		roomId: data.roomId,
 					// newState: "waiting",
 					// room: {
 					// 	id: room.id,
@@ -369,8 +420,8 @@ export function markRoomAsWaiting(
 					// 	state: room.state,
 					// 	// createdAt: room.createdAt.toISOString()
 					// }
-				}
-			}));
+			// 	}
+			// }));
 		// }
 
 		console.log(`Room ${data.roomId} marked as waiting by ${userId}`);
@@ -378,11 +429,9 @@ export function markRoomAsWaiting(
 	catch (err)
 	{
 		console.error("Mark room waiting error:", err);
-		ws.send(JSON.stringify({
-			success: false,
-			error: "Failed to mark room as waiting"
-		}));
+		// ws.send(JSON.stringify({
+		// 	success: false,
+		// 	error: "Failed to mark room as waiting"
+		// }));
 	}
 }
-export { WebSocketUserData };
-
