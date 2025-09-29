@@ -6,8 +6,10 @@ import { createDefaultPlacementsAsync, getPlacementsByGameAsync } from './placem
 import { createTournamentAsync } from './tournamentService.ts';
 import { addUserToTournamentAsync, setPlacementAsync } from './participationService.ts';
 import { GameResult, GameWorkerData } from '../models/gameModels.ts';
-import { getRoomFee } from './roomService.ts';
+import { getRoomFee, getUserCurrentRoom } from './roomService.ts';
+import { StringDecoder } from "string_decoder";
 
+const decoder = new StringDecoder("utf8");
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const gameWorkers = new Map<string, GameWorkerData>();
@@ -79,22 +81,42 @@ export function createGame(roomId: string, players: Array<{id: string, username:
 //<summary>
 // Get drag value from a user
 //</summary>
-export function updatePlayerPositionRelative(roomId: string, playerId: string, dragDelta: number): boolean
+export function updatePlayerPositionRelative(
+	userId: string,
+	message: ArrayBuffer
+) : boolean
 {
-	const gameData = gameWorkers.get(roomId);
+	const roomId = getUserCurrentRoom(userId);
 
-	if (!gameData)
-		return false;
-
-	// Send message to a worker
-	gameData.worker.postMessage(
+	if (roomId)
 	{
-		type: 'playerMoveRelative',
-		playerId,
-		delta: dragDelta
-	});
+		// Server does this check just in case
+		if (!isGameActive(roomId))
+		{
+			console.log(`Player ${userId} tried to send input but no active game in room ${roomId}`);
+			return false;
+		}
 
-	return true;
+		const dragString = decoder.write(Buffer.from(message));
+		const drag = parseFloat(dragString);
+
+		const gameData = gameWorkers.get(roomId);
+
+		if (!gameData)
+			return false;
+
+		// Send message to a worker
+		gameData.worker.postMessage(
+		{
+			type: 'playerMoveRelative',
+			playerId: userId,
+			delta: drag
+		});
+
+		return true;
+	}
+
+	return false;
 }
 
 export async function stopGame(roomId: string, gameResult: GameResult): Promise<boolean>
@@ -107,6 +129,7 @@ export async function stopGame(roomId: string, gameResult: GameResult): Promise<
 		if (gameResult && gameResult.state === "finished")
 			await saveGameResults(gameResult);
 
+		gameWorkers.delete(roomId);
 		gameData.worker.postMessage({ type: 'stop' });
 		console.log(`Game worker stopped for room ${roomId}`);
 	}

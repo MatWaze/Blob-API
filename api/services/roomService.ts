@@ -55,14 +55,15 @@ export function joinRoom(
 {
 	if (userRoomMapping.has(userId)) {
 		const existingRoomId = userRoomMapping.get(userId);
-		if (existingRoomId === roomId) {
+		if (existingRoomId && existingRoomId === roomId) {
 			return { success: false, message: "You are already in this room" };
-		} else {
-			return {
-				success: false,
-				message: `You are already in room ${existingRoomId}. Leave it first to join another room.` 
-			};
 		}
+		// else {
+		// 	return {
+		// 		success: false,
+		// 		message: `You are already in room ${existingRoomId}. Leave it first to join another room.` 
+		// 	};
+		// }
 	}
 
 	const room = rooms.get(roomId);
