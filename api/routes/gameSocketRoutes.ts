@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { getUws } from '@geut/fastify-uws';
 import { WebSocket } from "uWebSockets.js";
-import { create, join, getRooms, leave, markRoomAsReady, markRoomAsWaiting } from "../controllers/roomSocketController.ts";
+import { create, join, getRooms, leave, markRoomAsReady, markRoomAsWaiting, getRoom } from "../controllers/roomSocketController.ts";
 import { StringDecoder } from "string_decoder";
 import { getRoomDetails, getUserCurrentRoom } from "../services/roomService.ts";
 import { updatePlayerPositionRelative, isGameActive } from "../services/gameSocketService.ts";
@@ -21,23 +21,104 @@ export async function gameSocketRoutes(server: FastifyInstance)
 		...baseBehavior,
 		open: (ws: WebSocket<WebSocketUserData>) =>
 		{
-			const userData = ws.getUserData();
-			if (userData?.userId)
-			{
-				const currentRoomId = getUserCurrentRoom(userData.userId);
-				if (currentRoomId)
-				{
-					// subscrive to both room and game channels
-					ws.subscribe(currentRoomId);
-					ws.subscribe(`game:${currentRoomId}`);
-				}
-				console.log("Lobby WebSocket connected for user:", userData.userId);
-			}
-			getRooms(ws);
+			ws.subscribe("lobby69");
+			console.log(`User ${ws.getUserData().userId} connected to Lobby WebSocket.`);
+			// getRooms(app, ws.g);
 		},
 		message: (ws: WebSocket<WebSocketUserData>, message: ArrayBuffer) =>
 		{
-			getRooms(ws);
+			const userData = ws.getUserData();
+			const data = JSON.parse(decoder.write(Buffer.from(message)));
+
+			switch (data.type)
+			{
+				case "GET_ROOMS":
+					getRooms(app, userData);
+					break;
+				case "CREATE_ROOM":
+					create(app, ws, userData, data);
+					break;
+				case "JOIN_ROOM":
+					join(app, ws, userData, data);
+					break;
+				case "LEAVE_ROOM":
+					leave(app, ws, userData, data);
+					break;
+				case "GET_ROOM":
+					getRoom(app, userData, data);
+					break;
+				case "READY":
+					markRoomAsReady(app, ws, userData, data);
+					break;
+				case "WAITING":
+					markRoomAsWaiting(app, ws, userData, data);
+					break;
+				case "START_GAME":
+					handleStartGame(app, ws, data.roomId);
+					break;
+				case "GAME_DATA":
+					updatePlayerPositionRelative(ws.getUserData().userId, message);
+					break;
+				case "UNSUBSCRIBE_ROOM":
+					var roomId : string | undefined;
+
+					if (data.roomId)
+						roomId = data.roomId;
+					else
+						roomId = getUserCurrentRoom(ws.getUserData().userId);
+
+					if (roomId)
+						ws.unsubscribe(`room69:${data.roomId}`);
+					break;
+				case "UNSUBSCRIBE_GAME":
+					var roomId : string | undefined;
+
+					if (data.roomId)
+						roomId = data.roomId;
+					else
+						roomId = getUserCurrentRoom(ws.getUserData().userId);
+
+					if (roomId) ws.unsubscribe(`game69:${data.roomId}`);
+
+					break;
+				case "SUBSCRIBE_ROOM":
+					var roomId : string | undefined;
+
+					if (data.roomId)
+						roomId = data.roomId;
+					else
+						roomId = getUserCurrentRoom(ws.getUserData().userId);
+
+					if (roomId)
+					{
+						ws.subscribe(`room69:${data.roomId}`);
+						// ws.unsubscribe("lobby69");
+					}
+
+					break;
+				case "SUBSCRIBE_GAME":
+					var roomId : string | undefined;
+
+					if (data.roomId)
+						roomId = data.roomId;
+					else
+						roomId = getUserCurrentRoom(ws.getUserData().userId);
+
+					if (roomId)
+					{
+						ws.subscribe(`game69:${data.roomId}`);
+						// ws.unsubscribe("lobby69");
+					}
+
+					break;
+				case "SUBSCRIBE_LOBBY":
+					ws.subscribe("lobby69");
+					break;
+				case "UNSUBSCRIBE_LOBBY":
+					ws.unsubscribe("lobby69");
+				default:
+					break;
+			}
 		},
 		close: (ws: WebSocket<WebSocketUserData>) =>
 		{
@@ -48,6 +129,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 		}
 	});
 
+	/*
 	// Get room details
 	app.ws('/ws/room/:roomId/details',
 	{
@@ -241,4 +323,5 @@ export async function gameSocketRoutes(server: FastifyInstance)
 				console.log("Game player WebSocket disconnected:", userData.userId);
 		}
 	});
+	*/
 }
