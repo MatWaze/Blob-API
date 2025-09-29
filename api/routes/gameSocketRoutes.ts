@@ -33,7 +33,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 			switch (data.type)
 			{
 				case "GET_ROOMS":
-					getRooms(app, userData);
+					getRooms(app);
 					break;
 				case "CREATE_ROOM":
 					create(app, ws, userData, data);
@@ -57,7 +57,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 					handleStartGame(app, ws, data.roomId);
 					break;
 				case "GAME_DATA":
-					updatePlayerPositionRelative(ws.getUserData().userId, message);
+					updatePlayerPositionRelative(userData.userId, data);
 					break;
 				case "UNSUBSCRIBE_ROOM":
 					var roomId : string | undefined;
@@ -65,10 +65,11 @@ export async function gameSocketRoutes(server: FastifyInstance)
 					if (data.roomId)
 						roomId = data.roomId;
 					else
-						roomId = getUserCurrentRoom(ws.getUserData().userId);
+						roomId = getUserCurrentRoom(userData.userId);
 
 					if (roomId)
 						ws.unsubscribe(`room69:${data.roomId}`);
+
 					break;
 				case "UNSUBSCRIBE_GAME":
 					var roomId : string | undefined;
@@ -76,7 +77,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 					if (data.roomId)
 						roomId = data.roomId;
 					else
-						roomId = getUserCurrentRoom(ws.getUserData().userId);
+						roomId = getUserCurrentRoom(userData.userId);
 
 					if (roomId) ws.unsubscribe(`game69:${data.roomId}`);
 
@@ -87,13 +88,9 @@ export async function gameSocketRoutes(server: FastifyInstance)
 					if (data.roomId)
 						roomId = data.roomId;
 					else
-						roomId = getUserCurrentRoom(ws.getUserData().userId);
+						roomId = getUserCurrentRoom(userData.userId);
 
-					if (roomId)
-					{
-						ws.subscribe(`room69:${data.roomId}`);
-						// ws.unsubscribe("lobby69");
-					}
+					if (roomId) ws.subscribe(`room69:${data.roomId}`);
 
 					break;
 				case "SUBSCRIBE_GAME":
@@ -102,13 +99,9 @@ export async function gameSocketRoutes(server: FastifyInstance)
 					if (data.roomId)
 						roomId = data.roomId;
 					else
-						roomId = getUserCurrentRoom(ws.getUserData().userId);
+						roomId = getUserCurrentRoom(userData.userId);
 
-					if (roomId)
-					{
-						ws.subscribe(`game69:${data.roomId}`);
-						// ws.unsubscribe("lobby69");
-					}
+					if (roomId) ws.subscribe(`game69:${data.roomId}`);
 
 					break;
 				case "SUBSCRIBE_LOBBY":
