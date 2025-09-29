@@ -83,7 +83,7 @@ export function createGame(roomId: string, players: Array<{id: string, username:
 //</summary>
 export function updatePlayerPositionRelative(
 	userId: string,
-	message: ArrayBuffer
+	data: any
 ) : boolean
 {
 	const roomId = getUserCurrentRoom(userId);
@@ -97,13 +97,12 @@ export function updatePlayerPositionRelative(
 			return false;
 		}
 
-		const dragString = decoder.write(Buffer.from(message));
-		const drag = parseFloat(dragString);
-
 		const gameData = gameWorkers.get(roomId);
 
 		if (!gameData)
 			return false;
+
+		const drag : number = parseFloat(data.dragValue);
 
 		// Send message to a worker
 		gameData.worker.postMessage(
