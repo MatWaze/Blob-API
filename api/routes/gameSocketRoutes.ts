@@ -21,7 +21,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 		...baseBehavior,
 		open: (ws: WebSocket<WebSocketUserData>) =>
 		{
-			ws.subscribe("lobby69");
+			// ws.subscribe("lobby69");
 			console.log(`User ${ws.getUserData().userId} connected to Lobby WebSocket.`);
 			// getRooms(app, ws.g);
 		},
