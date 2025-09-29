@@ -66,7 +66,7 @@ export function create(
 		ws.subscribe(`game69:${roomId}`);
 
 		// unsubscribe from the lobby channel to stop getting other rooms updates
-		ws.unsubscribe("lobby69");
+		// ws.unsubscribe("lobby69");
 
 		getRooms(app, userData);
 		getRoom(app, userData, { roomId });
@@ -136,7 +136,7 @@ export function join(
 		// console.log(`User ${userId} subscribed to room ${data.roomId}`);
 
 		// unsubscribe from the lobby channel to stop getting other rooms updates
-		ws.unsubscribe("lobby69");
+		// ws.unsubscribe("lobby69");
 
 		getRooms(app, userData);
 		getRoom(app, userData, data);
@@ -248,10 +248,20 @@ export function getRoom(
 
 	try
 	{
-		const room = getRoomDetails(data.roomId);
+		let roomId : string | undefined = undefined;
 
-		if (room)
-			app.publish(`room69:${data.roomId}`, JSON.stringify(room));
+		if (data.roomId)
+			roomId = data.roomId;
+		else
+			roomId = getUserCurrentRoom(userId)
+
+		if (roomId)
+		{
+			const room = getRoomDetails(roomId);
+	
+			if (room)
+				app.publish(`room69:${roomId}`, JSON.stringify(room));
+		}
 	}
 	catch (err)
 	{
