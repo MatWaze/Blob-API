@@ -60,7 +60,7 @@ export function create(
 		}
 
 		const roomId = result.roomId!;
-		
+
 		// Subscribe this WebSocket (which could be lobby or create connection) to the room
 		ws.subscribe(`room69:${roomId}`);
 		ws.subscribe(`game69:${roomId}`);
@@ -68,7 +68,7 @@ export function create(
 		// unsubscribe from the lobby channel to stop getting other rooms updates
 		// ws.unsubscribe("lobby69");
 
-		getRooms(app, userData);
+		getRooms(app);
 		getRoom(app, userData, { roomId });
 		// console.log(`Creator ${userId} subscribed to room ${room.id}`);
 
@@ -138,7 +138,7 @@ export function join(
 		// unsubscribe from the lobby channel to stop getting other rooms updates
 		// ws.unsubscribe("lobby69");
 
-		getRooms(app, userData);
+		getRooms(app);
 		getRoom(app, userData, data);
 
 		ws.send(JSON.stringify(
@@ -202,7 +202,7 @@ export function leave(
 		ws.unsubscribe(`room69:${data.roomId}`);
 		ws.unsubscribe(`game69:${data.roomId}`);
 
-		getRooms(app, userData);
+		getRooms(app);
 		getRoom(app, userData, data);
 
 		// Notify remaining room members - simple notification
@@ -270,17 +270,11 @@ export function getRoom(
 }
 
 export function getRooms(
-	app: TemplatedApp,
-	userData: WebSocketUserData
+	app: TemplatedApp
 )
 {
-	const userId = userData?.userId;
-
 	try
 	{
-		const currentRoomId = userId ? getUserCurrentRoom(userId) : undefined;
-
-		console.log("retrieving rooms");
 		app.publish("lobby69", JSON.stringify(
 		{
 			// currentRoomId: currentRoomId,
