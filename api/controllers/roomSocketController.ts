@@ -302,6 +302,39 @@ export function getRooms(
 	}
 }
 
+export function getRoomsForUser(
+	ws: WebSocket<WebSocketUserData>
+)
+{
+	try
+	{
+		ws.send(JSON.stringify(
+		{
+			// currentRoomId: currentRoomId,
+			rooms: getAllRooms().map((room: RoomInfo) =>
+			{
+				return {
+					id: room.id,
+					name: room.name,
+					entryFee: room.entryFee,
+					count: room.players.size,
+					maxPlayers: room.maxPlayers,
+					state: room.state,
+				};
+			})
+		}));
+	}
+	catch (err)
+	{
+		console.error("Get rooms error:", err);
+		// ws.send(JSON.stringify(
+		// {
+		// 	success: false,
+		// 	error: "Failed to get rooms"
+		// }));
+	}	
+}
+
 export function markRoomAsReady(
 	app: TemplatedApp,
 	ws: WebSocket<WebSocketUserData>,

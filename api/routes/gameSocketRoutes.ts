@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { getUws } from '@geut/fastify-uws';
 import { WebSocket } from "uWebSockets.js";
-import { create, join, getRooms, leave, markRoomAsReady, markRoomAsWaiting, getRoom } from "../controllers/roomSocketController.ts";
+import { create, join, getRooms, leave, markRoomAsReady, markRoomAsWaiting, getRoom, getRoomsForUser } from "../controllers/roomSocketController.ts";
 import { StringDecoder } from "string_decoder";
 import { getRoomDetails, getUserCurrentRoom } from "../services/roomService.ts";
 import { updatePlayerPositionRelative, isGameActive } from "../services/gameSocketService.ts";
@@ -33,7 +33,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 			switch (data.type)
 			{
 				case "GET_ROOMS":
-					getRooms(app);
+					getRoomsForUser(ws);
 					break;
 				case "CREATE_ROOM":
 					create(app, ws, userData, data);
@@ -109,6 +109,10 @@ export async function gameSocketRoutes(server: FastifyInstance)
 					break;
 				case "UNSUBSCRIBE_LOBBY":
 					ws.unsubscribe("lobby69");
+				case "SUBSCRIBE_PRIVATE":
+					ws.subscribe(`user:${ws.getUserData().userId}`);
+				case "UNSUBSCRIBE_PRIVATE":
+					ws.unsubscribe(`user:${ws.getUserData().userId}`);
 				default:
 					break;
 			}
