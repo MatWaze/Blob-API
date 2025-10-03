@@ -219,11 +219,11 @@ export async function createBaseBehavior(server: FastifyInstance): Promise<Parti
 			else if (userData === null)
 			{
 				console.log("No valid tokens found");
-				res.cork(() =>
-				{
-					res.writeStatus('401 Unauthorized');
-					res.end('LOGIN_AGAIN');
-				});
+				// res.cork(() =>
+				// {
+				// 	res.writeStatus('401 Unauthorized');
+				// 	res.end('LOGIN_AGAIN');
+				// });
 			}
 		},
 	};
