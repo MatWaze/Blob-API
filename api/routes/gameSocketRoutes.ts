@@ -22,7 +22,6 @@ export async function gameSocketRoutes(server: FastifyInstance)
 		open: (ws: WebSocket<WebSocketUserData>) =>
 		{
 			console.log(`User ${ws.getUserData().userId} connected to Lobby WebSocket.`);
-			getRoomsForUser(ws);
 		},
 		message: (ws: WebSocket<WebSocketUserData>, message: ArrayBuffer) =>
 		{
@@ -102,6 +101,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 					break;
 				case "SUBSCRIBE_LOBBY":
 					ws.subscribe("lobby69");
+					getRoomsForUser(ws);
 					break;
 				case "UNSUBSCRIBE_LOBBY":
 					ws.unsubscribe("lobby69");
