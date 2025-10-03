@@ -322,7 +322,6 @@ export function getRoomsForUser(
 					state: room.state,
 				};
 			}),
-			greeting: "PIDOR"
 		}));
 	}
 	catch (err)
