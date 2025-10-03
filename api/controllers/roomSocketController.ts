@@ -321,7 +321,8 @@ export function getRoomsForUser(
 					maxPlayers: room.maxPlayers,
 					state: room.state,
 				};
-			})
+			}),
+			greeting: "PIDOR"
 		}));
 	}
 	catch (err)
