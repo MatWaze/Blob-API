@@ -20,7 +20,7 @@ export type RoomInfo =
 
 export type RoomDetails =
 {
-	players: Set<RoomPlayer>;
+	players: RoomPlayer[];
 	creator:	RoomPlayer | undefined;
 	createdAt: Date;
 }

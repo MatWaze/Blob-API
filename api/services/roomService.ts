@@ -39,7 +39,6 @@ export function createRoom(
 		isReady: false
 	};
 	room.players.add(creatorPlayer);
-
 	rooms.set(id, room);
 
 	userRoomMapping.set(creatorUserId, id);
@@ -163,8 +162,9 @@ export function getRoomDetails(roomId: string): RoomDetails | undefined
 	if (!room)
 		return undefined;
 
+	console.log(`room count: ${room.players.size}`);
 	return {
-		players: room.players,
+		players: Array.from(room.players),
 		creator: getRoomCreator(roomId),
 		createdAt: room.createdAt
 	};
