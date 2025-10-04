@@ -32,8 +32,6 @@ export function createRoom(
 		state: "waiting",
 	};
 
-	rooms.set(id, room);
-
 	// Always auto-join creator
 	const creatorPlayer: RoomPlayer = {
 		id: creatorUserId,
@@ -41,6 +39,9 @@ export function createRoom(
 		isReady: false
 	};
 	room.players.add(creatorPlayer);
+
+	rooms.set(id, room);
+
 	userRoomMapping.set(creatorUserId, id);
 
 	console.log(`Room ${id} created by ${creatorUsername} (${creatorUserId})`);
