@@ -222,8 +222,6 @@ export function leave(
 				success: true
 			}
 		}));
-		// resubscribe to the lobby channel
-		ws.subscribe("lobby69");
 
 		console.log(`${username} left room: ${data.roomId}`);
 	}
