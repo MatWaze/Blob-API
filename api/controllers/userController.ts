@@ -15,6 +15,40 @@ import { FastifyJWT } from "@fastify/jwt";
 import { removeSessionCookie, setSessionCookie } from "../services/cookieService.ts";
 import { getSession, updateSessionAccessToken } from "../services/sessionService.ts";
 
+export async function getCurrentUserAsync(
+	request: FastifyRequest,
+	response: FastifyReply
+)
+{
+	const sessionId = request.cookies.sessionId;
+
+	if (!sessionId)
+	{
+		return response.code(401).send({
+			success: false,
+			message: 'No active session for user',
+			needsLogin: true
+		});
+	}
+
+	const sessionData = await getSession(sessionId);
+
+	if (!sessionData)
+	{
+		return response.code(401).send({
+			success: false,
+			message: 'No session data for this id',
+			needsLogin: true
+		});
+	}
+
+	return response.code(200).send({
+		id: sessionData.userId,
+		username: sessionData.username,
+		email: sessionData.email
+	});
+}
+
 export async function registerAsync(
 	request: FastifyRequest<{ Body: CreateUserType }>,
 	response: FastifyReply

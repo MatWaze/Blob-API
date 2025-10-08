@@ -1,10 +1,15 @@
-import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+import { FastifyInstance } from "fastify";
 import { userSchemas } from "../models/userSchema.ts";
-import { getAllUsersAsync, registerAsync, loginAsync, confirmEmailAsync, removeUserAsync, logoutAsync, getTokens } from "../controllers/userController.ts";
+import { getAllUsersAsync, registerAsync, loginAsync, confirmEmailAsync, removeUserAsync, logoutAsync, getTokens, getCurrentUserAsync } from "../controllers/userController.ts";
 import { googleSignInAsync } from "../controllers/googleOauthController.ts";
 
 async function userRoutes(server: FastifyInstance)
 {
+	server.get(
+		"/current",
+		getCurrentUserAsync
+	)
+
 	// POST api/users/register
 	server.post(
 		"/register",
