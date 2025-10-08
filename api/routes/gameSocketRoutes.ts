@@ -63,7 +63,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 						roomId = getUserCurrentRoom(userData.userId);
 
 					if (roomId)
-						ws.unsubscribe(`room69:${data.roomId}`);
+						ws.unsubscribe(`room69:${roomId}`);
 
 					break;
 				case "UNSUBSCRIBE_GAME":
@@ -74,7 +74,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 					else
 						roomId = getUserCurrentRoom(userData.userId);
 
-					if (roomId) ws.unsubscribe(`game69:${data.roomId}`);
+					if (roomId) ws.unsubscribe(`game69:${roomId}`);
 
 					break;
 				case "SUBSCRIBE_ROOM":
@@ -87,7 +87,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 
 					if (roomId)
 					{
-						ws.subscribe(`room69:${data.roomId}`);
+						ws.subscribe(`room69:${roomId}`);
 						getRoom(app, userData, { roomId });
 					}
 					break;
@@ -99,7 +99,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 					else
 						roomId = getUserCurrentRoom(userData.userId);
 
-					if (roomId) ws.subscribe(`game69:${data.roomId}`);
+					if (roomId) ws.subscribe(`game69:${roomId}`);
 
 					break;
 				case "SUBSCRIBE_LOBBY":
