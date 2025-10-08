@@ -85,8 +85,11 @@ export async function gameSocketRoutes(server: FastifyInstance)
 					else
 						roomId = getUserCurrentRoom(userData.userId);
 
-					if (roomId) ws.subscribe(`room69:${data.roomId}`);
-
+					if (roomId)
+					{
+						ws.subscribe(`room69:${data.roomId}`);
+						getRoom(app, userData, { roomId });
+					}
 					break;
 				case "SUBSCRIBE_GAME":
 					var roomId : string | undefined;
