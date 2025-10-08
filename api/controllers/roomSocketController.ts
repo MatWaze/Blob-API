@@ -258,7 +258,9 @@ export function getRoom(
 			const room = getRoomDetails(roomId);
 	
 			if (room)
+			{
 				app.publish(`room69:${roomId}`, JSON.stringify(room));
+			}
 		}
 	}
 	catch (err)
