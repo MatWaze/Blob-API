@@ -92,7 +92,7 @@ export function joinRoom(
 
 export function leaveRoom(roomId: string, userId: string): { success: boolean; message?: string } {
 	const room = rooms.get(roomId);
-	console.log(`deleting room ${roomId}`);
+
 	if (!room)
 	{
 		console.log("No room found");
@@ -162,7 +162,6 @@ export function getRoomDetails(roomId: string): RoomDetails | undefined
 	if (!room)
 		return undefined;
 
-	console.log(`room count: ${room.players.size}`);
 	return {
 		players: Array.from(room.players),
 		creator: getRoomCreator(roomId),
