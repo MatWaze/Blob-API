@@ -23,4 +23,5 @@ export type RoomDetails =
 	players: RoomPlayer[];
 	creator:	RoomPlayer | undefined;
 	createdAt: Date;
+	maxPlayers: number;
 }

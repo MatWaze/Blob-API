@@ -165,7 +165,8 @@ export function getRoomDetails(roomId: string): RoomDetails | undefined
 	return {
 		players: Array.from(room.players),
 		creator: getRoomCreator(roomId),
-		createdAt: room.createdAt
+		createdAt: room.createdAt,
+		maxPlayers: room.maxPlayers
 	};
 }
 
