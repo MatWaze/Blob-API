@@ -163,6 +163,7 @@ export function getRoomDetails(roomId: string): RoomDetails | undefined
 		return undefined;
 
 	return {
+		id: roomId,
 		players: Array.from(room.players),
 		creator: getRoomCreator(roomId),
 		createdAt: room.createdAt,
