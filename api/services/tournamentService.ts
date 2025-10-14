@@ -20,7 +20,6 @@ export async function getTournamentByIdAsync(id: number)
 	catch (error)
 	{
 		console.error(`Error getting tournament by ID ${id}:`, error);
-		throw error;
 	}
 }
 
@@ -33,7 +32,6 @@ export async function getAllTournamentsAsync()
 	catch (error)
 	{
 		console.error("Error getting all tournaments:", error);
-		throw new Error("Failed to retrieve tournaments");
 	}
 }
 
@@ -51,7 +49,6 @@ export async function createTournamentAsync(gameId: number)
 	catch (error)
 	{
 		console.error(`Error creating tournament for game ${gameId}:`, error);
-		throw error;
 	}
 }
 
@@ -84,11 +81,10 @@ export async function getTournamentsByGameAsync(gameId: number)
 	catch (error)
 	{
 		console.error(`Error getting tournaments for game ${gameId}:`, error);
-		throw error;
 	}
 }
 
-export async function getTournamentCountAsync(): Promise<number>
+export async function getTournamentCountAsync()
 {
 	try
 	{
@@ -98,34 +94,31 @@ export async function getTournamentCountAsync(): Promise<number>
 	catch (error)
 	{
 		console.error("Error getting tournament count:", error);
-		throw new Error("Failed to get tournament count");
 	}
 }
 
-export async function getTournamentParticipantCountAsync(tournamentId: number): Promise<number>
+export async function getTournamentParticipantCountAsync(tournamentId: number)
 {
 	try
 	{
 		const tournament = await getTournamentByIdAsync(tournamentId);
-		return tournament.participations.length;
+		return tournament!.participations.length;
 	}
 	catch (error)
 	{
 		console.error(`Error getting participant count for tournament ${tournamentId}:`, error);
-		throw error;
 	}
 }
 
-export async function isTournamentFullAsync(tournamentId: number, maxParticipants: number = 8): Promise<boolean>
+export async function isTournamentFullAsync(tournamentId: number, maxParticipants: number = 8)
 {
 	try
 	{
 		const participantCount = await getTournamentParticipantCountAsync(tournamentId);
-		return participantCount >= maxParticipants;
+		return participantCount! >= maxParticipants;
 	}
 	catch (error)
 	{
 		console.error(`Error checking if tournament ${tournamentId} is full:`, error);
-		throw error;
 	}
 }

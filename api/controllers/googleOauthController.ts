@@ -14,12 +14,19 @@ export async function googleSignInAsync(
 
 	try
 	{
-		const { id_token, access_token } = await getGoogleOAuthTokens({ code });
+		const tokens = await getGoogleOAuthTokens({ code });
 
+		if (!tokens)
+			return;
+	
+		const { id_token, access_token } = tokens!;
 		console.log({ id_token, access_token });
 
 		// get user with tokens
 		const googleUser = await getGoogleUser({ id_token, access_token });
+
+		if (!googleUser)
+			return;
 
 		if (!googleUser.verified_email)
 		{

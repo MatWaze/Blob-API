@@ -9,7 +9,6 @@ export async function getAllGamesAsync()
 	catch (error)
 	{
 		console.error("Error getting all games:", error);
-		throw new Error("Failed to retrieve games");
 	}
 }
 
@@ -33,7 +32,6 @@ export async function getGameByIdAsync(id: number)
 	catch (error)
 	{
 		console.error(`Error getting game by ID ${id}:`, error);
-		throw error;
 	}
 }
 
@@ -62,7 +60,6 @@ export async function createGameAsync(name: string)
 	catch (error)
 	{
 		console.error(`Error creating game with name "${name}":`, error);
-		throw error;
 	}
 }
 
@@ -80,7 +77,7 @@ export async function gameExistsAsync(id: number): Promise<boolean>
 	}
 }
 
-export async function getGameCountAsync(): Promise<number>
+export async function getGameCountAsync(): Promise<number | undefined>
 {
 	try
 	{
@@ -90,6 +87,5 @@ export async function getGameCountAsync(): Promise<number>
 	catch (error)
 	{
 		console.error("Error getting game count:", error);
-		throw new Error("Failed to get game count");
 	}
 }

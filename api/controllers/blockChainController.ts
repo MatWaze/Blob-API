@@ -3,7 +3,7 @@ import { TransferEvent, getTransfersSnowTrace } from "../services/blockChainServ
 
 export async function getTransfersSnowrtraceAsync(
 	request: FastifyRequest<{ Params: { recipientAddress: string }; }>
-) : Promise<TransferEvent[]>
+) : Promise<TransferEvent[] | undefined>
 {
 	return await getTransfersSnowTrace(request.params.recipientAddress);
 }

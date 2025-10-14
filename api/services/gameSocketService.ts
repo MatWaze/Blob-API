@@ -164,15 +164,15 @@ async function saveGameResults(gameResult: GameResult) : Promise<void>
 		let placements;
 
 		const existingGames = await getAllGamesAsync();
-		pongGame = existingGames.find(game => game.name.toLowerCase() === "pong");
+		pongGame = existingGames?.find(game => game.name.toLowerCase() === "pong");
 
 		if (!pongGame)
 		{
 			pongGame = await createGameAsync("Pong");
-			placements = await createDefaultPlacementsAsync(pongGame.id, "Pong");
+			placements = await createDefaultPlacementsAsync(pongGame!.id, "Pong");
 		}
 
-		const tournament = await createTournamentAsync(pongGame.id);
+		const tournament = await createTournamentAsync(pongGame!.id);
 
 		if (!tournament)
 		{
@@ -180,7 +180,7 @@ async function saveGameResults(gameResult: GameResult) : Promise<void>
 			return;
 		}
 
-		placements = await getPlacementsByGameAsync(pongGame.id);
+		placements = await getPlacementsByGameAsync(pongGame!.id);
 
 		if (!placements || placements.length === 0)
 		{
@@ -199,7 +199,7 @@ async function saveGameResults(gameResult: GameResult) : Promise<void>
 				.find(p => p.name === player.place.toString());
 
 			if (placement)
-				setPlacementAsync(participation.id, placement.id);
+				setPlacementAsync(participation!.id, placement.id);
 		}
 	}
 	catch(error)

@@ -19,6 +19,23 @@ model User {
 	authMethod		String?
 	emailVerified	EmailVerified?	@relation("UserToEmailVerified")
 	participations	Participation[]
+	friendships		Friendship[]
+}
+
+model Friendship {
+	id				String		@id @default(uuid())
+	status			String		@default("PENDING") // "PENDING", "ACCEPTED", "REJECTED", "BLOCKED"
+	createdAt		DateTime	@default(now())
+	updatedAt		DateTime	@updatedAt
+	
+	user1Id			String
+	user2Id			String
+	initiatorId		String
+	
+	user1			User		@relation(fields: [user1Id], references: [id], onDelete: Cascade)
+	
+	@@unique([user1Id, user2Id])
+	@@index([user2Id])
 }
 
 model EmailVerified {

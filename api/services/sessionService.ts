@@ -14,7 +14,7 @@ export async function createSession(data: CreateSessionData) : Promise<GetSessio
 	}
 }
 
-export async function getSession(sessionId: string) : Promise<GetSessionEntity>
+export async function getSession(sessionId: string) : Promise<GetSessionEntity | undefined>
 {
 	try
 	{
@@ -27,8 +27,7 @@ export async function getSession(sessionId: string) : Promise<GetSessionEntity>
 	}
 	catch (error)
 	{
-		console.error("Service: Error retrieving session: ", error);
-		throw new Error("Failed to get a session");
+		console.error("Error retrieving session: ", error);
 	}
 }
 
@@ -40,7 +39,7 @@ export async function deleteSession(sessionId: string) : Promise<void>
 	}
 	catch (error)
 	{
-		throw new Error("Failed to delete a session");
+		console.error("Error deleting session: ", error);
 	}
 }
 
@@ -52,7 +51,7 @@ export async function deleteSessionByUserId(userId: string) : Promise<void>
 	}
 	catch (error)
 	{
-		throw new Error("Failed to delete a session by the user id");
+		console.error("Error deleting session: ", error);
 	}
 }
 
@@ -67,6 +66,6 @@ export async function updateSessionAccessToken(
 	}
 	catch (error)
 	{
-		throw new Error("Failed to update an access token");
+		console.error("Failed to update access token: ", error);
 	}
 }

@@ -38,7 +38,7 @@ contract.on("Transfer", async (from: string, to: string, amount: ethers.BigNumbe
 	}
 });
 
-export async function getTransfersSnowTrace(recipientAddress: string): Promise<TransferEvent[]>
+export async function getTransfersSnowTrace(recipientAddress: string): Promise<TransferEvent[] | undefined>
 {
 	try
 	{
@@ -77,11 +77,10 @@ export async function getTransfersSnowTrace(recipientAddress: string): Promise<T
 	catch (error)
 	{
 		console.error("Error fetching transfers from Snowtrace API:", error);
-		throw error;
 	}
 }
 
-export async function getTransfersEthersProvider(recipientAddress: string): Promise<TransferEvent[]>
+export async function getTransfersEthersProvider(recipientAddress: string): Promise<TransferEvent[] | undefined>
 {
 	try
 	{
@@ -147,13 +146,12 @@ export async function getTransfersEthersProvider(recipientAddress: string): Prom
 	catch (error)
 	{
 		console.error("Error fetching transfers using Ethers provider:", error);
-		throw error;
 	}
 }
 
 
 // Fallback method that tries Snowtrace first, then Avalanche SDK
-export async function getTransfers(recipientAddress: string): Promise<TransferEvent[]>
+export async function getTransfers(recipientAddress: string): Promise<TransferEvent[] | undefined>
 {
 	try
 	{
@@ -169,13 +167,12 @@ export async function getTransfers(recipientAddress: string): Promise<TransferEv
 		catch (sdkError)
 		{
 			console.error("Both methods failed:", { snowtraceError, sdkError });
-			throw new Error("Failed to fetch transfers using both Snowtrace API and Avalanche SDK");
 		}
 	}
 }
 
 // Additional utility functions
-export async function getBalance(address: string): Promise<string>
+export async function getBalance(address: string): Promise<string | undefined>
 {
 	try
 	{
@@ -185,11 +182,10 @@ export async function getBalance(address: string): Promise<string>
 	catch (error)
 	{
 		console.error("Error getting balance:", error);
-		throw error;
 	}
 }
 
-export async function sendTokens(toAddress: string, amount: string): Promise<string>
+export async function sendTokens(toAddress: string, amount: string): Promise<string | undefined>
 {
 	try
 	{
@@ -203,6 +199,5 @@ export async function sendTokens(toAddress: string, amount: string): Promise<str
 	catch (error)
 	{
 		console.error("Error sending tokens:", error);
-		throw error;
 	}
 }

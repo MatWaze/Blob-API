@@ -16,7 +16,6 @@ export async function getPlacementsByGameAsync(gameId: number)
 	catch (error)
 	{
 		console.error(`Error getting placements for game ${gameId}:`, error);
-		throw error;
 	}
 }
 
@@ -50,7 +49,6 @@ export async function createPlacementAsync(gameId: number, name: string)
 	catch (error)
 	{
 		console.error(`Error creating placement "${name}" for game ${gameId}:`, error);
-		throw error;
 	}
 }
 
@@ -78,20 +76,18 @@ export async function createDefaultPlacementsAsync(gameId: number, gameName: str
 	catch (error)
 	{
 		console.error(`Error creating default placements for game ${gameId}:`, error);
-		throw error;
 	}
 }
 
-export async function getPlacementCountAsync(gameId: number): Promise<number>
+export async function getPlacementCountAsync(gameId: number): Promise<number | undefined>
 {
 	try
 	{
 		const placements = await getPlacementsByGameAsync(gameId);
-		return placements.length;
+		return placements!.length;
 	}
 	catch (error)
 	{
 		console.error(`Error getting placement count for game ${gameId}:`, error);
-		throw error;
 	}
 }

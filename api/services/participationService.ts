@@ -28,7 +28,6 @@ export async function addUserToTournamentAsync(userId: string, tournamentId: num
 	catch (error)
 	{
 		console.error(`Error adding user ${userId} to tournament ${tournamentId}:`, error);
-		throw error;
 	}
 }
 
@@ -60,7 +59,6 @@ export async function removeUserFromTournamentAsync(userId: string, tournamentId
 	catch (error)
 	{
 		console.error(`Error removing user ${userId} from tournament ${tournamentId}:`, error);
-		throw error;
 	}
 }
 
@@ -78,7 +76,6 @@ export async function getParticipantsByTournamentAsync(tournamentId: number)
 	catch (error)
 	{
 		console.error(`Error getting participants for tournament ${tournamentId}:`, error);
-		throw error;
 	}
 }
 
@@ -101,7 +98,6 @@ export async function setPlacementAsync(participationId: number, placementId: nu
 	catch (error)
 	{
 		console.error(`Error setting placement ${placementId} for participation ${participationId}:`, error);
-		throw error;
 	}
 }
 
@@ -120,7 +116,6 @@ export async function getUserTournamentsAsync(userId: string)
 	catch (error)
 	{
 		console.error(`Error getting tournaments for user ${userId}:`, error);
-		throw error;
 	}
 }
 
@@ -144,6 +139,5 @@ export async function getTournamentParticipationAsync(userId: string, tournament
 	catch (error)
 	{
 		console.error(`Error getting participation for user ${userId} in tournament ${tournamentId}:`, error);
-		throw error;
 	}
 }

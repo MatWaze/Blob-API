@@ -45,7 +45,7 @@ export async function createUserAsync(user:
 	}
 	catch (e: any)
 	{
-		throw new Error(e);
+		console.log(e);
 	}
 }
 
@@ -59,7 +59,6 @@ export async function deleteUserAsync(id: string)
 	catch (e: any)
 	{
 		console.log(e);
-		throw new Error(e);
 	}
 }
 

@@ -54,7 +54,7 @@ export async function getGoogleOAuthTokens(
 	}:
 	{
 		code: string;
-	}): Promise<GoogleTokensResult>
+	}): Promise<GoogleTokensResult | undefined>
 {
 	const url = "https://oauth2.googleapis.com/token";
 
@@ -84,8 +84,7 @@ export async function getGoogleOAuthTokens(
 	}
 	catch (error: any)
 	{
-		console.error(error);
-		throw new Error(`Failed to fetch Google OAuth tokens: ${error.message}`);
+		console.log("Failed to fetch Google OAuth tokens: " + error);
 	}
 }
 
@@ -97,7 +96,7 @@ export async function getGoogleUser(
 {
 	id_token: string;
 	access_token: string;
-}): Promise<GoogleUserResult>
+}): Promise<GoogleUserResult | undefined>
 {
 	try
 	{
@@ -115,6 +114,5 @@ export async function getGoogleUser(
 	catch (error: any)
 	{
 		console.error(error.response.data.error);
-		throw new Error(error.message);
 	}
 }
