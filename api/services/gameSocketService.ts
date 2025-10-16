@@ -37,7 +37,7 @@ export function createGame(roomId: string, players: Array<{id: string, username:
 			countdownSeconds: 5,
 		};
 
-		const workerPath = path.join(__dirname, '..', 'controllers', 'gameWorker.js');
+		const workerPath = path.join(__dirname, '..', 'controllers', 'gameWorker.ts');
 		console.log('Creating worker with path:', workerPath);
 
 		const worker = new Worker(workerPath,
