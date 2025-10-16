@@ -20,6 +20,7 @@ export type RoomInfo =
 
 export type RoomDetails =
 {
+	id: string;
 	players: RoomPlayer[];
 	creator:	RoomPlayer | undefined;
 	createdAt: Date;
