@@ -201,9 +201,6 @@ export function markRoomReady(roomId: string, userId: string): { success: boolea
 	// if (!isUserRoomCreator(userId, roomId))
 	// 	return { success: false, message: "Only room creator can mark room as ready" };
 
-	if (room.players.size < 2)
-		return { success: false, message: "Need at least 2 players to mark room as ready" };
-
 	const usr : RoomPlayer | undefined = getPlayerFromRoom(room, userId);
 	
 	if (usr)
