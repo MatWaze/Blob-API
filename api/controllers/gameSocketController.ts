@@ -4,8 +4,57 @@ import { FastifyInstance } from "fastify";
 import { getRoomDetails, rooms } from "../services/roomService.ts";
 import { createGame, getGameWorker, stopGame } from "../services/gameSocketService.ts";
 import { FastifyJWT } from "@fastify/jwt";
-import { GameResult } from "../models/gameModels.ts";
+// import { GameResult } from "../models/gameModels.ts";
 import { getSession, updateSessionAccessToken } from "../services/sessionService.ts";
+
+export interface GameResult
+{
+	players: Array<{
+		id: string;
+		username: string;
+		place: string;
+		playersKicked: number;
+		isActive: boolean;
+		score: number
+	}>;
+	state: 'finished' | 'aborted';
+	fee: number
+}
+
+export interface GamePlayer
+{
+	id: string;
+	username: string;
+	position: number;
+	x: number;
+	y: number;
+	isActive: boolean;
+	place: string,
+	playersKicked: number
+	prevX?: number,
+	prevY?: number;
+	velocityX?: number;
+	velocityY?: number;
+}
+
+export interface GameState
+{
+	roomId: string;
+	state: 'countdown' | 'playing' | 'finished';
+	ballPosition: [number, number];
+	ballVelocity: [number, number];
+	players: GamePlayer[];
+	countdownSeconds: number;
+	whoHitTheBall: GamePlayer | undefined
+}
+
+export interface GameWorkerData
+{
+	worker: Worker;
+	roomId: string;
+	players: Array<{id: string, username: string}>;
+	createdAt: Date;
+}
 
 // async function authenticateWebSocket(res: HttpResponse, req: HttpRequest, server: FastifyInstance)
 // : Promise<{userId: string, username: string, email: string } | null>

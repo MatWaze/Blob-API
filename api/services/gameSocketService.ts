@@ -5,9 +5,58 @@ import { createGameAsync, getAllGamesAsync } from './gameService.ts';
 import { createDefaultPlacementsAsync, getPlacementsByGameAsync } from './placementService.ts';
 import { createTournamentAsync } from './tournamentService.ts';
 import { addUserToTournamentAsync, setPlacementAsync } from './participationService.ts';
-import { GameResult, GameWorkerData } from '../models/gameModels.ts';
+// import { GameResult, GameWorkerData } from '../models/gameModels.ts';
 import { getRoomFee, getUserCurrentRoom } from './roomService.ts';
 import { StringDecoder } from "string_decoder";
+
+export interface GameResult
+{
+	players: Array<{
+		id: string;
+		username: string;
+		place: string;
+		playersKicked: number;
+		isActive: boolean;
+		score: number
+	}>;
+	state: 'finished' | 'aborted';
+	fee: number
+}
+
+export interface GamePlayer
+{
+	id: string;
+	username: string;
+	position: number;
+	x: number;
+	y: number;
+	isActive: boolean;
+	place: string,
+	playersKicked: number
+	prevX?: number,
+	prevY?: number;
+	velocityX?: number;
+	velocityY?: number;
+}
+
+export interface GameState
+{
+	roomId: string;
+	state: 'countdown' | 'playing' | 'finished';
+	ballPosition: [number, number];
+	ballVelocity: [number, number];
+	players: GamePlayer[];
+	countdownSeconds: number;
+	whoHitTheBall: GamePlayer | undefined
+}
+
+export interface GameWorkerData
+{
+	worker: Worker;
+	roomId: string;
+	players: Array<{id: string, username: string}>;
+	createdAt: Date;
+}
 
 const decoder = new StringDecoder("utf8");
 const __filename = fileURLToPath(import.meta.url);
@@ -46,7 +95,8 @@ export function createGame(roomId: string, players: Array<{id: string, username:
 			{
 				initialState: initialGameState,
 				fee: getRoomFee(roomId)
-			}
+			},
+			execArgv: ["-r", "ts-node/register", "--no-warnings"]
 		});
 
 		worker.on('error', (error) =>
