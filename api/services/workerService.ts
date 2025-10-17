@@ -1,7 +1,7 @@
 import { workerData } from 'worker_threads';
 // import { GamePlayer, GameResult, GameState } from '../models/gameModels.ts';
 
-export interface GameResult
+interface GameResult
 {
 	players: Array<{
 		id: string;
@@ -15,7 +15,7 @@ export interface GameResult
 	fee: number
 }
 
-export interface GamePlayer
+interface GamePlayer
 {
 	id: string;
 	username: string;
@@ -31,7 +31,7 @@ export interface GamePlayer
 	velocityY?: number;
 }
 
-export interface GameState
+interface GameState
 {
 	roomId: string;
 	state: 'countdown' | 'playing' | 'finished';
@@ -41,15 +41,6 @@ export interface GameState
 	countdownSeconds: number;
 	whoHitTheBall: GamePlayer | undefined
 }
-
-export interface GameWorkerData
-{
-	worker: Worker;
-	roomId: string;
-	players: Array<{id: string, username: string}>;
-	createdAt: Date;
-}
-
 
 const PADDLE_SIDE_PERCENT = 0.1;
 

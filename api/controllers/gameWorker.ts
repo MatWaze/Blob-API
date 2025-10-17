@@ -1,22 +1,7 @@
 import { isMainThread, parentPort, workerData } from 'worker_threads';
 import { calculatePlayerPositions, checkCollisions } from '../services/workerService.ts';
 // import { GameState } from '../models/gameModels.ts';
-
-export interface GameResult
-{
-	players: Array<{
-		id: string;
-		username: string;
-		place: string;
-		playersKicked: number;
-		isActive: boolean;
-		score: number
-	}>;
-	state: 'finished' | 'aborted';
-	fee: number
-}
-
-export interface GamePlayer
+interface GamePlayer
 {
 	id: string;
 	username: string;
@@ -32,7 +17,7 @@ export interface GamePlayer
 	velocityY?: number;
 }
 
-export interface GameState
+interface GameState
 {
 	roomId: string;
 	state: 'countdown' | 'playing' | 'finished';
@@ -41,14 +26,6 @@ export interface GameState
 	players: GamePlayer[];
 	countdownSeconds: number;
 	whoHitTheBall: GamePlayer | undefined
-}
-
-export interface GameWorkerData
-{
-	worker: Worker;
-	roomId: string;
-	players: Array<{id: string, username: string}>;
-	createdAt: Date;
 }
 
 if (!isMainThread)
