@@ -1,7 +1,16 @@
 import { ethers } from "ethers";
-import abi from "../abis/Blob.json";
+// import abi from "../abis/Blob.json";
 import { config } from "dotenv";
 import { getUserByWalletAddress } from "./userService.ts";
+import { fileURLToPath } from "url";
+import path from "path";
+import { readFileSync } from "fs";
+
+const __filename = fileURLToPath(import.meta.url);
+
+const abi = JSON.parse(
+	readFileSync(path.join('..', 'api', 'abis', 'Blob.json'), 'utf-8')
+);
 
 config();
 
