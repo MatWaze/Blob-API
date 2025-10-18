@@ -498,7 +498,8 @@ export function checkCollisions(gameState: GameState, parentPort: any)
 function reflectBall(gameState: GameState, normal: [number, number])
 {
 	const [vx, vy] = gameState.ballVelocity;
-	const [nx, ny] = normal;const dot = vx * nx + vy * ny;
+	const [nx, ny] = normal;
+	const dot = vx * nx + vy * ny;
 	gameState.ballVelocity = [
 		vx - 2 * dot * nx,
 		vy - 2 * dot * ny
