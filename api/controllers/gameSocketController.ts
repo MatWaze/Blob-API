@@ -1,7 +1,7 @@
 import { WebSocket, TemplatedApp, HttpResponse, HttpRequest, WebSocketBehavior, us_socket_context_t } from "uWebSockets.js";
 import { WebSocketUserData } from "./roomSocketController.ts";
 import { FastifyInstance } from "fastify";
-import { getRoomDetails, rooms } from "../services/roomService.ts";
+import { getRoomDetails, isUserRoomCreator, rooms } from "../services/roomService.ts";
 import { createGame, getGameWorker, stopGame } from "../services/gameSocketService.ts";
 import { FastifyJWT } from "@fastify/jwt";
 import { GameResult } from "../models/gameModels.ts";
@@ -232,19 +232,20 @@ export async function createBaseBehavior(server: FastifyInstance): Promise<Parti
 export function handleStartGame(
 	app: TemplatedApp,
 	ws: WebSocket<WebSocketUserData>,
+	userData: WebSocketUserData,
 	roomId: string,
 )
 {
-	// if (!isUserRoomCreator(userId, roomId))
-	// {
-	// 	ws.send(JSON.stringify(
-	// 	{
-	// 		success: false,
-	// 		message: "Only room creator can start game" 
-	// 	}));
+	if (!isUserRoomCreator(userData.userId, roomId))
+	{
+		ws.send(JSON.stringify(
+		{
+			success: false,
+			message: "Only room creator can start game" 
+		}));
 
-	// 	return;
-	// }
+		return;
+	}
 
 	const room = rooms.get(roomId);
 
@@ -362,6 +363,7 @@ function setupGameBroadcaster(
 				}));
 
 				ws.subscribe("lobby69");
+				return;
 			}
 		}
 		catch (error)

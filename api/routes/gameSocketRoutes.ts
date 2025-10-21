@@ -49,7 +49,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 					markRoomAsWaiting(app, ws, userData, data);
 					break;
 				case "START_GAME":
-					handleStartGame(app, ws, data.roomId);
+					handleStartGame(app, ws, userData, data.roomId);
 					break;
 				case "GAME_DATA":
 					updatePlayerPositionRelative(userData.userId, data);
