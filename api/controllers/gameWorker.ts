@@ -67,7 +67,7 @@ if (!isMainThread)
 			{
 				game.state = 'playing';
 				const randomAngle = Math.random() * 2 * Math.PI;
-				const speed = 0.8;
+				const speed = 1;
 				game.ballVelocity = [Math.cos(randomAngle) * speed, Math.sin(randomAngle) * speed];
 				console.log('Game transitioned to playing state');
 			}
