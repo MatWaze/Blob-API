@@ -2,7 +2,7 @@ import { randomBytes } from "crypto";
 import { RoomDetails, RoomInfo, RoomPlayer } from "../models/roomModels";
 
 export const rooms = new Map<string, RoomInfo>();
-const userRoomMapping = new Map<string, string>(); // userId -> roomId
+export const userRoomMapping = new Map<string, string>(); // userId -> roomId
 
 export function createRoom(
 	entryFee: number,
