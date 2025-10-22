@@ -6,7 +6,7 @@ import { createDefaultPlacementsAsync, getPlacementsByGameAsync } from './placem
 import { createTournamentAsync } from './tournamentService.ts';
 import { addUserToTournamentAsync, setPlacementAsync } from './participationService.ts';
 import { GameResult, GameWorkerData } from '../models/gameModels.ts';
-import { getRoomFee, getUserCurrentRoom } from './roomService.ts';
+import { getRoomFee, getUserCurrentRoom, rooms } from './roomService.ts';
 import { StringDecoder } from "string_decoder";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -33,7 +33,7 @@ export function createGame(roomId: string, players: Array<{id: string, username:
 				place: undefined,
 				playersKicked: 0,
 			})),
-			countdownSeconds: 3,
+			countdownSeconds: 5,
 		};
 
 		const workerPath = path.join(__dirname, '..', 'controllers', 'gameWorker.ts');
@@ -130,6 +130,7 @@ export async function stopGame(roomId: string, gameResult: GameResult): Promise<
 
 		gameWorkers.delete(roomId);
 		gameData.worker.postMessage({ type: 'stop' });
+		rooms.delete(roomId); // deleting room when the game is over
 		console.log(`Game worker stopped for room ${roomId}`);
 	}
 	catch (error)

@@ -1,6 +1,9 @@
 import { workerData } from 'worker_threads';
 // import { GamePlayer, GameResult, GameState } from '../models/gameModels.ts';
 
+
+// TODO: for some reason, when ball hits the wall, it can go backwards
+
 interface GameResult
 {
 	players: Array<{

@@ -102,7 +102,7 @@ if (!isMainThread)
 			calculatePlayerPositions(gameState);
 			updatePhysics(gameState);
 
-			if (parentPort)
+			if (parentPort /* && gameState.state != countdown */)
 			{
 				parentPort.postMessage(
 				{
