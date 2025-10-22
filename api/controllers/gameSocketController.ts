@@ -362,7 +362,6 @@ function setupGameBroadcaster(
 					gameResult: message.gameResult as GameResult
 				}));
 
-				ws.subscribe("lobby69");
 				return;
 			}
 		}
