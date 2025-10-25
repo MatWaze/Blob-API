@@ -335,24 +335,27 @@ function setupGameBroadcaster(
 				// 	gameStartNotificationSent = true;
 				// }
 
-				const gameStateMessage = JSON.stringify(
+				if (message.state.state !== 'countdown')
 				{
-					state: message.state.state,
-					ballPosition: message.state.ballPosition,
-					players: message.state.players
-						.filter((p: any) => p.isActive)
-						.map((p: any) =>
-						({
-							id: p.id,
-							username: p.username,
-							position: p.position,
-							isActive: p.isActive
-						})),
-					countdownSeconds: message.state.state === 'countdown' ?
-						Math.ceil(message.state.countdownSeconds) : undefined
-				});
+					const gameStateMessage = JSON.stringify(
+					{
+						state: message.state.state,
+						ballPosition: message.state.ballPosition,
+						players: message.state.players
+							.filter((p: any) => p.isActive)
+							.map((p: any) =>
+							({
+								id: p.id,
+								username: p.username,
+								position: p.position,
+								isActive: p.isActive
+							})),
+						countdownSeconds: message.state.state === 'countdown' ?
+							Math.ceil(message.state.countdownSeconds) : undefined
+					});
+					app.publish(`game69:${roomId}`, gameStateMessage);
+				}
 
-				app.publish(`game69:${roomId}`, gameStateMessage);
 			}
 			else if (message.type === 'gameFinished')
 			{

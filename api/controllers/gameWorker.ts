@@ -1,6 +1,8 @@
 import { isMainThread, parentPort, workerData } from 'worker_threads';
 import { calculatePlayerPositions, checkCollisions } from '../services/workerService.ts';
 // import { GameState } from '../models/gameModels.ts';
+import game_config from "../game_config.json" with { type: 'json' };
+
 interface GamePlayer
 {
 	id: string;
@@ -27,6 +29,9 @@ interface GameState
 	countdownSeconds: number;
 	whoHitTheBall: GamePlayer | undefined
 }
+
+const playerMoveTimestamps: Record<string, number> = {};
+const MOVE_RATE_LIMIT_MS = 16;
 
 if (!isMainThread)
 {
@@ -62,15 +67,15 @@ if (!isMainThread)
 	{
 		if (game.state === 'countdown')
 		{
-			game.countdownSeconds -= 1 / 60;
-			if (game.countdownSeconds <= 0)
-			{
-				game.state = 'playing';
-				const randomAngle = Math.random() * 2 * Math.PI;
-				const speed = 1;
-				game.ballVelocity = [Math.cos(randomAngle) * speed, Math.sin(randomAngle) * speed];
-				console.log('Game transitioned to playing state');
-			}
+			game.state = 'playing';
+			const acuteRanges = [
+				(Math.random() - 0.5) * (Math.PI / 2), // -π/4 to +π/4
+				Math.PI + (Math.random() - 0.5) * (Math.PI / 2) // 3π/4 to 5π/4
+			];
+			const randomAngle = game_config.angle;
+			const speed = 0.5;
+			game.ballVelocity = [Math.cos(randomAngle) * speed, Math.sin(randomAngle) * speed];
+			console.log('Game transitioned to playing state');
 			return;
 		}
 		else if (game.state === 'playing')
@@ -88,7 +93,6 @@ if (!isMainThread)
 
 	calculatePlayerPositions(gameState);
 
-	// 60 FPS game loop
 	const gameLoop = setInterval(() =>
 	{
 		try
@@ -129,18 +133,26 @@ if (!isMainThread)
 			isRunning = false;
 			clearInterval(gameLoop);
 		}
-	}, 1000 / 60);
+	}, 1000 / game_config.fps);
 
 	parentPort?.on('message', (message) =>
 	{
 		try
 		{
-			console.log('Game worker received message:', message);
-
-			if (message.type === 'playerMoveRelative')
+			// console.log('Game worker received message:', message);
+			// Problem when user logs out when he's in the room
+			if (message.type === 'playerMoveRelative' && message.delta !== 0)
 			{
-				const player = gameState.players.find(p => p.id === message.playerId);
+				const now = Date.now();
+				const playerId = message.playerId;
+				const lastMove = playerMoveTimestamps[playerId] || 0;
 
+				if (now - lastMove < MOVE_RATE_LIMIT_MS)
+					return;
+
+				playerMoveTimestamps[playerId] = now;
+
+				const player = gameState.players.find(p => p.id === playerId);
 				if (player && player.isActive)
 				{
 					const scaledDelta = message.delta * MOUSE_SENSITIVITY;
