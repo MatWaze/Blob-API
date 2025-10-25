@@ -73,7 +73,7 @@ if (!isMainThread)
 				Math.PI + (Math.random() - 0.5) * (Math.PI / 2) // 3π/4 to 5π/4
 			];
 			const randomAngle = game_config.angle;
-			const speed = 0.5;
+			const speed = game_config.speed;
 			game.ballVelocity = [Math.cos(randomAngle) * speed, Math.sin(randomAngle) * speed];
 			console.log('Game transitioned to playing state');
 			return;
@@ -155,11 +155,18 @@ if (!isMainThread)
 				const player = gameState.players.find(p => p.id === playerId);
 				if (player && player.isActive)
 				{
-					const scaledDelta = message.delta * MOUSE_SENSITIVITY;
-					const tempPos = player.position + scaledDelta;
-
+					const tempPos = player.position + message.delta;
+					const diff = player.position - tempPos;
 					const sidePercent = 0.1;
-					player.position = Math.max(sidePercent, Math.min(1.0 - sidePercent, tempPos));
+
+					if (Math.abs(diff) < 0.2)
+					{
+						player.position = Math.max(sidePercent, Math.min(1 - sidePercent, tempPos));
+					}
+					else
+					{
+						player.position += (Math.sign(message.delta) * sidePercent);
+					}
 
 					// console.log(`Player ${player.id}: position += ${scaledDelta.toFixed(4)} = ${player.position.toFixed(4)}`);
 				}
