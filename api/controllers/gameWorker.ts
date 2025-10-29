@@ -161,10 +161,9 @@ if (!isMainThread)
 				if (player && player.isActive)
 				{
 					const tempPos = player.position + message.delta;
-					const diff = player.position - tempPos;
-					const sidePercent = 0.0;
+					const sidePercent = 0.1;
 
-					player.position = Math.max(sidePercent, Math.min(1, tempPos));
+					player.position = Math.max(sidePercent, Math.min(0.9, tempPos));
 
 					// console.log(`Player ${player.id}: position += ${scaledDelta.toFixed(4)} = ${player.position.toFixed(4)}`);
 				}
