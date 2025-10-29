@@ -82,7 +82,7 @@ if (!isMainThread)
 		{
 			const collisionOrGoal = checkCollisions(gameState, parentPort);
 			
-			if (!collisionOrGoal && game.state === 'playing')
+			if (!collisionOrGoal)
 			{
 				const dt = 1 / 60;
 				game.ballPosition[0] += game.ballVelocity[0] * dt;
@@ -91,7 +91,7 @@ if (!isMainThread)
 		}
 	}
 
-	calculatePlayerPositions(gameState);
+	//calculatePlayerPositions(gameState);
 
 	const gameLoop = setInterval(() =>
 	{
@@ -103,11 +103,24 @@ if (!isMainThread)
 				return;
 			}
 
-			calculatePlayerPositions(gameState);
-			updatePhysics(gameState);
-
-			if (parentPort /* && gameState.state != countdown */)
+			if (gameState.state == "countdown")
 			{
+				gameState.state = 'playing';
+				const acuteRanges = [
+					(Math.random() - 0.5) * (Math.PI / 2), // -π/4 to +π/4
+					Math.PI + (Math.random() - 0.5) * (Math.PI / 2) // 3π/4 to 5π/4
+				];
+				const randomAngle = game_config.angle;
+				const speed = game_config.speed;
+				gameState.ballVelocity = [Math.cos(randomAngle) * speed, Math.sin(randomAngle) * speed];
+				console.log('Game transitioned to playing state');
+			}
+			else if (parentPort && gameState.state == "playing")
+			{
+				calculatePlayerPositions(gameState);
+				updatePhysics(gameState);
+
+				//console.log(`x: ${gameState.players[1].x}, y: ${gameState.players[1].y}`);
 				parentPort.postMessage(
 				{
 					type: 'gameState',
@@ -157,16 +170,9 @@ if (!isMainThread)
 				{
 					const tempPos = player.position + message.delta;
 					const diff = player.position - tempPos;
-					const sidePercent = 0.1;
+					const sidePercent = 0.0;
 
-					if (Math.abs(diff) < 0.2)
-					{
-						player.position = Math.max(sidePercent, Math.min(1 - sidePercent, tempPos));
-					}
-					else
-					{
-						player.position += (Math.sign(message.delta) * sidePercent);
-					}
+					player.position = Math.max(sidePercent, Math.min(1, tempPos));
 
 					// console.log(`Player ${player.id}: position += ${scaledDelta.toFixed(4)} = ${player.position.toFixed(4)}`);
 				}

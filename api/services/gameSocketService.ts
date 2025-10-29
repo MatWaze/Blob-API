@@ -8,12 +8,13 @@ import { addUserToTournamentAsync, setPlacementAsync } from './participationServ
 import { GameResult, GameWorkerData } from '../models/gameModels.ts';
 import { getRoomFee, getUserCurrentRoom, rooms, userRoomMapping } from './roomService.ts';
 import { StringDecoder } from "string_decoder";
+import { TemplatedApp } from '@geut/fastify-uws';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const gameWorkers = new Map<string, GameWorkerData>();
 
-export function createGame(roomId: string, players: Array<{id: string, username: string}>): boolean
+export function createGame(app: TemplatedApp, roomId: string, players: Array<{id: string, username: string}>): boolean
 {
 	// stopGame(roomId);
 
@@ -33,9 +34,10 @@ export function createGame(roomId: string, players: Array<{id: string, username:
 				place: undefined,
 				playersKicked: 0,
 			})),
-			countdownSeconds: 5,
+			countdownSeconds: 3,
 		};
 
+		app.publish(`game69:${roomId}`, JSON.stringify(initialGameState));
 		const workerPath = path.join(__dirname, '..', 'controllers', 'gameWorker.ts');
 		console.log('Creating worker with path:', workerPath);
 

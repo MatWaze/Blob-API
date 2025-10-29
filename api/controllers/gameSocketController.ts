@@ -281,7 +281,7 @@ export function handleStartGame(
 	// 	}))
 	// }
 
-	const success = createGame(roomId, Array.from(room.players));
+	const success = createGame(app, roomId, Array.from(room.players));
 
 	if (success)
 	{
@@ -352,6 +352,25 @@ function setupGameBroadcaster(
 						Math.ceil(message.state.countdownSeconds) : undefined
 				});
 				app.publish(`game69:${roomId}`, gameStateMessage);
+			}
+			else if (message.type == 'countdown')
+			{
+				const countdownMessage = JSON.stringify(
+				{
+					state: message.state.state,
+					ballPosition: message.state.ballPosition,
+					players: message.state.players
+						.filter((p: any) => p.isActive)
+						.map((p: any) =>
+						({
+							id: p.id,
+							username: p.username,
+							position: p.position,
+							isActive: p.isActive
+						})),
+					countdownSeconds: Math.ceil(message.state.countdownSeconds)
+				});
+				app.publish(`game69:${roomId}`, countdownMessage);
 			}
 			else if (message.type === 'gameFinished')
 			{
