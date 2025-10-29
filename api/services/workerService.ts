@@ -52,8 +52,8 @@ function calculateTwoPlayersPositions(players: GamePlayer[])
 	const leftPlayer = players[0];
 	const rightPlayer = players[1];
 
-	const leftPlayerDist = Math.max(-0.4, Math.min(0.4, 0.5 - leftPlayer.position));
-	const rightPlayerDist =Math.max(-0.4, Math.min(0.4, 0.5 - rightPlayer.position));
+	const leftPlayerDist = Math.max(-0.4, Math.min(0.4, leftPlayer.position - 0.5));
+	const rightPlayerDist = Math.max(-0.4, Math.min(0.4, rightPlayer.position - 0.5));
 
 	// Math.max(-0.5, Math.min(0.3, p.y - paddleHalfHeight))
 	// leftmost coordinate of the unit circle
@@ -343,10 +343,19 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 	for (const p of players)
 	{
 		const paddleHalfHeight = PADDLE_SIDE_PERCENT;
-
-		const paddleBottom: [number, number] = [p.x, Math.max(-0.5, Math.min(0.3, p.y - paddleHalfHeight))];
-		const paddleTop: [number, number] = [p.x, Math.min(0.5, Math.max(-0.3, p.y + paddleHalfHeight))];
+		const side = p.x == -1 ? "left" : "right";
 		
+		let paddleBottom: [number, number] = [p.x, p.y - paddleHalfHeight];
+		let paddleTop: [number, number] = [p.x, p.y + paddleHalfHeight];
+
+		if (side == 'left')
+		{
+			var tmp = paddleTop[1];
+			paddleTop[1] = -paddleBottom[1];
+			paddleBottom[1] = -tmp;
+		}
+		
+
 		// const intersection = getIntersection(ball, nextBall, paddleBottom, paddleTop);
 		// if (!intersection) continue;
 
@@ -356,11 +365,9 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 		// const clampedPoint: [number, number] = [ix, iy];
 		// const paddleNormal: [number, number] = p.x < 0 ? [1, 0] : [-1, 0];
 
-		const side = p.x == -1 ? "left" : "right";
-
 		if (side == "left")
 		{
-			if (ball[0] < -0.98 && (ball[1] >= paddleBottom[1] && ball[1] <= paddleTop[1]))
+			if (ball[0] < -1.05 && (ball[1] >= paddleBottom[1] && ball[1] <= paddleTop[1]))
 			{
 				console.log('WITHIN LEFT PADDLE');
 				console.log(`ball x: ${ball[0]}`);
@@ -376,7 +383,7 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 				});
 				break;
 			}
-			else if (ball[0] < -0.98)
+			else if (ball[0] < -1.05)
 			{
 				console.log('GOOOOOAAAAAAAAAAAAL');
 				console.log(`ball x: ${ball[0]}`);
@@ -395,7 +402,7 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 		}
 		else
 		{
-			if (ball[0] > 0.98 && (ball[1] >= paddleBottom[1] && ball[1] <= paddleTop[1]))
+			if (ball[0] > 1.05 && (ball[1] >= paddleBottom[1] && ball[1] <= paddleTop[1]))
 			{
 				console.log('WITHIN RIGHT PADDLE');
 				console.log(`ball x: ${ball[0]}`);
@@ -411,7 +418,7 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 				});
 				break;
 			}
-			else if (ball[0] > 0.98)
+			else if (ball[0] > 1.05)
 			{
 				console.log('GOOOOOAAAAAAAAAAAAL');
 				console.log(`ball x: ${ball[0]}`);
