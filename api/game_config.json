@@ -1,5 +1,9 @@
 {
     "angle": 0.7853981634,
-    "fps": 30,
-    "speed": 0.5
+    "fps": 60,
+    "speed": 0.6,
+    "goal_2p": 1.08,
+    "field_width_2p": 1.1,
+    "field_height_2p": 0.48,
+    "paddle_half_percent": 0.1
 }

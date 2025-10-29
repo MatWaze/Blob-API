@@ -1,4 +1,6 @@
 import { workerData } from 'worker_threads';
+import game_config from "../game_config.json" with { type: 'json' };
+
 // import { GamePlayer, GameResult, GameState } from '../models/gameModels.ts';
 
 
@@ -45,7 +47,7 @@ interface GameState
 	whoHitTheBall: GamePlayer | undefined
 }
 
-const PADDLE_SIDE_PERCENT = 0.1;
+const PADDLE_SIDE_PERCENT = game_config.paddle_half_percent;
 
 function calculateTwoPlayersPositions(players: GamePlayer[])
 {
@@ -325,7 +327,7 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 
 	// Top wall
 	// let inter = lineSegmentsIntersect(ball, nextBall, [-FIELD_HALF_WIDTH, FIELD_HALF_HEIGHT], [FIELD_HALF_WIDTH, FIELD_HALF_HEIGHT]);
-	if ((ball[0] >= -1.1 && ball[0] <= 1.1) && (ball[1] > 0.48))
+	if ((ball[0] >= -game_config.field_width_2p && ball[0] <= game_config.field_width_2p) && (ball[1] > game_config.field_height_2p))
 	{
 		console.log("TOP WALL");
 		collisions.push({type: 'wall', normal: [0, -1]});
@@ -333,7 +335,7 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 
 	// Bottom wall
 	// inter = lineSegmentsIntersect(ball, nextBall, [-FIELD_HALF_WIDTH, -FIELD_HALF_HEIGHT], [FIELD_HALF_WIDTH, -FIELD_HALF_HEIGHT]);
-	if ((ball[0] >= -1.1 && ball[0] <= 1.1) && (ball[1] < -0.48))
+	if ((ball[0] >= -game_config.field_width_2p && ball[0] <= game_config.field_width_2p) && (ball[1] < -game_config.field_height_2p))
 	{
 		console.log("BOTTOM WALL");
 		collisions.push({type: 'wall', normal: [0, 1]});
@@ -367,7 +369,7 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 
 		if (side == "left")
 		{
-			if (ball[0] < -1.05 && (ball[1] >= paddleBottom[1] && ball[1] <= paddleTop[1]))
+			if (ball[0] < -game_config.goal_2p && (ball[1] >= paddleBottom[1] && ball[1] <= paddleTop[1]))
 			{
 				console.log('WITHIN LEFT PADDLE');
 				console.log(`ball x: ${ball[0]}`);
@@ -383,7 +385,7 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 				});
 				break;
 			}
-			else if (ball[0] < -1.05)
+			else if (ball[0] < -game_config.goal_2p)
 			{
 				console.log('GOOOOOAAAAAAAAAAAAL');
 				console.log(`ball x: ${ball[0]}`);
@@ -402,7 +404,7 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 		}
 		else
 		{
-			if (ball[0] > 1.05 && (ball[1] >= paddleBottom[1] && ball[1] <= paddleTop[1]))
+			if (ball[0] > game_config.goal_2p && (ball[1] >= paddleBottom[1] && ball[1] <= paddleTop[1]))
 			{
 				console.log('WITHIN RIGHT PADDLE');
 				console.log(`ball x: ${ball[0]}`);
@@ -418,7 +420,7 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 				});
 				break;
 			}
-			else if (ball[0] > 1.05)
+			else if (ball[0] > game_config.goal_2p)
 			{
 				console.log('GOOOOOAAAAAAAAAAAAL');
 				console.log(`ball x: ${ball[0]}`);
