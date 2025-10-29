@@ -37,7 +37,6 @@ export function createGame(app: TemplatedApp, roomId: string, players: Array<{id
 			countdownSeconds: 3,
 		};
 
-		app.publish(`game69:${roomId}`, JSON.stringify(initialGameState));
 		const workerPath = path.join(__dirname, '..', 'controllers', 'gameWorker.ts');
 		console.log('Creating worker with path:', workerPath);
 

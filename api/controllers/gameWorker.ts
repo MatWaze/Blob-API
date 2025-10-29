@@ -67,15 +67,19 @@ if (!isMainThread)
 	{
 		if (game.state === 'countdown')
 		{
-			game.state = 'playing';
-			const acuteRanges = [
-				(Math.random() - 0.5) * (Math.PI / 2), // -π/4 to +π/4
-				Math.PI + (Math.random() - 0.5) * (Math.PI / 2) // 3π/4 to 5π/4
-			];
-			const randomAngle = game_config.angle;
-			const speed = game_config.speed;
-			game.ballVelocity = [Math.cos(randomAngle) * speed, Math.sin(randomAngle) * speed];
-			console.log('Game transitioned to playing state');
+			game.countdownSeconds -= 1 / 60;
+			if (game.countdownSeconds <= 0)
+			{
+				game.state = 'playing';
+				const acuteRanges = [
+					(Math.random() - 0.5) * (Math.PI / 2), // -π/4 to +π/4
+					Math.PI + (Math.random() - 0.5) * (Math.PI / 2) // 3π/4 to 5π/4
+				];
+				const randomAngle = game_config.angle;
+				const speed = game_config.speed;
+				game.ballVelocity = [Math.cos(randomAngle) * speed, Math.sin(randomAngle) * speed];
+				console.log('Game transitioned to playing state');
+			}
 			return;
 		}
 		else if (game.state === 'playing')
@@ -103,19 +107,7 @@ if (!isMainThread)
 				return;
 			}
 
-			if (gameState.state == "countdown")
-			{
-				gameState.state = 'playing';
-				const acuteRanges = [
-					(Math.random() - 0.5) * (Math.PI / 2), // -π/4 to +π/4
-					Math.PI + (Math.random() - 0.5) * (Math.PI / 2) // 3π/4 to 5π/4
-				];
-				const randomAngle = game_config.angle;
-				const speed = game_config.speed;
-				gameState.ballVelocity = [Math.cos(randomAngle) * speed, Math.sin(randomAngle) * speed];
-				console.log('Game transitioned to playing state');
-			}
-			else if (parentPort && gameState.state == "playing")
+			if (parentPort)
 			{
 				calculatePlayerPositions(gameState);
 				updatePhysics(gameState);
