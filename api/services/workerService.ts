@@ -34,6 +34,7 @@ interface GamePlayer
 	prevY?: number;
 	velocityX?: number;
 	velocityY?: number;
+	drag: number;
 }
 
 interface GameState
@@ -48,6 +49,8 @@ interface GameState
 }
 
 const PADDLE_SIDE_PERCENT = game_config.paddle_half_percent;
+const dt = 1 / 60;
+const speed = game_config.speed;
 
 function calculateTwoPlayersPositions(players: GamePlayer[])
 {
@@ -73,7 +76,6 @@ export function calculatePlayerPositions(gameState: GameState)
 	{
 		const activePlayers = gameState.players.filter(p => p.isActive);
 		const playerCount = activePlayers.length;
-		const dt = 1 / 60;
 
 		if (playerCount === 0)
 		{
@@ -105,21 +107,6 @@ export function calculatePlayerPositions(gameState: GameState)
 				// console.log(`playerIndex: ${arrayIndex}, pos: ${player.position}, x: ${player.x}, y: ${player.y}`);
 			});
 		}
-
-		activePlayers.forEach(player =>
-		{
-			// Initialize prev if first time
-			if (player.prevX === undefined) player.prevX = player.x;
-			if (player.prevY === undefined) player.prevY = player.y;
-
-			// Compute velocity
-			player.velocityX = (player.x - player.prevX) / dt;
-			player.velocityY = (player.y - player.prevY) / dt;
-
-			// Update prev for next frame
-			player.prevX = player.x;
-			player.prevY = player.y;
-		});
 	}
 	catch (error)
 	{
@@ -158,7 +145,7 @@ export function sendFinishedNotification(gameState: GameState, parentPort: any)
 function getBallNextPosition(gameState: GameState): [number, number]
 {
 	const ball = gameState.ballPosition;
-	const dt = 1 / 60;
+
 	return [
 		ball[0] + gameState.ballVelocity[0] * dt,
 		ball[1] + gameState.ballVelocity[1] * dt
@@ -234,7 +221,7 @@ function isWithinPaddle(ix: number, iy: number, playerLeft: [number, number], pl
 	return u >= 0 && u <= 1;
 }
 
-function handlePaddleCollision(gameState: GameState, player: GamePlayer, ix: number, iy: number, playerAcoeff: number, playerBcoeff: number)
+function handlePaddleCollision(gameState: GameState, player: GamePlayer, ix: number, iy: number, playerAcoeff: number, playerBcoeff: number, beta: number)
 {
 	const normal: [number, number] = [playerAcoeff, playerBcoeff];
 	const length = Math.sqrt(normal[0] * normal[0] + normal[1] * normal[1]);
@@ -252,7 +239,11 @@ function handlePaddleCollision(gameState: GameState, player: GamePlayer, ix: num
 	}
 
 	// const paddleVel: [number, number] = [player.velocityX || 0, player.velocityY || 0];
-	reflectBall(gameState, normal);
+	const dragX = (player.drag ?? 0) * Math.cos(beta);
+	const dragY = (player.drag ?? 0) * Math.sin(beta);
+	console.log(`dragX: ${dragX}`);
+	console.log(`dragY: ${dragY}`);
+	reflectBallWithPaddleVelocity(gameState, normal, [ dragX, dragY ]);
 
 	gameState.ballPosition[0] = ix + normal[0] * 0.005;
 	gameState.ballPosition[1] = iy + normal[1] * 0.005;
@@ -323,7 +314,7 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 	const FIELD_HALF_HEIGHT = 0.5;
 
 	// Collect potential collisions
-	const collisions: {type: 'wall' | 'paddle' | 'goal', normal: [number, number], player?: any}[] = [];
+	const collisions: {type: 'wall' | 'paddle' | 'goal', normal: [number, number], player?: GamePlayer}[] = [];
 
 	// Top wall
 	// let inter = lineSegmentsIntersect(ball, nextBall, [-FIELD_HALF_WIDTH, FIELD_HALF_HEIGHT], [FIELD_HALF_WIDTH, FIELD_HALF_HEIGHT]);
@@ -372,6 +363,7 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 			if (ball[0] < -game_config.goal_2p && (ball[1] >= paddleBottom[1] && ball[1] <= paddleTop[1]))
 			{
 				console.log('WITHIN LEFT PADDLE');
+				console.log(`drag: ${p.drag}`);
 				console.log(`ball x: ${ball[0]}`);
 				console.log(`ball y: ${ball[1]}\n`);
 
@@ -407,6 +399,8 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 			if (ball[0] > game_config.goal_2p && (ball[1] >= paddleBottom[1] && ball[1] <= paddleTop[1]))
 			{
 				console.log('WITHIN RIGHT PADDLE');
+				console.log(`drag: ${p.drag}`);
+
 				console.log(`ball x: ${ball[0]}`);
 				console.log(`ball y: ${ball[1]}\n`);
 
@@ -441,7 +435,7 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 
 	// Find earliest collision
 	if (collisions.length === 0) return false;
-
+	
 	// Sort by t value and take the earliest
 	// collisions.sort((a, b) => a.t - b.t);
 	const earliest = collisions[0];
@@ -455,22 +449,14 @@ function checkTwoPlayerCollisions(gameState: GameState, nextBall: [number, numbe
 			console.log(`Goal scored on ${scoredOn.username}`);
 			handleGoal(gameState, scoredOn, players, parentPort);
 		}
-		else
-		{
-			console.log('No defender - bouncing off goal line');
-			reflectBall(gameState, earliest.normal);
-			// Larger nudge to prevent immediate re-collision
-			gameState.ballPosition[0] += earliest.normal[0] * 0.02;
-			gameState.ballPosition[1] += earliest.normal[1] * 0.02;
-		}
 	}
 	else
 	{
 		console.log(`${earliest.type === 'wall' ? 'Wall' : 'Paddle'} collision`);
 
 		// Reflect ball velocity
-		reflectBall(gameState, earliest.normal);
-		
+		reflectBallWithPaddleVelocity(gameState, earliest.normal, earliest.type === 'wall' ? [0, 0] : [0, earliest.player?.drag ?? 0]);
+
 		// Larger nudge to prevent re-collision
 		const nudge = 0.015;
 		gameState.ballPosition[0] += earliest.normal[0] * nudge;
@@ -527,7 +513,7 @@ export function checkCollisions(gameState: GameState, parentPort: any)
 		{
 			const playerAcoeff = playerRightBorder[1] - playerLeftBorder[1];
 			const playerBcoeff = -(playerRightBorder[0] - playerLeftBorder[0]);
-			handlePaddleCollision(gameState, player, ix, iy, playerAcoeff, playerBcoeff);
+			handlePaddleCollision(gameState, player, ix, iy, playerAcoeff, playerBcoeff, beta);
 			collisionOrGoalOccurred = true;
 			break;
 		}
@@ -542,13 +528,47 @@ export function checkCollisions(gameState: GameState, parentPort: any)
 	return collisionOrGoalOccurred;
 }
 
-function reflectBall(gameState: GameState, normal: [number, number])
+function reflectBall(gameState: GameState, normal: [number, number], paddleVelocity: [number, number] = [0,0])
 {
-	const [vx, vy] = gameState.ballVelocity;
+	let [vx, vy] = gameState.ballPosition;
+	const [px, py] = paddleVelocity;
 	const [nx, ny] = normal;
 	const dot = vx * nx + vy * ny;
 	gameState.ballVelocity = [
 		vx - 2 * dot * nx,
 		vy - 2 * dot * ny
 	];
+}
+
+function reflectBallWithPaddleVelocity(gameState: GameState, normal: [number, number], paddleVel: [number, number] = [0,0])
+{
+	let [vx, vy] = gameState.ballVelocity;
+
+	// Reflect off surface first (for angled paddles)
+	if (normal[0] !== 0 || normal[1] !== 0)
+	{
+		const [nx, ny] = normal;
+		const dot = vx * nx + vy * ny;
+		vx = vx - 2 * dot * nx;
+		vy = vy - 2 * dot * ny;
+	}
+
+	// Add paddle velocity
+	const [px, py] = paddleVel;
+	const nudgedVx = vx + px;
+	const nudgedVy = vy + py;
+
+	// console.log(`p velocity y: ${py}`);
+
+	// Normalize (get direction)
+	const length = Math.sqrt(nudgedVx * nudgedVx + nudgedVy * nudgedVy);
+	let dirVx = 0, dirVy = 0;
+	if (length > 0)
+	{
+		dirVx = nudgedVx / length;
+		dirVy = nudgedVy / length;
+	}
+
+	// Scale to constant speed
+	gameState.ballVelocity = [dirVx * speed, dirVy * speed];
 }
