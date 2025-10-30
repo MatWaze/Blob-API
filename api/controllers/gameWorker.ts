@@ -17,6 +17,7 @@ interface GamePlayer
 	prevY?: number;
 	velocityX?: number;
 	velocityY?: number;
+	drag: number,
 }
 
 interface GameState
@@ -31,7 +32,7 @@ interface GameState
 }
 
 const playerMoveTimestamps: Record<string, number> = {};
-const MOVE_RATE_LIMIT_MS = 16;
+const MOVE_RATE_LIMIT_MS = game_config.drag_update_rate;
 
 if (!isMainThread)
 {
@@ -164,7 +165,7 @@ if (!isMainThread)
 					const sidePercent = 0.1;
 
 					player.position = Math.max(sidePercent, Math.min(0.9, tempPos));
-
+					player.drag = message.delta;
 					// console.log(`Player ${player.id}: position += ${scaledDelta.toFixed(4)} = ${player.position.toFixed(4)}`);
 				}
 			}
