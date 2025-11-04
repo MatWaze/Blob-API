@@ -14,6 +14,7 @@ async function userRoutes(server: FastifyInstance)
 	server.post(
 		"/register",
 		{
+			config: { rateLimit: { timeWindow: '1 minute', max: 1000 } },
 			schema:
 			{
 				body: userSchemas.createUserModel,
@@ -30,6 +31,7 @@ async function userRoutes(server: FastifyInstance)
 	server.post(
 		"/login",
 		{
+			config: { rateLimit: { timeWindow: '1 minute', max: 1000 } },
 			schema:
 			{
 				body: userSchemas.loginUserModel,
@@ -46,6 +48,7 @@ async function userRoutes(server: FastifyInstance)
 	server.post(
 		"/email/confirm",
 		{
+			config: { rateLimit: { timeWindow: '1 minute', max: 500 } },
 			schema:
 			{
 				querystring: userSchemas.confirmEmailModel,
@@ -62,6 +65,7 @@ async function userRoutes(server: FastifyInstance)
 	server.get(
 		"/",
 		{
+			config: { rateLimit: { timeWindow: '1 minute', max: 1000 } },
 			preHandler: [ server.authenticate ]
 		},
 		getAllUsersAsync
@@ -76,6 +80,7 @@ async function userRoutes(server: FastifyInstance)
 	server.get(
 		"/oauth/google",
 		{
+			config: { rateLimit: { timeWindow: '1 minute', max: 1000 } },
 			schema:
 			{
 				querystring: userSchemas.googleCodeModel
@@ -87,12 +92,19 @@ async function userRoutes(server: FastifyInstance)
 	// POST api/users/logout
 	server.post(
 		"/logout",
+		{
+			config: { rateLimit: { timeWindow: '1 minute', max: 1000 } },
+			preHandler: [ server.authenticate ]
+		},
 		logoutAsync
 	);
 
 	// GET api/users/tokens
 	server.get(
 		"/tokens",
+		{
+			config: { rateLimit: { timeWindow: '1 minute', max: 1000 } },
+		},
 		getTokens
 	);
 }
