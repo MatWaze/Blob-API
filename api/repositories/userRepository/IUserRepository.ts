@@ -9,4 +9,6 @@ export interface IUserRepository
 	createUserAsync(user: CreateUserType) : Promise<any>;
 	// updateUserAsync(user: any) : Promise<any>;
 	deleteUserAsync(id: string) : Promise<void>;
+	updateBalanceAsync(userId: string, amount: number) : Promise<void>;
+	updateWithdrawabalBalanceAsync(userId: string, amount: number) : Promise<void>;
 }

@@ -124,4 +124,28 @@ export class userRepository implements IUserRepository
 			},
 		});
 	}
+
+	async updateBalanceAsync(userId: string, amount: number)
+	{
+		await prisma.user.update(
+		{
+			where: { id: userId },
+			data:
+			{
+				balance: amount
+			}
+		})
+	}
+
+	async updateWithdrawabalBalanceAsync(userId: string, amount: number)
+	{
+		await prisma.user.update(
+		{
+			where: { id: userId },
+			data:
+			{
+				withdrawAmount: amount
+			}
+		})
+	}
 }
