@@ -1,5 +1,5 @@
 import { isMainThread, parentPort, workerData } from 'worker_threads';
-import { calculatePlayerPositions, checkCollisions } from '../services/workerService.ts';
+import { avoidVertexHit, calculatePlayerPositions, checkCollisions, getPolygonVertices } from '../services/workerService.ts';
 // import { GameState } from '../models/gameModels.ts';
 import game_config from "../game_config.json" with { type: 'json' };
 
@@ -79,6 +79,12 @@ if (!isMainThread)
 				const randomAngle = game_config.angle;
 				const speed = game_config.speed;
 				game.ballVelocity = [Math.cos(randomAngle) * speed, Math.sin(randomAngle) * speed];
+
+				const n = game.players.filter(p => p.isActive).length;
+				if (n > 2)
+					game.ballVelocity = avoidVertexHit(game.ballPosition, game.ballVelocity, getPolygonVertices(n));
+				else
+					game.ballVelocity = avoidVertexHit(game.ballPosition, game.ballVelocity, [[-1.1, 0.5], [1.1, 0.5], [-1.1, -0.5], [1.1, -0.5]]);
 				console.log('Game transitioned to playing state');
 			}
 			return;
