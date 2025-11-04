@@ -15,11 +15,23 @@ model User {
 	password		String?
 	walletAddress	String?
 	withdrawAmount	Decimal?		@default(0.0)
+	balance			Decimal			@default(0.0)
 	isDeleted		Boolean?		@default(false)
 	authMethod		String?
 	emailVerified	EmailVerified?	@relation("UserToEmailVerified")
 	participations	Participation[]
 	friendships		Friendship[]
+	transactions	Transaction[]
+}
+
+model Transaction {
+	id				String		@id @default(uuid())
+	status			String		@default("PENDING") // "PENDING", "SUCCESS", "FAIL"
+	type			String // "WITHDRAWAL", "BONUS", "PURCHASE", maybe "DEPOSIT"
+	amount			Decimal
+	createdAt		DateTime	@default(now())
+	user			User		@relation(fields: [userId], references: [id])
+	userId			String
 }
 
 model Friendship {
