@@ -9,7 +9,11 @@ import { fastifyCookie } from '@fastify/cookie'
 import fastifyCors from '@fastify/cors';
 import fastifyUwsPlugin from '@geut/fastify-uws/plugin'
 import { serverFactory } from '@geut/fastify-uws'
-import blockChainRoutes from './routes/blockChainRoutes.ts';
+import { transactionRoutes } from './routes/transactionRoutes.ts';
+import { tournamentRoutes } from './routes/tournamentRoutes.ts';
+import { getSession } from './services/sessionService.ts';
+import fastifyRateLimit from '@fastify/rate-limit';
+// import blockChainRoutes from './routes/blockChainRoutes.ts';
 
 let server: FastifyInstance;
 
@@ -47,18 +51,28 @@ async function buildServer()
 		{
 			try
 			{
-				const token = request.cookies.accessToken;
+				const sessionId = request.cookies.sessionId;
 
-				if (!token)
+				if (!sessionId)
 				{
 					return reply.code(401).send({ 
-						message: 'Missing access token', 
+						message: 'Missing session', 
 						needsRefresh: true 
 					});
 				}
 
-				request.headers.authorization = `Bearer ${token}`;
-				await request.jwtVerify();
+				const session = await getSession(sessionId);
+
+				if (!session)
+				{
+					return reply.code(404).send({ 
+						message: "Session doesn't exist", 
+						needsRefresh: true 
+					});
+				}
+
+				//request.headers.authorization = `Bearer ${token}`;
+				server.jwt.verify(session.accessToken!);
 			}
 			catch (e)
 			{
@@ -80,6 +94,9 @@ async function buildServer()
 		'http://localhost:4000',
 		'http://localhost:3065',
 		'http://localhost:3000',
+		'http://10.19.245.113:4000',
+		'http://10.19.245.113:3065',
+		'http://10.19.245.113:3000',
 		'https://your-production-domain.com'
 	];
 
@@ -107,6 +124,7 @@ async function buildServer()
 
 	await server.register(fastifyCookie);
 	await server.register(fastifyUwsPlugin);
+	await server.register(fastifyRateLimit,	{ global: false });
 
 	await server.register(fjwt,
 	{
@@ -121,7 +139,9 @@ async function buildServer()
 	});
 
 	await server.register(userRoutes, { prefix: 'api/users' });
-	await server.register(blockChainRoutes, { prefix: 'api/blockchain' });
+	await server.register(transactionRoutes, { prefix: 'api/transactions' });
+	await server.register(tournamentRoutes, { prefix: 'api/tournaments' });
+	// await server.register(blockChainRoutes, { prefix: 'api/blockchain' });
 	await server.register(gameSocketRoutes);
 
 	return server;
