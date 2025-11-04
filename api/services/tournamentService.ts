@@ -110,6 +110,27 @@ export async function getTournamentParticipantCountAsync(tournamentId: number)
 	}
 }
 
+export async function getTournamentsByUser(userId: string)
+{
+	try
+	{
+		const lastWeekDate = new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000);
+		return (await tournamentRepo.getTournamentsByUserAsync(userId))
+			.filter(t => t.createdAt >= lastWeekDate)
+			.map(t =>
+			({
+				id: t.id,
+				createdAt: t.createdAt,
+				gameName: t.game.name,
+				placementName: t.participations[0]?.placement?.name || 'N/A'
+			}));;
+	}
+	catch (error)
+	{
+		console.log(error);
+	}
+}
+
 export async function isTournamentFullAsync(tournamentId: number, maxParticipants: number = 8)
 {
 	try

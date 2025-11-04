@@ -1,3 +1,4 @@
+import { from, fromAsync } from "linq-to-typescript";
 import prisma from "../../prisma/prismaInstance.ts";
 
 export class TournamentRepository
@@ -29,8 +30,35 @@ export class TournamentRepository
 			include:
 			{
 				game: true,
+				participations: true
 			},
 		});
+	}
+
+	async getTournamentsByUserAsync(userId: string)
+	{
+		const tournaments = await prisma.tournament.findMany(
+		{
+			where:
+			{
+				participations:
+				{
+					some: { userId: userId }
+				}
+			},
+			include:
+			{
+				game: true,
+				participations:
+				{
+					where: { userId: userId },
+					include: { placement: true }
+				}
+			},
+			orderBy: { createdAt: 'desc' }
+		});
+		
+		return tournaments;
 	}
 
 	async createTournamentAsync(gameId: number)
