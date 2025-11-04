@@ -1,6 +1,7 @@
 import userRepo from "../repositories/userRepository/userFactory.ts";
 import bcrypt from "bcrypt";
 import { confirmationEmail, getMailClient } from "./emailService.ts";
+import { getSession } from "./sessionService.ts";
 
 export async function sendEmailAsync(usr: any)
 	: Promise<any>
@@ -101,6 +102,19 @@ export async function getUserByNonceAsync(nonce: string)
 	}
 }
 
+export async function getCurrentUser(sessionId: string)
+{
+	if (sessionId)
+	{
+		const s = await getSession(sessionId);
+	
+		if (s !== undefined)
+		{
+			return await getUserByEmailAsync(s.email);
+		}
+	}
+}
+
 export async function getUsersAsync() : Promise<any>
 {
 	try
@@ -134,6 +148,32 @@ export async function setEmailConfirmed(user: any)
 	try
 	{
 		await userRepo.confirmEmailAsync(user.id);
+	}
+	catch (error)
+	{
+		console.log(error);
+	}
+}
+
+export async function updateBalance(user: any, amount: number)
+	: Promise<void>
+{
+	try
+	{
+		await userRepo.updateBalanceAsync(user.id, amount);
+	}
+	catch (error)
+	{
+		console.log(error);
+	}
+}
+
+export async function updateWithdrawabalBalance(user: any, amount: number)
+	: Promise<void>
+{
+	try
+	{
+		await userRepo.updateWithdrawabalBalanceAsync(user.id, amount);
 	}
 	catch (error)
 	{
