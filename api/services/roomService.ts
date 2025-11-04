@@ -1,5 +1,6 @@
 import { randomBytes } from "crypto";
 import { RoomDetails, RoomInfo, RoomPlayer } from "../models/roomModels";
+import { gameWorkers, stopGame } from "./gameSocketService";
 
 export const rooms = new Map<string, RoomInfo>();
 export const userRoomMapping = new Map<string, string>(); // userId -> roomId
@@ -111,12 +112,19 @@ export function leaveRoom(roomId: string, userId: string): { success: boolean; m
 	userRoomMapping.delete(userId);
 
 	// If room is empty, delete it
-	if (room.players.size === 0) {
+	if (room.players.size === 0)
+	{
 		rooms.delete(roomId);
 		console.log(`Room ${roomId} deleted - no players remaining`);
+
+		// Stop the game
+		// const gameData = gameWorkers.get(roomId);
+		// gameWorkers.delete(roomId);
+		// gameData?.worker.postMessage({ type: 'stop' });
 	}
 	// If creator left and there are still players, the first remaining player becomes creator
-	else if (wasCreator && room.players.size > 0) {
+	else if (wasCreator && room.players.size > 0)
+	{
 		const newCreator = Array.from(room.players)[0];
 		console.log(`Room ${roomId}: Creator left, ${newCreator.username} is now the creator`);
 	}
@@ -169,6 +177,16 @@ export function getRoomDetails(roomId: string): RoomDetails | undefined
 		createdAt: room.createdAt,
 		maxPlayers: room.maxPlayers
 	};
+}
+
+export function getRoomByUserId(userId: string)
+{
+	const roomId = getUserCurrentRoom(userId);
+
+	if (roomId)
+	{
+		return rooms.get(roomId);
+	}
 }
 
 export function getRoomFee(roomId: string): number | undefined
