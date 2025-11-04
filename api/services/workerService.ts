@@ -51,7 +51,7 @@ interface GameState
 const PADDLE_SIDE_PERCENT = game_config.paddle_half_percent;
 const dt = 1 / 60;
 const speed = game_config.speed;
-const r = game_config.ball_radius;
+// const r = game_config.ball_radius;
 
 function calculateTwoPlayersPositions(players: GamePlayer[])
 {
