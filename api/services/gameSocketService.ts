@@ -12,7 +12,7 @@ import { TemplatedApp } from '@geut/fastify-uws';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const gameWorkers = new Map<string, GameWorkerData>();
+export const gameWorkers = new Map<string, GameWorkerData>();
 
 export function createGame(app: TemplatedApp, roomId: string, players: Array<{id: string, username: string}>): boolean
 {
