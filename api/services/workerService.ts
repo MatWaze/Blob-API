@@ -51,6 +51,7 @@ interface GameState
 const PADDLE_SIDE_PERCENT = game_config.paddle_half_percent;
 const dt = 1 / 60;
 const speed = game_config.speed;
+const r = game_config.ball_radius;
 
 function calculateTwoPlayersPositions(players: GamePlayer[])
 {
@@ -540,7 +541,61 @@ function reflectBall(gameState: GameState, normal: [number, number], paddleVeloc
 	];
 }
 
-function reflectBallWithPaddleVelocity(gameState: GameState, normal: [number, number], paddleVel: [number, number] = [0,0])
+export function getPolygonVertices(n: number): [number, number][]
+{
+	const radius = 0.5 / Math.cos(Math.PI / n);
+	const vertices: [number, number][] = [];
+
+	for (let i = 0; i < n; i++) {
+		const theta = (2 * Math.PI * i) / n;
+		const x = radius * Math.sin(theta);
+		const y = radius * Math.cos(theta);
+		vertices.push([x, y]);
+	}
+
+	return vertices;
+}
+
+export function avoidVertexHit(
+	pos: [number, number],
+	vel: [number, number],
+	vertices: [number, number][],
+	radius: number = 0.01
+): [number, number]
+{
+	let [vx, vy] = vel;
+	let hitVertex = false;
+
+	for (const [xv, yv] of vertices)
+	{
+		const dx = xv - pos[0];
+		const dy = yv - pos[1];
+		const t = vx * dx + vy * dy;
+		if (t <= 0) continue;
+		const d = Math.abs(vx * dy - vy * dx);
+		if (d < radius)
+		{
+			hitVertex = true;
+			break;
+		}
+	}
+
+	if (hitVertex)
+	{
+		console.log('AVOIDING VERTEX HIT');
+		const delta = (Math.random() > 0.5 ? 1 : -1) * 0.02;
+		const cos = Math.cos(delta), sin = Math.sin(delta);
+		return [vx * cos - vy * sin, vx * sin + vy * cos];
+	}
+
+	return [vx, vy];
+}
+
+
+function reflectBallWithPaddleVelocity(
+	gameState: GameState,
+	normal: [number, number],
+	paddleVel: [number, number] = [0,0])
 {
 	let [vx, vy] = gameState.ballVelocity;
 
@@ -571,4 +626,11 @@ function reflectBallWithPaddleVelocity(gameState: GameState, normal: [number, nu
 
 	// Scale to constant speed
 	gameState.ballVelocity = [dirVx * speed, dirVy * speed];
+
+
+	const n = gameState.players.filter(p => p.isActive).length;
+	if (n > 2)
+		gameState.ballVelocity = avoidVertexHit(gameState.ballPosition, gameState.ballVelocity, getPolygonVertices(n));
+	else
+		gameState.ballVelocity = avoidVertexHit(gameState.ballPosition, gameState.ballVelocity, [[-1.1, 0.5], [1.1, 0.5], [-1.1, -0.5], [1.1, -0.5]]);
 }
