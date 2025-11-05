@@ -236,6 +236,7 @@ export function handleStartGame(
 	roomId: string,
 )
 {
+	ws.subscribe(`game69:${roomId}`);
 	if (!isUserRoomCreator(userData.userId, roomId))
 	{
 		ws.send(JSON.stringify(
@@ -282,7 +283,7 @@ export function handleStartGame(
 	// }
 
 	const success = createGame(app, roomId, Array.from(room.players));
-
+	
 	if (success)
 	{
 		// ws.send(JSON.stringify(
@@ -290,16 +291,17 @@ export function handleStartGame(
 		// 	success: true,
 		// 	message: "Game started"
 		// }));
+		ws.unsubscribe(`room69:${roomId}`);
 		setupGameBroadcaster(app, ws, roomId);
 		// console.log(`Game started in room ${roomId} by ${userId}`);
 	}
 	else
 	{
-		ws.send(JSON.stringify(
+		app.publish(`game69:${roomId}`, JSON.stringify(
 		{
-			success: false,
 			message: "Failed to start game"
 		}));
+		ws.unsubscribe(`game69:${roomId}`);
 	}
 }
 
@@ -357,10 +359,11 @@ function setupGameBroadcaster(
 			{
 				await stopGame(roomId, message.gameResult);
 
-				app.publish(`room69:${roomId}`, JSON.stringify({
+				app.publish(`game69:${roomId}`, JSON.stringify({
 					gameResult: message.gameResult as GameResult
 				}));
 
+				ws.unsubscribe(`game69:${roomId}`);
 				return;
 			}
 		}
