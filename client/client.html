@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transcendence - Game Client</title>
+    <title>Blobula</title>
     <style>
         body {
             margin: 0;
@@ -125,6 +125,93 @@
             transform: translateY(0);
             pointer-events: all;
             z-index: 200;
+        }
+
+        /* Grid window layouts */
+        .window.grid-1 {
+            width: calc(100% - 24px);
+            height: calc(100% - 24px);
+            left: 12px;
+            top: 10px;
+        }
+
+        .window.grid-2-1 {
+            width: calc(50% - 18px);
+            height: calc(100% - 24px);
+            left: 12px;
+            top: 10px;
+        }
+
+        .window.grid-2-2 {
+            width: calc(50% - 18px);
+            height: calc(100% - 24px);
+            left: calc(50% + 6px);
+            top: 10px;
+        }
+
+        .window.grid-3-1 {
+            width: calc(50% - 18px);
+            height: calc(100% - 24px);
+            left: 12px;
+            top: 10px;
+        }
+
+        .window.grid-3-2 {
+            width: calc(50% - 18px);
+            height: calc(50% - 17px);
+            left: calc(50% + 6px);
+            top: 10px;
+        }
+
+        .window.grid-3-3 {
+            width: calc(50% - 18px);
+            height: calc(50% - 17px);
+            left: calc(50% + 6px);
+            top: calc(50% + 5px);
+        }
+
+        .window.grid-4-1, .window.grid-4-2, .window.grid-4-3, .window.grid-4-4 {
+            width: calc(50% - 18px);
+            height: calc(50% - 17px);
+        }
+
+        .window.grid-4-1 {
+            left: 12px;
+            top: 10px;
+        }
+
+        .window.grid-4-2 {
+            left: calc(50% + 6px);
+            top: 10px;
+        }
+
+        .window.grid-4-3 {
+            left: 12px;
+            top: calc(50% + 5px);
+        }
+
+        .window.grid-4-4 {
+            left: calc(50% + 6px);
+            top: calc(50% + 5px);
+        }
+
+        .window.focused {
+            z-index: 300 !important;
+            border-color: #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+
+        .window.unfocused {
+            z-index: 250 !important;
+            border-color: #006600;
+        }
+        
+        .window.active.unfocused {
+            z-index: 250 !important;
+        }
+        
+        .window.active.focused {
+            z-index: 300 !important;
         }
 
         .window.minimized {
@@ -304,7 +391,6 @@
             background: #3a3a3a;
             border: 2px solid #00ff00;
             color: #00ff00;
-            padding: 8px 15px;
             border-radius: 5px;
             cursor: pointer;
             font-family: inherit;
@@ -314,6 +400,13 @@
             white-space: nowrap;
             min-width: 120px;
             text-align: center;
+            line-height: normal;
+        }
+        
+        .taskbar-item.visible {
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .taskbar-item.visible {
@@ -361,15 +454,184 @@
         .window.restoring {
             animation: restoreFromTaskbar 0.3s ease-out forwards;
         }
+
+        /* Profile input styles */
+        #profileWalletInput::placeholder {
+            color: #555;
+        }
+
+        #updateWalletBtn:hover {
+            background: #00ff00;
+            color: #1a1a1a;
+        }
+
+        #updateWalletBtn:active {
+            transform: scale(0.98);
+        }
+
+        /* Profile tabs */
+        .profile-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #00ff00;
+            padding-bottom: 10px;
+        }
+
+        .profile-tab {
+            background: #2a2a2a;
+            border: 2px solid #555;
+            color: #888;
+            padding: 8px 16px;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            border-bottom: none;
+        }
+
+        .profile-tab:hover {
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .profile-tab.active {
+            background: #1a1a1a;
+            border-color: #00ff00;
+            color: #00ff00;
+            position: relative;
+            bottom: -2px;
+        }
+
+        .profile-section {
+            display: none;
+        }
+
+        .profile-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .transaction-list, .game-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #2a2a2a;
+            border: 1px solid #00ff00;
+            border-radius: 4px;
+        }
+
+        .transaction-item, .game-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #1a1a1a;
+            border: 1px solid #555;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .transaction-item:hover, .game-item:hover {
+            border-color: #00ff00;
+            transform: translateX(2px);
+        }
+
+        .transaction-item:last-child, .game-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .transaction-header, .game-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .transaction-status {
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+
+        .status-pending {
+            background: #ffaa00;
+            color: #000;
+        }
+
+        .status-completed {
+            background: #00ff00;
+            color: #000;
+        }
+
+        .status-failed {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        .game-result {
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .result-win {
+            background: #00ff00;
+            color: #000;
+        }
+
+        .result-loss {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        .result-draw {
+            background: #ffaa00;
+            color: #000;
+        }
+
+        .transaction-details, .game-details {
+            font-size: 11px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #555;
+            font-style: italic;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 40px;
+            color: #00ff00;
+        }
+
+        .loading-spinner-small {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #333;
+            border-top: 2px solid #00ff00;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="title">TRANSCENDENCE</div>
+        <div class="title">BLOBULA</div>
         <div class="nav-buttons">
             <button class="nav-btn" id="loginBtn">Login</button>
-            <button class="nav-btn" id="gameBtn" disabled>Game</button>
-            <button class="nav-btn" id="babylonBtn" disabled>3D Scene</button>
+            <button class="nav-btn" id="gameBtn" disabled>Pong</button>
+            <button class="nav-btn" id="profileBtn" disabled>Profile</button>
             <button class="nav-btn" id="logoutBtn" style="display: none;">Logout</button>
         </div>
     </div>
@@ -391,12 +653,12 @@
     <div class="main-content">
         <!-- Welcome Screen -->
         <div class="welcome-screen" id="welcomeScreen">
-            <div class="welcome-title">TRANSCENDENCE</div>
+            <div class="welcome-title">BLOBULA</div>
             <div class="welcome-subtitle">Choose an option to get started</div>
             <div class="welcome-buttons">
                 <button class="welcome-btn" id="welcomeLoginBtn">Login</button>
                 <button class="welcome-btn" id="welcomeGameBtn" disabled>Play Game</button>
-                <button class="welcome-btn" id="welcomeBabylonBtn" disabled>3D Scene</button>
+                <button class="welcome-btn" id="welcomeProfileBtn" disabled>Profile</button>
             </div>
         </div>
 
@@ -428,17 +690,72 @@
             </div>
         </div>
 
-        <!-- Babylon.js Window -->
-        <div class="window" id="babylonWindow">
+        <!-- Profile Window -->
+        <div class="window" id="profileWindow">
             <div class="window-header">
-                <div class="window-title">🎲 Babylon 3D</div>
+                <div class="window-title">👤 Profile</div>
                 <div class="window-controls">
-                    <div class="window-control minimize" title="Minimize" onclick="client.minimizeWindow('babylon')"></div>
-                    <div class="window-control close" title="Close" onclick="client.hideWindow('babylon')"></div>
+                    <div class="window-control minimize" title="Minimize" onclick="client.minimizeWindow('profile')"></div>
+                    <div class="window-control close" title="Close" onclick="client.hideWindow('profile')"></div>
                 </div>
             </div>
             <div class="window-content">
-                <iframe id="babylonFrame" src=""></iframe>
+                <div id="profileContent" style="padding: 20px; color: #00ff00; font-family: 'Courier New', monospace; max-width: 800px; margin: 0 auto; overflow-y: auto; height: 100%;">
+                    <h2 style="border-bottom: 2px solid #00ff00; padding-bottom: 10px; margin-bottom: 20px;">User Profile</h2>
+                    
+                    <!-- Profile Tabs -->
+                    <div class="profile-tabs">
+                        <button class="profile-tab active" onclick="client.switchProfileTab('info')">User Information</button>
+                        <button class="profile-tab" onclick="client.switchProfileTab('transactions')">Transactions</button>
+                        <button class="profile-tab" onclick="client.switchProfileTab('games')">Recent Games</button>
+                    </div>
+
+                    <!-- User Information Section -->
+                    <div id="profileSectionInfo" class="profile-section active">
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <div class="profile-field">
+                                <label style="display: block; color: #888; font-size: 12px; margin-bottom: 5px;">USERNAME</label>
+                                <div id="profileUsername" style="font-size: 16px; padding: 8px 12px; background: #2a2a2a; border: 1px solid #00ff00; border-radius: 4px;">Not logged in</div>
+                            </div>
+                            <div class="profile-field">
+                                <label style="display: block; color: #888; font-size: 12px; margin-bottom: 5px;">EMAIL</label>
+                                <div id="profileEmail" style="font-size: 16px; padding: 8px 12px; background: #2a2a2a; border: 1px solid #00ff00; border-radius: 4px;">Not logged in</div>
+                            </div>
+                            <div class="profile-field">
+                                <label style="display: block; color: #888; font-size: 12px; margin-bottom: 5px;">BALANCE</label>
+                                <div id="profileBalance" style="font-size: 16px; padding: 8px 12px; background: #2a2a2a; border: 1px solid #00ff00; border-radius: 4px;">0.00</div>
+                            </div>
+                            <div class="profile-field">
+                                <label style="display: block; color: #888; font-size: 12px; margin-bottom: 5px;">WALLET ADDRESS</label>
+                                <div style="display: flex; gap: 10px; align-items: stretch;">
+                                    <input type="text" id="profileWalletInput" placeholder="Enter wallet address" style="flex: 1; font-size: 14px; padding: 8px 12px; background: #2a2a2a; border: 1px solid #00ff00; border-radius: 4px; color: #00ff00; font-family: 'Courier New', monospace;">
+                                    <button id="updateWalletBtn" style="background: #3a3a3a; border: 2px solid #00ff00; color: #00ff00; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-family: 'Courier New', monospace; font-size: 14px; transition: all 0.3s ease; white-space: nowrap;">Update</button>
+                                </div>
+                                <div id="profileWallet" style="font-size: 12px; padding: 8px 0; color: #888; word-break: break-all;">Not available</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transactions Section -->
+                    <div id="profileSectionTransactions" class="profile-section">
+                        <div id="transactionsContainer">
+                            <div class="loading-state">
+                                <div class="loading-spinner-small"></div>
+                                <p>Loading transactions...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Games Section -->
+                    <div id="profileSectionGames" class="profile-section">
+                        <div id="gamesContainer">
+                            <div class="loading-state">
+                                <div class="loading-spinner-small"></div>
+                                <p>Loading games...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -446,8 +763,8 @@
     <!-- Taskbar -->
     <div class="taskbar" id="taskbar">
         <div class="taskbar-item" id="loginTaskbar" onclick="client.restoreWindow('login')">🔐 Login</div>
-        <div class="taskbar-item" id="gameTaskbar" onclick="client.restoreWindow('game')">🎮 Game</div>
-        <div class="taskbar-item" id="babylonTaskbar" onclick="client.restoreWindow('babylon')">🎲 Babylon 3D</div>
+        <div class="taskbar-item" id="gameTaskbar" onclick="client.restoreWindow('game')">🎮 Pong</div>
+        <div class="taskbar-item" id="profileTaskbar" onclick="client.restoreWindow('profile')">👤 Profile</div>
     </div>
 
     <!-- Loading Overlay -->
@@ -468,32 +785,32 @@
                 this.currentSessionId = null;
                 this.currentUser = null;
                 this.isAuthenticated = false;
-                this.activeWindow = null;
+                this.activeWindows = new Set();
+                this.focusedWindow = null;
                 this.minimizedWindows = new Set();
                 
                 // Elements
                 this.welcomeScreen = document.getElementById('welcomeScreen');
                 this.loginWindow = document.getElementById('loginWindow');
                 this.gameWindow = document.getElementById('gameWindow');
-                this.babylonWindow = document.getElementById('babylonWindow');
+                this.profileWindow = document.getElementById('profileWindow');
                 this.loginFrame = document.getElementById('loginFrame');
                 this.gameFrame = document.getElementById('gameFrame');
-                this.babylonFrame = document.getElementById('babylonFrame');
                 this.loading = document.getElementById('loading');
                 
                 // Buttons
                 this.loginBtn = document.getElementById('loginBtn');
                 this.gameBtn = document.getElementById('gameBtn');
-                this.babylonBtn = document.getElementById('babylonBtn');
+                this.profileBtn = document.getElementById('profileBtn');
                 this.logoutBtn = document.getElementById('logoutBtn');
                 this.welcomeLoginBtn = document.getElementById('welcomeLoginBtn');
                 this.welcomeGameBtn = document.getElementById('welcomeGameBtn');
-                this.welcomeBabylonBtn = document.getElementById('welcomeBabylonBtn');
+                this.welcomeProfileBtn = document.getElementById('welcomeProfileBtn');
                 
                 // Taskbar items
                 this.loginTaskbar = document.getElementById('loginTaskbar');
                 this.gameTaskbar = document.getElementById('gameTaskbar');
-                this.babylonTaskbar = document.getElementById('babylonTaskbar');
+                this.profileTaskbar = document.getElementById('profileTaskbar');
                 
                 // Status elements
                 this.authIndicator = document.getElementById('authIndicator');
@@ -511,13 +828,35 @@
                 // Navigation buttons
                 this.loginBtn.onclick = () => this.showWindow('login');
                 this.gameBtn.onclick = () => this.showWindow('game');
-                this.babylonBtn.onclick = () => this.showWindow('babylon');
+                this.profileBtn.onclick = () => this.showWindow('profile');
                 this.logoutBtn.onclick = () => this.handleLogout();
                 
                 // Welcome buttons
                 this.welcomeLoginBtn.onclick = () => this.showWindow('login');
                 this.welcomeGameBtn.onclick = () => this.showWindow('game');
-                this.welcomeBabylonBtn.onclick = () => this.showWindow('babylon');
+                this.welcomeProfileBtn.onclick = () => this.showWindow('profile');
+                
+                // Profile update button
+                document.getElementById('updateWalletBtn').onclick = () => this.updateWalletAddress();
+                
+                // Window click handlers for focus
+                this.loginWindow.addEventListener('mousedown', () => {
+                    if (this.activeWindows.has('login')) {
+                        this.focusWindow('login');
+                    }
+                });
+                
+                this.gameWindow.addEventListener('mousedown', () => {
+                    if (this.activeWindows.has('game')) {
+                        this.focusWindow('game');
+                    }
+                });
+                
+                this.profileWindow.addEventListener('mousedown', () => {
+                    if (this.activeWindows.has('profile')) {
+                        this.focusWindow('profile');
+                    }
+                });
             }
 
             setupMessageListener() {
@@ -525,8 +864,6 @@
                     // Allow messages from your origin and Babylon.js origin
                     // if (event.origin !== window.location.origin && 
                     //     !event.origin.startsWith('http://localhost:')) return;
-
-                    console.log('Client received message:', event.data);
 
                     switch (event.data.type) {
                         case 'LOGIN_SUCCESS':
@@ -538,9 +875,9 @@
                             break;
 
                         case 'REQUEST_SESSION':
-                        case 'REQUEST_USER_ID':
-                            this.sendSessionToFrame(this.gameFrame.contentWindow);
-                            break;
+                        // case 'REQUEST_USER_ID':
+                        //     this.sendSessionToFrame(this.gameFrame.contentWindow);
+                        //     break;
                         
                         case 'AUTH_FAILED':
                             this.handleAuthFailed();
@@ -610,31 +947,29 @@
                 // Hide welcome screen
                 this.welcomeScreen.style.display = 'none';
                 
-                // Clear all window states first
-                this.loginWindow.classList.remove('active', 'minimized', 'minimizing', 'restoring');
-                this.gameWindow.classList.remove('active', 'minimized', 'minimizing', 'restoring');
-                this.babylonWindow.classList.remove('active', 'minimized', 'minimizing', 'restoring');
+                // Check if window is already open (active)
+                if (this.activeWindows.has(windowType)) {
+                    console.log(`Window ${windowType} already open, focusing it`);
+                    this.focusWindow(windowType);
+                    return;
+                }
                 
-                // Hide all taskbar items
-                this.loginTaskbar.classList.remove('visible', 'active');
-                this.gameTaskbar.classList.remove('visible', 'active');
-                this.babylonTaskbar.classList.remove('visible', 'active');
+                // Check if window is minimized and restore it instead
+                if (this.minimizedWindows.has(windowType)) {
+                    console.log(`Window ${windowType} is minimized, restoring it`);
+                    this.restoreWindow(windowType);
+                    return;
+                }
                 
-                // Update button states
-                this.loginBtn.classList.remove('active');
-                this.gameBtn.classList.remove('active');
-                this.babylonBtn.classList.remove('active');
-                
-                // Remove from minimized set
-                this.minimizedWindows.delete('login');
-                this.minimizedWindows.delete('game');
-                this.minimizedWindows.delete('babylon');
+                // Remove from minimized set if it was minimized
+                this.minimizedWindows.delete(windowType);
                 
                 // Show selected window
                 if (windowType === 'login') {
-                    this.activeWindow = 'login';
+                    this.loginWindow.classList.remove('minimized', 'minimizing', 'restoring');
                     this.loginWindow.classList.add('active');
                     this.loginBtn.classList.add('active');
+                    this.loginTaskbar.classList.remove('visible');
                     
                     // Load login iframe if not already loaded
                     if (!this.loginFrame.src || this.loginFrame.src === window.location.href) {
@@ -648,113 +983,200 @@
                         return;
                     }
                     
-                    this.activeWindow = 'game';
+                    this.gameWindow.classList.remove('minimized', 'minimizing', 'restoring');
                     this.gameWindow.classList.add('active');
                     this.gameBtn.classList.add('active');
+                    this.gameTaskbar.classList.remove('visible');
                     
                     // Load game iframe if not already loaded
                     if (!this.gameFrame.src || this.gameFrame.src === window.location.href) {
                         this.gameFrame.src = 'http://localhost:3000';
                     }
                     
-                } else if (windowType === 'babylon') {
+                } else if (windowType === 'profile') {
                     if (!this.isAuthenticated) {
-                        this.updateAuthStatus('Please login first', false);
-                        this.showWindow('login');
+                        alert('Please login first to view your profile');
                         return;
                     }
                     
-                    this.activeWindow = 'babylon';
-                    this.babylonWindow.classList.add('active');
-                    this.babylonBtn.classList.add('active');
+                    this.profileWindow.classList.remove('minimized', 'minimizing', 'restoring');
+                    this.profileWindow.classList.add('active');
+                    this.profileBtn.classList.add('active');
+                    this.profileTaskbar.classList.remove('visible');
                     
-                    // Load Babylon.js project - CHANGE THIS PORT TO YOUR BABYLON PROJECT PORT
-                    if (!this.babylonFrame.src || this.babylonFrame.src === window.location.href) {
-                        this.babylonFrame.src = ''; // ← CHANGE THIS TO YOUR BABYLON PROJECT PORT
+                    // Update profile information
+                    this.updateProfileWindow();
+                }
+                
+                // Add to active windows
+                this.activeWindows.add(windowType);
+                this.focusWindow(windowType);
+                this.arrangeWindows();
+            }
+
+            focusWindow(windowType) {
+                console.log(`Focusing ${windowType} window`);
+                
+                if (!this.activeWindows.has(windowType)) {
+                    console.log(`Cannot focus ${windowType} - not in active windows`);
+                    return;
+                }
+                
+                // Remove focus from all windows
+                this.loginWindow.classList.remove('focused');
+                this.gameWindow.classList.remove('focused');
+                this.profileWindow.classList.remove('focused');
+                
+                // Add unfocused class to all active windows
+                if (this.activeWindows.has('login')) {
+                    this.loginWindow.classList.add('unfocused');
+                }
+                if (this.activeWindows.has('game')) {
+                    this.gameWindow.classList.add('unfocused');
+                }
+                if (this.activeWindows.has('profile')) {
+                    this.profileWindow.classList.add('unfocused');
+                }
+                
+                // Focus the selected window
+                const windowElement = this.getWindowElement(windowType);
+                if (windowElement) {
+                    windowElement.classList.add('focused');
+                    windowElement.classList.remove('unfocused');
+                    this.focusedWindow = windowType;
+                }
+            }
+
+            arrangeWindows() {
+                const activeCount = this.activeWindows.size;
+                const activeWindowsArray = Array.from(this.activeWindows);
+                
+                // Remove all positioning classes first
+                const allGridClasses = ['grid-1', 'grid-2-1', 'grid-2-2', 'grid-3-1', 'grid-3-2', 'grid-3-3', 'grid-4-1', 'grid-4-2', 'grid-4-3', 'grid-4-4'];
+                this.loginWindow.classList.remove(...allGridClasses);
+                this.gameWindow.classList.remove(...allGridClasses);
+                this.profileWindow.classList.remove(...allGridClasses);
+                
+                if (activeCount === 0) {
+                    this.showWelcomeScreen();
+                } else if (activeCount === 1) {
+                    // Single window - full screen
+                    this.getWindowElement(activeWindowsArray[0]).classList.add('grid-1');
+                } else if (activeCount === 2) {
+                    // Two windows - split screen 50/50 vertically
+                    this.getWindowElement(activeWindowsArray[0]).classList.add('grid-2-1');
+                    this.getWindowElement(activeWindowsArray[1]).classList.add('grid-2-2');
+                } else if (activeCount === 3) {
+                    // Three windows - one on left, two stacked on right
+                    this.getWindowElement(activeWindowsArray[0]).classList.add('grid-3-1');
+                    this.getWindowElement(activeWindowsArray[1]).classList.add('grid-3-2');
+                    this.getWindowElement(activeWindowsArray[2]).classList.add('grid-3-3');
+                } else if (activeCount >= 4) {
+                    // Four or more windows - 2x2 grid (show only first 4)
+                    const gridPositions = ['grid-4-1', 'grid-4-2', 'grid-4-3', 'grid-4-4'];
+                    for (let i = 0; i < Math.min(4, activeCount); i++) {
+                        this.getWindowElement(activeWindowsArray[i]).classList.add(gridPositions[i]);
                     }
                 }
+            }
+
+            getWindowElement(windowType) {
+                if (windowType === 'login') return this.loginWindow;
+                if (windowType === 'game') return this.gameWindow;
+                if (windowType === 'profile') return this.profileWindow;
+                return null;
             }
 
             hideWindow(windowType) {
                 console.log(`Hiding ${windowType} window`);
                 
+                const windowElement = this.getWindowElement(windowType);
+                if (!windowElement) return;
+                
+                // Remove all window-related classes
+                windowElement.classList.remove('active', 'minimized', 'minimizing', 'restoring', 'focused', 'unfocused', 'left-half', 'right-half');
+                
+                // Update UI elements
                 if (windowType === 'login') {
-                    this.loginWindow.classList.remove('active', 'minimized', 'minimizing', 'restoring');
                     this.loginBtn.classList.remove('active');
                     this.loginTaskbar.classList.remove('visible', 'active');
-                    this.minimizedWindows.delete('login');
                 } else if (windowType === 'game') {
-                    this.gameWindow.classList.remove('active', 'minimized', 'minimizing', 'restoring');
                     this.gameBtn.classList.remove('active');
                     this.gameTaskbar.classList.remove('visible', 'active');
-                    this.minimizedWindows.delete('game');
-                } else if (windowType === 'babylon') {
-                    this.babylonWindow.classList.remove('active', 'minimized', 'minimizing', 'restoring');
-                    this.babylonBtn.classList.remove('active');
-                    this.babylonTaskbar.classList.remove('visible', 'active');
-                    this.minimizedWindows.delete('babylon');
+                } else if (windowType === 'profile') {
+                    this.profileBtn.classList.remove('active');
+                    this.profileTaskbar.classList.remove('visible', 'active');
                 }
                 
-                this.activeWindow = null;
+                // Update state
+                this.minimizedWindows.delete(windowType);
+                this.activeWindows.delete(windowType);
+                
+                if (this.focusedWindow === windowType) {
+                    // Focus another window if available
+                    const remainingWindows = Array.from(this.activeWindows);
+                    if (remainingWindows.length > 0) {
+                        this.focusWindow(remainingWindows[0]);
+                    } else {
+                        this.focusedWindow = null;
+                    }
+                }
+                
+                // Rearrange remaining windows
+                this.arrangeWindows();
                 
                 // Show welcome screen if no windows are active or minimized
-                setTimeout(() => {
-                    if (!this.loginWindow.classList.contains('active') && 
-                        !this.gameWindow.classList.contains('active') &&
-                        !this.babylonWindow.classList.contains('active') &&
-                        this.minimizedWindows.size === 0) {
+                if (this.activeWindows.size === 0 && this.minimizedWindows.size === 0) {
+                    setTimeout(() => {
                         this.showWelcomeScreen();
-                    }
-                }, 300);
+                    }, 300);
+                }
             }
 
             minimizeWindow(windowType) {
                 console.log(`Minimizing ${windowType} window`);
                 
+                const windowElement = this.getWindowElement(windowType);
+                if (!windowElement) return;
+                
+                windowElement.classList.add('minimizing');
+                
                 if (windowType === 'login') {
-                    this.loginWindow.classList.add('minimizing');
                     this.loginBtn.classList.remove('active');
-                    
-                    setTimeout(() => {
-                        this.loginWindow.classList.remove('active', 'minimizing');
-                        this.loginWindow.classList.add('minimized');
-                        this.loginTaskbar.classList.add('visible');
-                        this.minimizedWindows.add('login');
-                    }, 300);
-                    
                 } else if (windowType === 'game') {
-                    this.gameWindow.classList.add('minimizing');
                     this.gameBtn.classList.remove('active');
-                    
-                    setTimeout(() => {
-                        this.gameWindow.classList.remove('active', 'minimizing');
-                        this.gameWindow.classList.add('minimized');
-                        this.gameTaskbar.classList.add('visible');
-                        this.minimizedWindows.add('game');
-                    }, 300);
-                    
-                } else if (windowType === 'babylon') {
-                    this.babylonWindow.classList.add('minimizing');
-                    this.babylonBtn.classList.remove('active');
-                    
-                    setTimeout(() => {
-                        this.babylonWindow.classList.remove('active', 'minimizing');
-                        this.babylonWindow.classList.add('minimized');
-                        this.babylonTaskbar.classList.add('visible');
-                        this.minimizedWindows.add('babylon');
-                    }, 300);
+                } else if (windowType === 'profile') {
+                    this.profileBtn.classList.remove('active');
                 }
                 
-                this.activeWindow = null;
-                
-                // Show welcome screen if no windows are active
                 setTimeout(() => {
-                    if (!this.loginWindow.classList.contains('active') && 
-                        !this.gameWindow.classList.contains('active') &&
-                        !this.babylonWindow.classList.contains('active')) {
-                        this.showWelcomeScreen();
+                    windowElement.classList.remove('active', 'minimizing', 'focused', 'unfocused', 'left-half', 'right-half');
+                    windowElement.classList.add('minimized');
+                    
+                    if (windowType === 'login') {
+                        this.loginTaskbar.classList.add('visible');
+                    } else if (windowType === 'game') {
+                        this.gameTaskbar.classList.add('visible');
+                    } else if (windowType === 'profile') {
+                        this.profileTaskbar.classList.add('visible');
                     }
-                }, 350);
+                    
+                    this.activeWindows.delete(windowType);
+                    this.minimizedWindows.add(windowType);
+                    
+                    if (this.focusedWindow === windowType) {
+                        // Focus another window if available
+                        const remainingWindows = Array.from(this.activeWindows);
+                        if (remainingWindows.length > 0) {
+                            this.focusWindow(remainingWindows[remainingWindows.length - 1]);
+                        } else {
+                            this.focusedWindow = null;
+                        }
+                    }
+                    
+                    // Rearrange remaining windows
+                    this.arrangeWindows();
+                }, 300);
             }
 
             restoreWindow(windowType) {
@@ -763,104 +1185,259 @@
                 // Hide welcome screen
                 this.welcomeScreen.style.display = 'none';
                 
-                if (windowType === 'login') {
-                    // Hide other windows first
-                    this.gameWindow.classList.remove('active');
-                    this.babylonWindow.classList.remove('active');
-                    this.gameBtn.classList.remove('active');
-                    this.babylonBtn.classList.remove('active');
-                    this.gameTaskbar.classList.remove('active');
-                    this.babylonTaskbar.classList.remove('active');
-                    
-                    // Restore login window
-                    this.loginWindow.classList.remove('minimized');
-                    this.loginWindow.classList.add('restoring');
-                    this.loginTaskbar.classList.remove('visible');
-                    this.loginTaskbar.classList.add('active');
-                    this.minimizedWindows.delete('login');
-                    
-                    setTimeout(() => {
-                        this.loginWindow.classList.remove('restoring');
-                        this.loginWindow.classList.add('active');
-                        this.loginBtn.classList.add('active');
-                        this.loginTaskbar.classList.remove('active');
-                        this.activeWindow = 'login';
-                    }, 300);
-                    
-                } else if (windowType === 'game') {
-                    if (!this.isAuthenticated) {
-                        this.updateAuthStatus('Please login first', false);
+                // Check authentication for game and profile
+                if ((windowType === 'game' || windowType === 'profile') && !this.isAuthenticated) {
+                    this.updateAuthStatus('Please login first', false);
+                    if (this.minimizedWindows.has('login')) {
                         this.restoreWindow('login');
-                        return;
+                    } else {
+                        this.showWindow('login');
                     }
-                    
-                    // Hide other windows first
-                    this.loginWindow.classList.remove('active');
-                    this.babylonWindow.classList.remove('active');
-                    this.loginBtn.classList.remove('active');
-                    this.babylonBtn.classList.remove('active');
-                    this.loginTaskbar.classList.remove('active');
-                    this.babylonTaskbar.classList.remove('active');
-                    
-                    // Restore game window
-                    this.gameWindow.classList.remove('minimized');
-                    this.gameWindow.classList.add('restoring');
-                    this.gameTaskbar.classList.remove('visible');
-                    this.gameTaskbar.classList.add('active');
-                    this.minimizedWindows.delete('game');
-                    
-                    setTimeout(() => {
-                        this.gameWindow.classList.remove('restoring');
-                        this.gameWindow.classList.add('active');
-                        this.gameBtn.classList.add('active');
-                        this.gameTaskbar.classList.remove('active');
-                        this.activeWindow = 'game';
-                    }, 300);
-                    
-                } else if (windowType === 'babylon') {
-                    if (!this.isAuthenticated) {
-                        this.updateAuthStatus('Please login first', false);
-                        this.restoreWindow('login');
-                        return;
-                    }
-                    
-                    // Hide other windows first
-                    this.loginWindow.classList.remove('active');
-                    this.gameWindow.classList.remove('active');
-                    this.loginBtn.classList.remove('active');
-                    this.gameBtn.classList.remove('active');
-                    this.loginTaskbar.classList.remove('active');
-                    this.gameTaskbar.classList.remove('active');
-                    
-                    // Restore babylon window
-                    this.babylonWindow.classList.remove('minimized');
-                    this.babylonWindow.classList.add('restoring');
-                    this.babylonTaskbar.classList.remove('visible');
-                    this.babylonTaskbar.classList.add('active');
-                    this.minimizedWindows.delete('babylon');
-                    
-                    setTimeout(() => {
-                        this.babylonWindow.classList.remove('restoring');
-                        this.babylonWindow.classList.add('active');
-                        this.babylonBtn.classList.add('active');
-                        this.babylonTaskbar.classList.remove('active');
-                        this.activeWindow = 'babylon';
-                    }, 300);
+                    return;
                 }
+                
+                const windowElement = this.getWindowElement(windowType);
+                if (!windowElement) return;
+                
+                // Restore window
+                windowElement.classList.remove('minimized');
+                windowElement.classList.add('restoring', 'active');
+                
+                if (windowType === 'login') {
+                    this.loginTaskbar.classList.remove('visible');
+                    this.loginBtn.classList.add('active');
+                } else if (windowType === 'game') {
+                    this.gameTaskbar.classList.remove('visible');
+                    this.gameBtn.classList.add('active');
+                } else if (windowType === 'profile') {
+                    this.profileTaskbar.classList.remove('visible');
+                    this.profileBtn.classList.add('active');
+                    this.updateProfileWindow();
+                }
+                
+                this.minimizedWindows.delete(windowType);
+                this.activeWindows.add(windowType);
+                
+                setTimeout(() => {
+                    windowElement.classList.remove('restoring');
+                    this.focusWindow(windowType);
+                    this.arrangeWindows();
+                }, 300);
             }
 
             showWelcomeScreen() {
-                this.welcomeScreen.style.display = 'flex';
-                this.activeWindow = null;
+                if (this.activeWindows.size === 0 && this.minimizedWindows.size === 0) {
+                    this.welcomeScreen.style.display = 'flex';
+                    this.focusedWindow = null;
+                    
+                    // Update welcome button states
+                    this.welcomeGameBtn.disabled = !this.isAuthenticated;
+                    this.welcomeProfileBtn.disabled = !this.isAuthenticated;
+                }
+            }
+
+            switchProfileTab(tabName) {
+                console.log(`Switching to profile tab: ${tabName}`);
                 
-                // Update welcome button states
-                this.welcomeGameBtn.disabled = !this.isAuthenticated;
-                this.welcomeBabylonBtn.disabled = !this.isAuthenticated;
+                // Update tab buttons
+                const tabs = document.querySelectorAll('.profile-tab');
+                tabs.forEach(tab => tab.classList.remove('active'));
+                event.target.classList.add('active');
+                
+                // Update sections
+                document.getElementById('profileSectionInfo').classList.remove('active');
+                document.getElementById('profileSectionTransactions').classList.remove('active');
+                document.getElementById('profileSectionGames').classList.remove('active');
+                
+                if (tabName === 'info') {
+                    document.getElementById('profileSectionInfo').classList.add('active');
+                } else if (tabName === 'transactions') {
+                    document.getElementById('profileSectionTransactions').classList.add('active');
+                    this.loadTransactions();
+                } else if (tabName === 'games') {
+                    document.getElementById('profileSectionGames').classList.add('active');
+                    this.loadRecentGames();
+                }
+            }
+
+            updateProfileWindow() {
+                if (this.currentUser) {
+                    document.getElementById('profileUsername').textContent = this.currentUser.username || 'N/A';
+                    document.getElementById('profileEmail').textContent = this.currentUser.email || 'N/A';
+                    document.getElementById('profileBalance').textContent = this.currentUser.balance ? `${this.currentUser.balance} tokens` : '0.00';
+                    
+                    const walletAddress = this.currentUser.walletAddress || '';
+                    document.getElementById('profileWalletInput').value = walletAddress;
+                    document.getElementById('profileWallet').textContent = walletAddress ? `Current: ${walletAddress}` : 'Not connected';
+                } else {
+                    document.getElementById('profileUsername').textContent = 'Not logged in';
+                    document.getElementById('profileEmail').textContent = 'Not logged in';
+                    document.getElementById('profileBalance').textContent = '0.00';
+                    document.getElementById('profileWalletInput').value = '';
+                    document.getElementById('profileWallet').textContent = 'Not available';
+                }
+            }
+
+            async loadTransactions() {
+                const container = document.getElementById('transactionsContainer');
+                
+                if (!this.isAuthenticated) {
+                    container.innerHTML = '<div class="empty-state">Please log in to view transactions</div>';
+                    return;
+                }
+                
+                try {
+                    container.innerHTML = '<div class="loading-state"><div class="loading-spinner-small"></div><p>Loading transactions...</p></div>';
+                    
+                    const response = await fetch('http://localhost:4000/api/transactions', {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch transactions');
+                    }
+                    
+                    const data = await response.json();
+                    const transactions = data.transactions || [];
+                    
+                    if (transactions.length === 0) {
+                        container.innerHTML = '<div class="empty-state">No transactions found</div>';
+                        return;
+                    }
+                    
+                    let html = '<div class="transaction-list">';
+                    transactions.forEach(tx => {
+                        const statusClass = tx.status === 'completed' ? 'status-completed' : 
+                                          tx.status === 'pending' ? 'status-pending' : 'status-failed';
+                        const date = new Date(tx.createdAt).toLocaleString();
+                        
+                        html += `
+                            <div class="transaction-item">
+                                <div class="transaction-header">
+                                    <span>${tx.type || 'Transaction'}</span>
+                                    <span class="transaction-status ${statusClass}">${tx.status || 'unknown'}</span>
+                                </div>
+                                <div class="transaction-details">
+                                    <div>Amount: ${tx.amount || 0} tokens</div>
+                                    <div>Date: ${date}</div>
+                                    ${tx.transactionHash ? `<div>Hash: ${tx.transactionHash.slice(0, 20)}...</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    
+                    container.innerHTML = html;
+                } catch (error) {
+                    console.error('Error loading transactions:', error);
+                    container.innerHTML = '<div class="empty-state">Failed to load transactions</div>';
+                }
+            }
+
+            async loadRecentGames() {
+                const container = document.getElementById('gamesContainer');
+                
+                if (!this.isAuthenticated) {
+                    container.innerHTML = '<div class="empty-state">Please log in to view recent games</div>';
+                    return;
+                }
+                
+                try {
+                    container.innerHTML = '<div class="loading-state"><div class="loading-spinner-small"></div><p>Loading games...</p></div>';
+                    
+                    // Calculate date for last week
+                    const lastWeek = new Date();
+                    lastWeek.setDate(lastWeek.getDate() - 7);
+                    
+                    const response = await fetch(`http://localhost:4000/api/tournaments`, {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch games');
+                    }
+                    
+                    const data = await response.json();
+                    const games = data.tournaments || [];
+                    
+                    if (games.length === 0) {
+                        container.innerHTML = '<div class="empty-state">No games played in the last week</div>';
+                        return;
+                    }
+                    
+                    let html = '<div class="game-list">';
+                    games.forEach(game => {
+                        const date = new Date(game.createdAt).toLocaleString();
+                        
+                        html += `
+                            <div class="game-item">
+                                <div class="game-header">
+                                    <span>${game.gameName}</span>
+                                </div>
+                                <div class="game-details">
+                                    <div>Placement: ${game.placementName}</div>
+                                    <div>Date: ${date}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    
+                    container.innerHTML = html;
+                } catch (error) {
+                    console.error('Error loading games:', error);
+                    container.innerHTML = '<div class="empty-state">Failed to load recent games</div>';
+                }
+            }
+
+            async updateWalletAddress() {
+                const walletInput = document.getElementById('profileWalletInput');
+                const walletAddress = walletInput.value.trim();
+                
+                if (!walletAddress) {
+                    alert('Please enter a wallet address');
+                    return;
+                }
+                
+                // Basic Ethereum address validation
+                if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+                    alert('Please enter a valid Ethereum wallet address (0x...)');
+                    return;
+                }
+                
+                try {
+                    this.showLoading('Updating wallet address...');
+                    
+                    const response = await fetch('http://localhost:4000/api/users/wallet', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({ walletAddress })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        this.currentUser.walletAddress = walletAddress;
+                        document.getElementById('profileWallet').textContent = `Current: ${walletAddress}`;
+                        alert('Wallet address updated successfully!');
+                    } else {
+                        alert(data.message || 'Failed to update wallet address');
+                    }
+                } catch (error) {
+                    console.error('Error updating wallet:', error);
+                    alert('Failed to update wallet address. Please try again.');
+                } finally {
+                    this.hideLoading();
+                }
             }
 
             handleLoginSuccess(data) {
-                console.log('Login successful:', data);
-                this.currentSessionId = data.sessionId;
+                //this.currentSessionId = data.sessionId;
                 this.currentUser = data.user;
                 this.isAuthenticated = true;
 
@@ -868,7 +1445,7 @@
                 this.updateUserInfo(data.user);
                 this.enableGameAccess();
 
-                this.sendSessionToFrame(this.gameFrame.contentWindow);
+                // this.sendSessionToFrame(this.gameFrame.contentWindow);
 
                 // Auto-switch to game after successful login
                 setTimeout(() => {
@@ -900,16 +1477,27 @@
                 this.updateUserInfo(null);
                 this.disableGameAccess();
                 
-                // Clear minimized windows
+                // Clear all windows
                 this.minimizedWindows.clear();
+                this.activeWindows.clear();
+                this.focusedWindow = null;
                 
                 // Clear iframes and hide all windows
                 this.loginFrame.src = '';
                 this.gameFrame.src = '';
-                this.babylonFrame.src = '';
-                this.hideWindow('game');
-                this.hideWindow('login');
-                this.hideWindow('babylon');
+                
+                this.loginWindow.classList.remove('active', 'minimized', 'minimizing', 'restoring', 'focused', 'unfocused', 'left-half', 'right-half');
+                this.gameWindow.classList.remove('active', 'minimized', 'minimizing', 'restoring', 'focused', 'unfocused', 'left-half', 'right-half');
+                this.profileWindow.classList.remove('active', 'minimized', 'minimizing', 'restoring', 'focused', 'unfocused', 'left-half', 'right-half');
+                
+                this.loginBtn.classList.remove('active');
+                this.gameBtn.classList.remove('active');
+                this.profileBtn.classList.remove('active');
+                
+                this.loginTaskbar.classList.remove('visible', 'active');
+                this.gameTaskbar.classList.remove('visible', 'active');
+                this.profileTaskbar.classList.remove('visible', 'active');
+                
                 this.showWelcomeScreen();
             }
 
@@ -938,17 +1526,17 @@
 
             enableGameAccess() {
                 this.gameBtn.disabled = false;
-                this.babylonBtn.disabled = false;
+                this.profileBtn.disabled = false;
                 this.welcomeGameBtn.disabled = false;
-                this.welcomeBabylonBtn.disabled = false;
+                this.welcomeProfileBtn.disabled = false;
                 this.logoutBtn.style.display = 'inline-block';
             }
 
             disableGameAccess() {
                 this.gameBtn.disabled = true;
-                this.babylonBtn.disabled = true;
+                this.profileBtn.disabled = true;
                 this.welcomeGameBtn.disabled = true;
-                this.welcomeBabylonBtn.disabled = true;
+                this.welcomeProfileBtn.disabled = true;
                 this.logoutBtn.style.display = 'none';
             }
 
