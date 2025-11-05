@@ -302,6 +302,34 @@ export function getRooms(
 	}
 }
 
+export function getRoomForUser(
+	ws: WebSocket<WebSocketUserData>,
+	data: any
+)
+{
+	try
+	{
+		if (data.roomId)
+		{
+			const room = getRoomDetails(data.roomId);
+
+			if (room)
+			{
+				ws.send(JSON.stringify(room));
+			}
+		}
+	}
+	catch (err)
+	{
+		console.error("Get room error:", err);
+		// ws.send(JSON.stringify(
+		// {
+		// 	success: false,
+		// 	error: "Failed to get rooms"
+		// }));
+	}
+}
+
 export function getRoomsForUser(
 	ws: WebSocket<WebSocketUserData>
 )
@@ -332,7 +360,7 @@ export function getRoomsForUser(
 		// 	success: false,
 		// 	error: "Failed to get rooms"
 		// }));
-	}	
+	}
 }
 
 export function markRoomAsReady(
