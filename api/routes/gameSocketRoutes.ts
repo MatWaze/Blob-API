@@ -1,9 +1,9 @@
 import { FastifyInstance } from "fastify";
 import { getUws } from '@geut/fastify-uws';
 import { WebSocket } from "uWebSockets.js";
-import { create, join, getRooms, leave, markRoomAsReady, markRoomAsWaiting, getRoom, getRoomsForUser } from "../controllers/roomSocketController.ts";
+import { create, join, leave, markRoomAsReady, markRoomAsWaiting, getRoom, getRoomsForUser, getRoomForUser } from "../controllers/roomSocketController.ts";
 import { StringDecoder } from "string_decoder";
-import { getRoomDetails, getUserCurrentRoom } from "../services/roomService.ts";
+import { getUserCurrentRoom } from "../services/roomService.ts";
 import { updatePlayerPositionRelative, isGameActive } from "../services/gameSocketService.ts";
 import { createBaseBehavior, handleStartGame } from "../controllers/gameSocketController.ts";
 import { WebSocketUserData } from "../controllers/roomSocketController.ts";
@@ -54,52 +54,20 @@ export async function gameSocketRoutes(server: FastifyInstance)
 				case "GAME_DATA":
 					updatePlayerPositionRelative(userData.userId, data);
 					break;
-				case "UNSUBSCRIBE_ROOM":
-					var roomId : string | undefined;
+				case "RECONNECT":
+					const roomId = getUserCurrentRoom(userData.userId);
 
-					if (data.roomId)
-						roomId = data.roomId;
-					else
-						roomId = getUserCurrentRoom(userData.userId);
-
-					if (roomId)
-						ws.unsubscribe(`room69:${roomId}`);
-
-					break;
-				case "UNSUBSCRIBE_GAME":
-					var roomId : string | undefined;
-
-					if (data.roomId)
-						roomId = data.roomId;
-					else
-						roomId = getUserCurrentRoom(userData.userId);
-
-					if (roomId) ws.unsubscribe(`game69:${roomId}`);
-
-					break;
-				case "SUBSCRIBE_ROOM":
-					var roomId : string | undefined;
-
-					if (data.roomId)
-						roomId = data.roomId;
-					else
-						roomId = getUserCurrentRoom(userData.userId);
-
-					if (roomId)
+					if (roomId && isGameActive(roomId))
 					{
-						ws.subscribe(`room69:${roomId}`);
-						getRoom(app, userData, { roomId });
+						console.log(`resubscribing to game69${roomId}`);
+						ws.subscribe(`game69:${roomId}`);
 					}
-					break;
-				case "SUBSCRIBE_GAME":
-					var roomId : string | undefined;
-
-					if (data.roomId)
-						roomId = data.roomId;
-					else
-						roomId = getUserCurrentRoom(userData.userId);
-
-					if (roomId) ws.subscribe(`game69:${roomId}`);
+					else if (roomId)
+					{
+						console.log(`resubscribing to room69${roomId}`);
+						ws.subscribe(`room69:${roomId}`);
+						getRoomForUser(ws, { roomId });
+					}
 
 					break;
 				case "SUBSCRIBE_LOBBY":
