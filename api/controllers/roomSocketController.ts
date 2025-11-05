@@ -63,7 +63,7 @@ export function create(
 
 		// Subscribe this WebSocket (which could be lobby or create connection) to the room
 		ws.subscribe(`room69:${roomId}`);
-		ws.subscribe(`game69:${roomId}`);
+		// ws.subscribe(`game69:${roomId}`);
 
 		// unsubscribe from the lobby channel to stop getting other rooms updates
 		// ws.unsubscribe("lobby69");
@@ -131,7 +131,7 @@ export function join(
 
 		// Subscribe to the room
 		ws.subscribe(`room69:${data.roomId}`);
-		ws.subscribe(`game69:${data.roomId}`);
+		// ws.subscribe(`game69:${data.roomId}`);
 
 		// console.log(`User ${userId} subscribed to room ${data.roomId}`);
 
@@ -200,7 +200,7 @@ export function leave(
 
 		// Unsubscribe from the room channel
 		ws.unsubscribe(`room69:${data.roomId}`);
-		ws.unsubscribe(`game69:${data.roomId}`);
+		// ws.unsubscribe(`game69:${data.roomId}`);
 
 		getRooms(app);
 		getRoom(app, userData, data);
