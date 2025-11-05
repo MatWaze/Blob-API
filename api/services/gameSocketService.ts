@@ -53,6 +53,7 @@ export function createGame(app: TemplatedApp, roomId: string, players: Array<{id
 		worker.on('error', (error) =>
 		{
 			console.error(`Worker error for room ${roomId}:`, error);
+			return false;
 		});
 
 		worker.on('exit', (code) =>
@@ -129,6 +130,7 @@ export async function stopGame(roomId: string, gameResult: GameResult): Promise<
 		if (gameResult && gameResult.state === "finished")
 			await saveGameResults(gameResult);
 
+		// can remove perhabs
 		gameWorkers.delete(roomId);
 		gameData.worker.postMessage({ type: 'stop' });
 
