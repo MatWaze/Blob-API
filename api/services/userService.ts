@@ -31,23 +31,15 @@ export async function createUserAsync(user:
 		username: string,
 		password: string,
 		authMethod: string
-	}
+	},
 ) : Promise<any>
 {
-	try
-	{
-		console.log(user);
-		const usr = await userRepo.createUserAsync(user);
+	const usr = await userRepo.createUserAsync(user);
 
-		if (user.authMethod != "GOOGLE")
-			await sendEmailAsync(usr);
+	if (user.authMethod != "GOOGLE")
+		await sendEmailAsync(usr);
 
-		return usr;
-	}
-	catch (e: any)
-	{
-		console.log(e);
-	}
+	return usr;
 }
 
 export async function deleteUserAsync(id: string)
@@ -82,6 +74,18 @@ export async function getUserByWalletAddress(address: string)
 	try
 	{
 		return await userRepo.getUserByWalletAddress(address);
+	}
+	catch (error)
+	{
+		console.log(error);
+	}
+}
+
+export async function getUserById(userId: string)
+{
+	try
+	{
+		return await userRepo.getUserByIdAsync(userId);
 	}
 	catch (error)
 	{
