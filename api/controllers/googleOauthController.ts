@@ -20,7 +20,6 @@ export async function googleSignInAsync(
 			return;
 	
 		const { id_token, access_token } = tokens!;
-		console.log({ id_token, access_token });
 
 		// get user with tokens
 		const googleUser = await getGoogleUser({ id_token, access_token });
@@ -52,18 +51,21 @@ export async function googleSignInAsync(
 		// saveCookie(response, "accessToken", accessToken);
 		// saveCookie(response, "refreshToken", refreshToken);
 
-		return response.code(200).send(
-		{
-			message: "Login successful",
-			user: {
-				id: user.id,
-				username: user.username,
-				email: user.email
-			}
-		});
+		response.redirect(process.env.CLIENT!);
+		// return response.code(200).send(
+		// {
+		// 	message: "Login successful",
+		// 	user: {
+		// 		id: user.id,
+		// 		username: user.username,
+		// 		email: user.email
+		// 	}
+		// });
 	}
 	catch (e)
 	{
 		console.log(e);
+		// For now redirect to the main page as well. Later on redirect to error page
+		response.redirect(process.env.CLIENT!);
 	}
 }
