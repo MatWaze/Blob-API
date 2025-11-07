@@ -54,8 +54,7 @@ export async function registerAsync(
 	response: FastifyReply
 )
 {
-	const body = request.body;
-
+	const { confirmPassword, ...body } = request.body;
 	try
 	{
 		const user = await createUserAsync({...body, authMethod: "EMAIL" });
