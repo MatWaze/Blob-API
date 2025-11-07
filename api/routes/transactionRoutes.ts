@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { getAllTransactionsAsync, withdrawAmountAsync, withdrawFeeAsync } from "../controllers/transactionController.ts";
+import { getUsersTransactionsAsync, withdrawAmountAsync, withdrawFeeAsync } from "../controllers/transactionController.ts";
 
 export async function transactionRoutes(server: FastifyInstance)
 {
@@ -9,7 +9,7 @@ export async function transactionRoutes(server: FastifyInstance)
 			config: { rateLimit: { timeWindow: '1 minute', max: 400 } },
 			preHandler: [ server.authenticate ]
 		},
-		getAllTransactionsAsync
+		getUsersTransactionsAsync
 	);
 
 	server.post(

@@ -1,14 +1,15 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { withdawBalance, getAllTransactions } from "../services/transactionService.ts";
+import { withdawBalance, getAllTransactions, getUsersTransactions } from "../services/transactionService.ts";
 import { getRoomByUserId } from "../services/roomService.ts";
 import { getCurrentUser } from "../services/userService.ts";
 
-export async function getAllTransactionsAsync(
+export async function getUsersTransactionsAsync(
 	request: FastifyRequest,
 	response: FastifyReply,
 )
 {
-	const trs = await getAllTransactions();
+	const user = await getCurrentUser(request.cookies.sessionId!)
+	const trs = await getUsersTransactions(user.id);
 
 	if (trs)
 	{
