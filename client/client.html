@@ -630,6 +630,7 @@
         <div class="title">BLOBULA</div>
         <div class="nav-buttons">
             <button class="nav-btn" id="loginBtn">Login</button>
+            <button class="nav-btn" id="registerBtn">Register</button>
             <button class="nav-btn" id="gameBtn" disabled>Pong</button>
             <button class="nav-btn" id="profileBtn" disabled>Profile</button>
             <button class="nav-btn" id="logoutBtn" style="display: none;">Logout</button>
@@ -657,6 +658,7 @@
             <div class="welcome-subtitle">Choose an option to get started</div>
             <div class="welcome-buttons">
                 <button class="welcome-btn" id="welcomeLoginBtn">Login</button>
+                <button class="welcome-btn" id="welcomeRegisterBtn">Register</button>
                 <button class="welcome-btn" id="welcomeGameBtn" disabled>Play Game</button>
                 <button class="welcome-btn" id="welcomeProfileBtn" disabled>Profile</button>
             </div>
@@ -673,6 +675,20 @@
             </div>
             <div class="window-content">
                 <iframe id="loginFrame" src=""></iframe>
+            </div>
+        </div>
+
+        <!-- Register Window -->
+        <div class="window" id="registerWindow">
+            <div class="window-header">
+                <div class="window-title">📝 Register</div>
+                <div class="window-controls">
+                    <div class="window-control minimize" title="Minimize" onclick="client.minimizeWindow('register')"></div>
+                    <div class="window-control close" title="Close" onclick="client.hideWindow('register')"></div>
+                </div>
+            </div>
+            <div class="window-content">
+                <iframe id="registerFrame" src=""></iframe>
             </div>
         </div>
 
@@ -763,6 +779,7 @@
     <!-- Taskbar -->
     <div class="taskbar" id="taskbar">
         <div class="taskbar-item" id="loginTaskbar" onclick="client.restoreWindow('login')">🔐 Login</div>
+        <div class="taskbar-item" id="registerTaskbar" onclick="client.restoreWindow('register')">📝 Register</div>
         <div class="taskbar-item" id="gameTaskbar" onclick="client.restoreWindow('game')">🎮 Pong</div>
         <div class="taskbar-item" id="profileTaskbar" onclick="client.restoreWindow('profile')">👤 Profile</div>
     </div>
@@ -773,7 +790,8 @@
         <h3>Loading...</h3>
         <p id="loadingMessage">Initializing application...</p>
     </div>
-    <script>
+    <script type="module" src="/client.ts"></script>
+    <!--<script>
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
@@ -1573,6 +1591,6 @@
         window.addEventListener('load', () => {
             client = new TranscendenceClient();
         });
-    </script>
+    </script>-->
 </body>
 </html>
