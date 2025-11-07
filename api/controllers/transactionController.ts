@@ -54,11 +54,11 @@ export async function withdrawAmountAsync(
 
 export async function withdrawFeeAsync(
 	request: FastifyRequest,
-	response: FastifyReply,
+	response: FastifyReply
 )
 {
 	const user = await getCurrentUser(request.cookies.sessionId!);
-	const room = await getRoomByUserId(user?.userId!);
+	const room = getRoomByUserId(user?.userId!);
 
 	if (room)
 	{
