@@ -6,6 +6,8 @@ import { createGame, getGameWorker, stopGame } from "../services/gameSocketServi
 import { FastifyJWT } from "@fastify/jwt";
 import { GameResult } from "../models/gameModels.ts";
 import { getSession, updateSessionAccessToken } from "../services/sessionService.ts";
+import { depositBlob } from "../services/transactionService.ts";
+import { getUserByEmailAsync, getUserById } from "../services/userService.ts";
 
 // async function authenticateWebSocket(res: HttpResponse, req: HttpRequest, server: FastifyInstance)
 // : Promise<{userId: string, username: string, email: string } | null>
@@ -358,6 +360,13 @@ function setupGameBroadcaster(
 			else if (message.type === 'gameFinished')
 			{
 				await stopGame(roomId, message.gameResult);
+
+				// Top up balance
+				// (message.gameResult as GameResult).players.forEach(async p =>
+				// {
+				// 	const user = await getUserById(p.id);
+				// 	await depositBlob(user, p.score, true);
+				// });
 
 				app.publish(`game69:${roomId}`, JSON.stringify({
 					gameResult: message.gameResult as GameResult
