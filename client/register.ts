@@ -20,39 +20,6 @@ function switchToLogin(): void {
 const registerForm = document.getElementById('registerForm') as HTMLFormElement;
 const registerErrorDiv = document.getElementById('error') as HTMLDivElement;
 const registerSuccessDiv = document.getElementById('success') as HTMLDivElement;
-const googleSignUpBtn = document.getElementById('googleSignUpBtn') as HTMLButtonElement;
-
-// Google Sign Up button handler
-googleSignUpBtn.addEventListener('click', () => {
-	const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth`;
-
-	const options =
-	{
-		redirect_uri: "http://localhost:3065/client.html",
-		client_id: "924313211927-mq9a80c5307kd925bcq85eqc6furl0n1.apps.googleusercontent.com",
-		access_type: "offline",
-		response_type: "code",
-		prompt: "consent",
-		scope:
-		[
-			"https://www.googleapis.com/auth/userinfo.profile",
-			"https://www.googleapis.com/auth/userinfo.email",
-		].join(" "),
-	};
-
-	const qs = new URLSearchParams(options);
-
-	const ans = `${googleAuthUrl}?${qs.toString()}`;
-
-	window.top!.location.href = ans;
-});
-
-
-function getCookie(name: string): string | undefined {
-	const value = `; ${document.cookie}`;
-	const parts = value.split(`; ${name}=`);
-	if (parts.length === 2) return parts.pop()?.split(';').shift();
-}
 
 registerForm.addEventListener('submit', async (e: Event) => {
 	e.preventDefault();
