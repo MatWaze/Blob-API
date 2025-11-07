@@ -130,7 +130,7 @@ export async function stopGame(roomId: string, gameResult: GameResult): Promise<
 		if (gameResult && gameResult.state === "finished")
 			await saveGameResults(gameResult);
 
-		// can remove perhabs
+		// can remove perhaps
 		gameWorkers.delete(roomId);
 		gameData.worker.postMessage({ type: 'stop' });
 
@@ -164,7 +164,44 @@ export function getActiveGames(): string[]
 export function isGameActive(roomId: string): boolean
 {
 	return gameWorkers.has(roomId);
-} 
+}
+
+export function calculatePlayerScore(place: number, totalPlayers: number, totalPrizePool: number): number
+{
+	if (totalPlayers === 2)
+	{
+		if (place === 1) return totalPrizePool * 0.90;
+		if (place === 2) return totalPrizePool * 0.10;
+		return 0;
+	}
+
+	if (totalPlayers === 3)
+	{
+		if (place === 1) return totalPrizePool * 0.85;
+		if (place === 2) return totalPrizePool * 0.10;
+		if (place === 3) return totalPrizePool * 0.05;
+		return 0;
+	}
+
+	// 4+ players
+	if (place === 1) return totalPrizePool * 0.80;
+	if (place === 2) return totalPrizePool * 0.125;
+	if (place === 3) return totalPrizePool * 0.05;
+	
+	const tailPrizePool = totalPrizePool * 0.025;
+	
+	let totalTailWeight = 0;
+	// place = 5, totalTailWeight = 5
+	for (let p = 4; p <= totalPlayers; p++)
+	{
+		totalTailWeight += (totalPlayers - p + 1);
+	}
+	
+	const playerWeight = totalPlayers - place + 1;
+	const playerTailFraction = totalTailWeight > 0 ? playerWeight / totalTailWeight : 0;
+	
+	return tailPrizePool * playerTailFraction;
+}
 
 async function saveGameResults(gameResult: GameResult) : Promise<void>
 {
@@ -198,8 +235,8 @@ async function saveGameResults(gameResult: GameResult) : Promise<void>
 			return;
 		}
 
-		console.log(`fee: ${gameResult.fee}, len: ${gameResult.players.length}`);
-		calculateAllPlayerScores(gameResult, gameResult.fee * gameResult.players.length);
+		const total = gameResult.fee * gameResult.players.length;
+		calculateAllPlayerScores(gameResult, total);
 
 		for (const player of gameResult.players)
 		{
@@ -223,13 +260,15 @@ function distributeForTwoPlayers(gameResult: GameResult, rankPrizePool: number)
 	const firstPct = 0.90;
 	const secondPct = 0.10;
 
+	let playerRankPrize = 0;
 	for (const player of gameResult.players)
 	{
-		const placeInt = +player.place;
-		let playerRankPrize = 0;
-		if (placeInt === 1) playerRankPrize = rankPrizePool * firstPct;
-		else if (placeInt === 2) playerRankPrize = rankPrizePool * secondPct;
-		player.score = Math.round(playerRankPrize);
+		const placeInt = parseInt(player.place);
+		if (placeInt === 1)
+			playerRankPrize = rankPrizePool * firstPct;
+		else if (placeInt === 2)
+			playerRankPrize = rankPrizePool * secondPct;
+		player.score = playerRankPrize;
 		console.log(`player ${player.username} got ${player.score}`);
 	}
 }
@@ -298,26 +337,25 @@ function calculateAllPlayerScores(gameResult: GameResult, totalPrizePool: number
 	const totalPlayers = gameResult.players.length;
 	console.log(`totalPlayers: ${totalPlayers}`);
 
-	const rankPrizePool = totalPrizePool;
 	const kicksPrizePool = 0; // reserved for future use
 
-	console.log(`rankPrizePool: ${rankPrizePool}`);
+	console.log(`rankPrizePool: ${totalPrizePool}`);
 	console.log(`kicksPrizePool: ${kicksPrizePool}`);
 
 	if (totalPlayers === 2)
 	{
-		distributeForTwoPlayers(gameResult, rankPrizePool);
+		distributeForTwoPlayers(gameResult, totalPrizePool);
 		return;
 	}
 
 	if (totalPlayers === 3)
 	{
-		distributeForThreePlayers(gameResult, rankPrizePool);
+		distributeForThreePlayers(gameResult, totalPrizePool);
 		return;
 	}
 
 	// 4+ players
-	distributeForFourPlus(gameResult, rankPrizePool);
+	distributeForFourPlus(gameResult, totalPrizePool);
 }
 // // Clean up inactive games periodically
 // setInterval(()
