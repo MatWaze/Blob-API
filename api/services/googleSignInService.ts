@@ -63,7 +63,7 @@ export async function getGoogleOAuthTokens(
 		code,
 		client_id: process.env.GOOGLE_CLIENT_ID,
 		client_secret: process.env.GOOGLE_CLIENT_SECRET,
-		redirect_uri: "http://localhost:4000/api/users/oauth/google",
+		redirect_uri: process.env.GOOGLE_OAUTH_REDIRECT_URI,
 		grant_type: "authorization_code",
 	};
 
