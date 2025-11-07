@@ -35,14 +35,15 @@ export async function getCurrentUserAsync(
 
 	if (!sessionData)
 	{
-		return response.code(401).send({
+		response.code(401).send({
 			success: false,
 			message: 'No session data for this id',
 			needsLogin: true
 		});
+		return;
 	}
 
-	return response.code(200).send({
+	response.code(200).send({
 		id: sessionData.userId,
 		username: sessionData.username,
 		email: sessionData.email
@@ -59,12 +60,12 @@ export async function registerAsync(
 	{
 		const user = await createUserAsync({...body, authMethod: "EMAIL" });
 
-		return response.code(201).send(user);
+		response.code(201).send(user);
 	}
 	catch (e)
 	{
 		console.log(e);
-		return response.code(500).send(e);
+		response.code(500).send(e);
 	}
 }
 
@@ -94,18 +95,20 @@ export async function loginAsync(
 
 	if (user.authMethod == "GOOGLE")
 	{
-		return response.code(401).send(
+		response.code(401).send(
 		{
 			message: "Account uses Google Sign-in to log in"
 		});
+		return;
 	}
 
 	if (!(user?.emailVerified?.isVerified))
 	{
-		return response.code(401).send(
+		response.code(401).send(
 		{
 			message: "Email isn't verified"
 		});
+		return;
 	}
 
 	const passwordsMatch = await verifyPassword(body.password, user.password);
@@ -115,7 +118,7 @@ export async function loginAsync(
 		const { password, ...rest } = user;
 		await setSessionCookie(request, response, rest);
 
-		return response.code(200).send(
+		response.code(200).send(
 		{
 			message: "Login successful",
 			user: {
@@ -124,9 +127,10 @@ export async function loginAsync(
 				email: user.email
 			}
 		});
+		return;
 	}
 
-	return response.code(401).send(
+	response.code(401).send(
 	{
 		message: "Invalid email or password",
 	});
@@ -141,22 +145,24 @@ export async function confirmEmailAsync(
 
 	if (!user)
 	{
-		return response.code(401).send(
+		response.code(401).send(
 		{
 			message: "Invalid nonce"
 		});
+		return;
 	}
 
 	if (user.emailVerified.isVerified)
 	{
-		return response.code(401).send(
+		response.code(401).send(
 		{
 			message: "Email has already been verified"
 		});
+		return;
 	}
 
 	await setEmailConfirmed(user);
-	return response.code(200).send(user);
+	response.code(200).send(user);
 }
 
 export async function removeUserAsync(
@@ -193,7 +199,7 @@ export async function logoutAsync(
 	const sessionId : string = request.cookies.sessionId!;
 
 	await removeSessionCookie(response, sessionId)
-	return response.code(200).send({ message: "Logged out successfully" });
+	response.code(200).send({ message: "Logged out successfully" });
 }
 
 export async function getTokens(
@@ -207,22 +213,24 @@ export async function getTokens(
 
 		if (!sessionId)
 		{
-			return response.code(401).send({
+			response.code(401).send({
 				success: false,
 				message: 'No active session for user',
 				needsLogin: true
 			});
+			return;
 		}
 
 		const sessionData = await getSession(sessionId);
 
 		if (!sessionData)
 		{
-			return response.code(401).send({
+			response.code(401).send({
 				success: false,
 				message: 'No session data for this id',
 				needsLogin: true
 			});
+			return;
 		}
 
 		let accessToken = sessionData.accessToken;
@@ -253,25 +261,27 @@ export async function getTokens(
 					catch (error)
 					{
 						// sessionStore.destroySession(sessionId);
-						return response.code(401).send({
+						response.code(401).send({
 							success: false,
 							message: `Session problem: ${error}`,
 							needsLogin: true
 						});
+						return;
 					}
 				}
 				else
 				{
-					return response.code(401).send({
+					response.code(401).send({
 						success: false,
 						message: `Need to re-login.`,
 						needsLogin: true
 					});
+					return;
 				}
 			}
 		}
 
-		return response.code(200).send({
+		response.code(200).send({
 			success: true,
 			accessToken: accessToken,
 			sessionId: sessionData.sessionId,
@@ -285,7 +295,7 @@ export async function getTokens(
 	catch (error)
 	{
 		console.error("Token retrieval error:", error);
-		return response.code(500).send({
+		response.code(500).send({
 			success: false,
 			message: 'Internal server error'
 		});
