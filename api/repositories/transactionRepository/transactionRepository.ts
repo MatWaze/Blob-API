@@ -5,7 +5,8 @@ export enum TransactionType
 	BONUS = "BONUS",
 	WITHDRAWAL = "WITHDRAWAL",
 	PURCHASE = "PURCHASE",
-	DEPOSIT = "DEPOSIT"
+	DEPOSIT = "DEPOSIT",
+	FEE = "FEE"
 }
 
 export enum TransactionStatus
@@ -42,17 +43,19 @@ export class TransactionRepository
 	{
 		type,
 		amount,
-		userId
+		userId,
+		status
 	} :
 	{
-		type: string
+		type: TransactionType
 		amount: number,
-		userId: string
+		userId: string,
+		status: TransactionStatus
 	})
 	{
 		await prisma.transaction.create(
 		{
-			data: { type, amount, userId, status: TransactionStatus.PENDING }
+			data: { type, amount, userId, status }
 		})
 	}
 
