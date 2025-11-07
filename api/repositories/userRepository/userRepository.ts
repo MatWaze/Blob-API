@@ -1,4 +1,3 @@
-import { CreateUserType } from "../../models/userSchema.ts";
 import { IUserRepository } from "./IUserRepository.ts";
 import prisma from "../../prisma/prismaInstance.ts";
 import bcrypt from "bcrypt";
@@ -6,6 +5,14 @@ import { randomBytes } from "crypto";
 
 export class userRepository implements IUserRepository
 {
+	async getUserByIdAsync(userId: string) : Promise<any>
+	{
+		return await prisma.user.findFirst(
+		{
+			where: { id: userId }
+		});
+	}
+
 	async getUserByWalletAddress(address: string) : Promise<any>
 	{
 		return await prisma.user.findFirst(
