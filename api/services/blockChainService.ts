@@ -1,16 +1,8 @@
 import { ethers } from "ethers";
-// import abi from "../abis/Blob.json";
+import abi from "../abis/Blob.json";
 import { config } from "dotenv";
 import { getUserByWalletAddress } from "./userService.ts";
-import { fileURLToPath } from "url";
-import path from "path";
-import { readFileSync } from "fs";
-
-const __filename = fileURLToPath(import.meta.url);
-
-const abi = JSON.parse(
-	readFileSync(path.join('..', 'api', 'abis', 'Blob.json'), 'utf-8')
-);
+import { depositBlob } from "./transactionService.ts";
 
 config();
 
@@ -39,10 +31,9 @@ contract.on("Transfer", async (from: string, to: string, amount: ethers.BigNumbe
 	if (to === wallet.address)
 	{
 		console.log("someone sent Blobcoin to the owner ");
-		// TODO: Top up the user's balance
-		// depending on the amount they sent to the owner
-		const formattedAmount = ethers.utils.formatUnits(amount, decimals);
+		const formattedAmount = parseFloat(ethers.utils.formatUnits(amount, decimals));
 		const user = await getUserByWalletAddress(from);
+		await depositBlob(user, formattedAmount);
 		console.log(`[Deposit] Received ${formattedAmount} tokens from ${from}`);
 	}
 });
