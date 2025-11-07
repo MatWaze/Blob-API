@@ -9,20 +9,12 @@ export async function getUsersTransactionsAsync(
 )
 {
 	const user = await getCurrentUser(request.cookies.sessionId!)
-	const trs = await getUsersTransactions(user.id);
+	const transactions = await getUsersTransactions(user.id);
 
-	if (trs)
+	if (transactions)
 	{
-		return response.code(200).send(
-		{
-			transactions: trs
-		});
+		return response.code(200).send({ transactions: await transactions.toArray() });
 	}
-
-	return response.code(404).send(
-	{
-		message: `No transactions found`
-	});
 }
 
 export async function withdrawAmountAsync(
