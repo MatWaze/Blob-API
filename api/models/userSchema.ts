@@ -11,12 +11,21 @@ const userBaseModel =
 
 const createUserModel = z.object(
 {
-	password: z.string(
-	{
-		error: "Password is required",
-	}),
+	password: z
+		.string({ error: "Password is required" })
+		.min(8, "Password must be at least 8 characters long")
+		.max(40, "Password's too long")
+		.regex(
+			new RegExp(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!?%&(){}<=>+\-~,._`|;:]).{8,}$/,),
+			"Password must contain at least one lowercase letter, one uppercase leter, one digit, and one special character"
+		),
+	confirmPassword: z.string({ error: "Password confirmation is required"}),
 	...userBaseModel
-});
+}) 
+.refine((data) => data.password === data.confirmPassword, {
+	message: "Passwords don not match",
+	path: ["confirmPassword"],
+});;
 
 const getUserModel = z.object(
 {
