@@ -20,14 +20,48 @@ function switchToLogin(): void {
 const registerForm = document.getElementById('registerForm') as HTMLFormElement;
 const registerErrorDiv = document.getElementById('error') as HTMLDivElement;
 const registerSuccessDiv = document.getElementById('success') as HTMLDivElement;
+var togglePasswordBtn = document.getElementById('togglePassword') as HTMLButtonElement;
+const toggleConfirmPasswordBtn = document.getElementById('toggleConfirmPassword') as HTMLButtonElement;
+var passwordInput = document.getElementById('password') as HTMLInputElement;
+const confirmPasswordInput = document.getElementById('confirmPassword') as HTMLInputElement;
+
+// Toggle password visibility
+togglePasswordBtn.addEventListener('click', () => {
+	const eyeOpen = togglePasswordBtn.querySelector('.eye-open') as SVGPathElement;
+	const eyeClosed = togglePasswordBtn.querySelector('.eye-closed') as SVGPathElement;
+	
+	if (passwordInput.type === 'password') {
+		passwordInput.type = 'text';
+		eyeOpen.style.display = 'none';
+		eyeClosed.style.display = 'block';
+	} else {
+		passwordInput.type = 'password';
+		eyeOpen.style.display = 'block';
+		eyeClosed.style.display = 'none';
+	}
+});
+
+// Toggle confirm password visibility
+toggleConfirmPasswordBtn.addEventListener('click', () => {
+	const eyeOpen = toggleConfirmPasswordBtn.querySelector('.eye-open') as SVGPathElement;
+	const eyeClosed = toggleConfirmPasswordBtn.querySelector('.eye-closed') as SVGPathElement;
+	
+	if (confirmPasswordInput.type === 'password') {
+		confirmPasswordInput.type = 'text';
+		eyeClosed.style.display = 'none';
+		eyeOpen.style.display = 'block';
+	} else {
+		confirmPasswordInput.type = 'password';
+		eyeClosed.style.display = 'block';
+		eyeOpen.style.display = 'none';
+	}
+});
 
 registerForm.addEventListener('submit', async (e: Event) => {
 	e.preventDefault();
 	
 	const usernameInput = document.getElementById('username') as HTMLInputElement;
 	const emailInput = document.getElementById('email') as HTMLInputElement;
-	const passwordInput = document.getElementById('password') as HTMLInputElement;
-	const confirmPasswordInput = document.getElementById('confirmPassword') as HTMLInputElement;
 	
 	const username = usernameInput.value.trim();
 	const email = emailInput.value.trim();

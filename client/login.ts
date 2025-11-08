@@ -15,6 +15,24 @@ const form = document.getElementById('loginForm') as HTMLFormElement;
 const errorDiv = document.getElementById('error') as HTMLDivElement;
 const successDiv = document.getElementById('success') as HTMLDivElement;
 const googleSignInBtn = document.getElementById('googleSignInBtn') as HTMLButtonElement;
+var togglePasswordBtn = document.getElementById('togglePassword') as HTMLButtonElement;
+var passwordInput = document.getElementById('password') as HTMLInputElement;
+
+// Toggle password visibility
+togglePasswordBtn.addEventListener('click', () => {
+	const eyeOpen = togglePasswordBtn.querySelector('.eye-open') as SVGPathElement;
+	const eyeClosed = togglePasswordBtn.querySelector('.eye-closed') as SVGPathElement;
+	
+	if (passwordInput.type === 'password') {
+		passwordInput.type = 'text';
+		eyeOpen.style.display = 'none';
+		eyeClosed.style.display = 'block';
+	} else {
+		passwordInput.type = 'password';
+		eyeOpen.style.display = 'block';
+		eyeClosed.style.display = 'none';
+	}
+});
 
 // Google Sign In button handler
 googleSignInBtn.addEventListener('click', () => {
@@ -40,41 +58,6 @@ googleSignInBtn.addEventListener('click', () => {
 	window.top!.location.href = `${googleAuthUrl}?${qs.toString()}`;
 });
 
-// Handle Google OAuth callback
-const urlParams = new URLSearchParams(window.location.search);
-const code = urlParams.get('code');
-
-if (code) {
-	handleGoogleCallback(code);
-}
-
-async function handleGoogleCallback(code: string) {
-	try {
-		const res = await fetch(`http://localhost:4000/api/users/oauth/google?code=${code}`, {
-			method: 'GET',
-			credentials: 'include'
-		});
-
-		// const data = await res.json();
-
-		// if (res.ok) {
-		// 	successDiv.textContent = 'Login successful!';
-			
-		// 	setTimeout(() => {
-		// 		window.parent.postMessage({
-		// 			type: 'LOGIN_SUCCESS',
-		// 			user: data.user
-		// 		}, '*');
-		// 	}, 100);
-		// } else {
-		// 	errorDiv.textContent = data.message || 'Google sign-in failed';
-		// }
-	} catch (error) {
-		console.error('Google sign-in error:', error);
-		errorDiv.textContent = 'Network error. Please try again.';
-	}
-}
-
 function getCookie(name: string): string | undefined {
 	const value = `; ${document.cookie}`;
 	const parts = value.split(`; ${name}=`);
@@ -85,7 +68,6 @@ form.addEventListener('submit', async (e: Event) => {
 	e.preventDefault();
 	
 	const emailInput = document.getElementById('email') as HTMLInputElement;
-	const passwordInput = document.getElementById('password') as HTMLInputElement;
 	
 	const email = emailInput.value.trim();
 	const password = passwordInput.value.trim();
