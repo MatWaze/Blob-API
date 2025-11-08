@@ -23,7 +23,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 		{
 			console.log(`User ${ws.getUserData().userId} connected to Lobby WebSocket.`);
 		},
-		message: (ws: WebSocket<WebSocketUserData>, message: ArrayBuffer) =>
+		message: async (ws: WebSocket<WebSocketUserData>, message: ArrayBuffer) =>
 		{
 			const userData = ws.getUserData();
 			const data = JSON.parse(decoder.write(Buffer.from(message)));
@@ -34,7 +34,7 @@ export async function gameSocketRoutes(server: FastifyInstance)
 					create(app, ws, userData, data);
 					break;
 				case "JOIN_ROOM":
-					join(app, ws, userData, data);
+					await join(app, ws, userData, data);
 					break;
 				case "LEAVE_ROOM":
 					leave(app, ws, userData, data);
