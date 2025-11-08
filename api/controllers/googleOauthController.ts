@@ -25,11 +25,17 @@ export async function googleSignInAsync(
 		const googleUser = await getGoogleUser({ id_token, access_token });
 
 		if (!googleUser)
+		{
+			response.code(401).send("Unable to get a Google account");
+			response.redirect(process.env.CLIENT!);
 			return;
+		}
 
 		if (!googleUser.verified_email)
 		{
-			return response.code(403).send("Google account isn't verified");
+			response.code(403).send("Google account isn't verified");
+			response.redirect(process.env.CLIENT!);
+			return;
 		}
 
 		var user = await getUserByEmailAsync(googleUser.email);
@@ -43,6 +49,12 @@ export async function googleSignInAsync(
 				password: randomBytes(32).toString("hex"),
 				authMethod: "GOOGLE"
 			});
+		}
+		else if (user.authMethod === "EMAIL")
+		{
+			// response.code(401).send("Can't sign in with Google");
+			response.redirect(process.env.CLIENT!);
+			return;
 		}
 
 		const { password, ...rest } = user;
