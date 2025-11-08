@@ -6,7 +6,7 @@ import { createGame, getGameWorker, stopGame } from "../services/gameSocketServi
 import { FastifyJWT } from "@fastify/jwt";
 import { GameResult } from "../models/gameModels.ts";
 import { getSession, updateSessionAccessToken } from "../services/sessionService.ts";
-import { depositBlob } from "../services/transactionService.ts";
+import { depositBlob, payFee } from "../services/transactionService.ts";
 import { getUserByEmailAsync, getUserById } from "../services/userService.ts";
 
 // async function authenticateWebSocket(res: HttpResponse, req: HttpRequest, server: FastifyInstance)
@@ -288,6 +288,8 @@ export function handleStartGame(
 	
 	if (success)
 	{
+		// const user = await getUserById(userData.userId);
+		// await payFee(user, room.entryFee);
 		// ws.send(JSON.stringify(
 		// {
 		// 	success: true,
