@@ -1,6 +1,8 @@
 import { randomBytes } from "crypto";
 import { RoomDetails, RoomInfo, RoomPlayer } from "../models/roomModels";
 import { gameWorkers, stopGame } from "./gameSocketService";
+import { getUserById } from "./userService";
+import { payFee } from "./transactionService";
 
 export const rooms = new Map<string, RoomInfo>();
 export const userRoomMapping = new Map<string, string>(); // userId -> roomId
@@ -48,11 +50,11 @@ export function createRoom(
 	return { success: true, roomId: id };
 }
 
-export function joinRoom(
+export async function joinRoom(
 	roomId: string,
 	userId: string,
 	username: string
-): { success: boolean; message?: string }
+): Promise<{ success: boolean; message?: string }>
 {
 	if (userRoomMapping.has(userId)) {
 		const existingRoomId = userRoomMapping.get(userId);
@@ -68,13 +70,21 @@ export function joinRoom(
 	}
 
 	const room = rooms.get(roomId);
-	if (!room) return { success: false, message: "Room not found" };
+	const user = await getUserById(userId);
+
+	if (!room)
+		return { success: false, message: "Room not found" };
+
+	if (user.balance < room.entryFee)
+		return { success: false, message: "Not enough blobs to enter a room" };
 
 	if (room.maxPlayers && room.players.size >= room.maxPlayers)
 		return { success: false, message: "Room is full" };
 
 	if (room.state !== "waiting" && room.state !== "ready")
 		return { success: false, message: "Room is not accepting new players" };
+
+	// await payFee(user, room.entryFee);
 
 	const player: RoomPlayer = {
 		id: userId,
@@ -130,11 +140,11 @@ export function leaveRoom(roomId: string, userId: string): { success: boolean; m
 	}
 
 	// Reset to waiting if less than 2 players
-	if (room && room.players.size < 2) {
-		room.state = "waiting";
-	} else if (room && room.players.size >= 2) {
-		room.state = "ready";
-	}
+	// if (room && room.players.size < 2) {
+	// 	room.state = "waiting";
+	// } else if (room && room.players.size >= 2) {
+	// 	room.state = "ready";
+	// }
 
 	console.log(`${userId} left room ${roomId}`);
 	return { success: true };
