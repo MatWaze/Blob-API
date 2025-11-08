@@ -75,8 +75,8 @@ export async function joinRoom(
 	if (!room)
 		return { success: false, message: "Room not found" };
 
-	if (user.balance < room.entryFee)
-		return { success: false, message: "Not enough blobs to enter a room" };
+	// if (user.balance < room.entryFee)
+	// 	return { success: false, message: "Not enough blobs to enter a room" };
 
 	if (room.maxPlayers && room.players.size >= room.maxPlayers)
 		return { success: false, message: "Room is full" };
