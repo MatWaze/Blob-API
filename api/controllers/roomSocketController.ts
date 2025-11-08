@@ -95,7 +95,7 @@ export function create(
 	}
 }
 
-export function join(
+export async function join(
 	app: TemplatedApp,
 	ws: WebSocket<WebSocketUserData>,
 	userData: WebSocketUserData,
@@ -117,7 +117,7 @@ export function join(
 
 	try
 	{
-		const result = joinRoom(data.roomId, userId, username);
+		const result = await joinRoom(data.roomId, userId, username);
 		
 		if (!result.success)
 		{
