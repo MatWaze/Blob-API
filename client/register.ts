@@ -32,12 +32,12 @@ togglePasswordBtn.addEventListener('click', () => {
 	
 	if (passwordInput.type === 'password') {
 		passwordInput.type = 'text';
-		eyeOpen.style.display = 'none';
-		eyeClosed.style.display = 'block';
-	} else {
-		passwordInput.type = 'password';
 		eyeOpen.style.display = 'block';
 		eyeClosed.style.display = 'none';
+	} else {
+		passwordInput.type = 'password';
+		eyeOpen.style.display = 'none';
+		eyeClosed.style.display = 'block';
 	}
 });
 
