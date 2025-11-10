@@ -22,8 +22,10 @@ const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS as string;
 const SNOWTRACE_API_KEY = process.env.SNOWTRACE_API_KEY as string;
 
 const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
+
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 const contract = new ethers.Contract(CONTRACT_ADDRESS, abi.abi, provider);
+const contractWithSigner = new ethers.Contract(CONTRACT_ADDRESS, abi.abi, wallet);
 const decimals = await contract.decimals();
 
 contract.on("Transfer", async (from: string, to: string, amount: ethers.BigNumber) =>
@@ -185,13 +187,14 @@ export async function getBalance(address: string): Promise<string | undefined>
 	}
 }
 
-export async function sendTokens(toAddress: string, amount: string): Promise<string | undefined>
+export async function sendTokens(toAddress: string, amount: number): Promise<string | undefined>
 {
 	try
 	{
-		const amountInWei = ethers.utils.parseUnits(amount, decimals);
+		const amountWei = ethers.utils.parseUnits(amount.toString(), decimals);
 
-		const tx = await contract.transfer(toAddress, amountInWei);
+		const tx = await contractWithSigner.transfer(toAddress, amountWei);
+
 		await tx.wait();
 		
 		return tx.hash;

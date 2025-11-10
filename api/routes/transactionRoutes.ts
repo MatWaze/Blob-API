@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { getUsersTransactionsAsync, withdrawAmountAsync, withdrawFeeAsync } from "../controllers/transactionController.ts";
+import { withdrawAmountSchema } from "../models/userSchema.ts";
 
 export async function transactionRoutes(server: FastifyInstance)
 {
@@ -19,7 +20,7 @@ export async function transactionRoutes(server: FastifyInstance)
 			preHandler: [ server.authenticate ],
 			schema:
 			{
-				querystring: new String("amount")
+				querystring: withdrawAmountSchema
 			}
 		},
 		withdrawAmountAsync

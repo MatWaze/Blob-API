@@ -1,7 +1,9 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { withdawBalance, getAllTransactions, getUsersTransactions } from "../services/transactionService.ts";
+import { withdawBalance, getUsersTransactions } from "../services/transactionService.ts";
 import { getRoomByUserId } from "../services/roomService.ts";
 import { getCurrentUser } from "../services/userService.ts";
+import { sendTokens } from "../services/blockChainService.ts";
+import { WithdrawAmountType } from "../models/userSchema.ts";
 
 export async function getUsersTransactionsAsync(
 	request: FastifyRequest,
@@ -13,33 +15,36 @@ export async function getUsersTransactionsAsync(
 
 	if (transactions)
 	{
-		return response.code(200).send({ transactions: await transactions.toArray() });
+		response.code(200).send({ transactions: await transactions.toArray() });
 	}
 }
 
 export async function withdrawAmountAsync(
-	request: FastifyRequest<{ Querystring: { amount: string } }>,
+	request: FastifyRequest<{ Querystring: WithdrawAmountType }>,
 	response: FastifyReply,
 )
 {
-	const amount = parseFloat(request.query.amount);
+	console.log("here")
+	const amount = request.query.amount;
 	const user = await getCurrentUser(request.cookies.sessionId!);
 
 	if (user && !Number.isNaN(amount))
 	{
-		const updatedBalance = await withdawBalance(user, amount);
+		// const updatedBalance = await withdawBalance(user, amount);
 
-		if (updatedBalance)
-		{
-			return response.code(200).send(
-			{
-				message: `Successfully withdrew ${amount}`,
-				balance: updatedBalance
-			});
-		}
+		// if (updatedBalance)
+		// {
+			await sendTokens("0x582a69Cad1Ae9c55a3D2aEb7f19c17c5D376B27C", amount);
+		// 	response.code(200).send(
+		// 	{
+		// 		message: `Successfully withdrew ${amount}`,
+		// 		balance: updatedBalance
+		// 	});
+			return;
+		// }
 	}
 
-	return response.code(401).send(
+	response.code(401).send(
 	{
 		message: `Withdrawal failed`
 	});
@@ -59,15 +64,16 @@ export async function withdrawFeeAsync(
 
 		if (updatedBalance)
 		{
-			return response.code(200).send(
+			response.code(200).send(
 			{
 				message: `Successfully withdrew ${room.entryFee}`,
 				balance: updatedBalance
 			});
+			return;
 		}
 	}
 
-	return response.code(401).send(
+	response.code(401).send(
 	{
 		message: `Withdrawal failed`
 	});
