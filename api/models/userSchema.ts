@@ -66,6 +66,13 @@ const userId = z.object(
 	userId: z.string()
 });
 
+export const withdrawAmountSchema = z.object(
+{
+	amount: z.coerce.number().positive("Amount must be positive")
+});
+
+export type WithdrawAmountType = z.infer<typeof withdrawAmountSchema>;
+
 export type CreateUserType = z.infer<typeof createUserModel>;
 
 export type GetUserType = z.infer<typeof getUserModel>;
