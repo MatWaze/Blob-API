@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import abi from "../abis/Blob.json";
+import abi from "../abis/Blob.json" with { type: "json" };
 import { config } from "dotenv";
 import { getUserByWalletAddress } from "./userService.ts";
 import { depositBlob } from "./transactionService.ts";

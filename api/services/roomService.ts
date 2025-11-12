@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import { RoomDetails, RoomInfo, RoomPlayer } from "../models/roomModels";
 import { gameWorkers, stopGame } from "./gameSocketService";
-import { getUserById } from "./userService";
+import { getUserById } from "./userService.ts";
 import { payFee } from "./transactionService";
 
 export const rooms = new Map<string, RoomInfo>();
