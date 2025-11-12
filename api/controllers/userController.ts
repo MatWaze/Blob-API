@@ -162,7 +162,10 @@ export async function confirmEmailAsync(
 	}
 
 	await setEmailConfirmed(user);
-	response.code(200).send(user);
+	await setSessionCookie(request, response, user);
+
+	response.redirect(process.env.CLIENT!);
+	// response.code(200).send(user);
 }
 
 export async function removeUserAsync(

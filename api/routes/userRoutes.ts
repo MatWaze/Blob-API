@@ -44,8 +44,8 @@ async function userRoutes(server: FastifyInstance)
 		loginAsync
 	)
 
-	// POST api/users/email/confirm?nonce={nonce}
-	server.post(
+	// GET api/users/email/confirm?nonce={nonce}
+	server.get(
 		"/email/confirm",
 		{
 			config: { rateLimit: { timeWindow: '1 minute', max: 500 } },
