@@ -26,7 +26,7 @@
     "fastify": "^5.4.0",
     "fastify-type-provider-zod": "^5.0.2",
     "linq-to-typescript": "^12.0.0",
-    "nodemailer": "^7.0.5",
+    "nodemailer": "^7.0.10",
     "prisma-client": "^0.0.0",
     "qs": "^6.14.0",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.46.0",
