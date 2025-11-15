@@ -352,7 +352,8 @@ function setupGameBroadcaster(
 							id: p.id,
 							username: p.username,
 							position: p.position,
-							isActive: p.isActive
+							isActive: p.isActive,
+							alias: p.alias
 						})),
 					countdownSeconds: message.state.state === 'countdown' ?
 						Math.ceil(message.state.countdownSeconds) : undefined

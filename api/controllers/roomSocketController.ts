@@ -8,7 +8,8 @@ import {
 	getUserCurrentRoom,
 	markRoomReady,
 	markRoomWaiting,
-	getRoomDetails
+	getRoomDetails,
+	assignAliasToUser
 } from "../services/roomService.ts";
 
 export interface WebSocketUserData
@@ -499,4 +500,12 @@ export function markRoomAsWaiting(
 		// 	error: "Failed to mark room as waiting"
 		// }));
 	}
+}
+
+export function createAlias(
+	userData: WebSocketUserData,
+	alias: string
+)
+{
+	assignAliasToUser(userData.userId, alias);
 }

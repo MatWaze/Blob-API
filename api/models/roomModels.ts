@@ -4,6 +4,7 @@ export type RoomPlayer =
 {
 	id:			string;
 	username:	string;
+	alias?:		string;
 	isReady:	boolean;
 };
 

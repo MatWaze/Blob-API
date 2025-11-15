@@ -18,6 +18,7 @@ interface GamePlayer
 	velocityX?: number;
 	velocityY?: number;
 	drag: number,
+	alias?: string
 }
 
 interface GameState
@@ -132,7 +133,8 @@ if (!isMainThread)
 							position: p.position,
 							isActive: p.isActive,
 							place: p.place,
-							playersKicked: p.playersKicked
+							playersKicked: p.playersKicked,
+							alias: p.alias
 						})),
 						fee: fee
 					},

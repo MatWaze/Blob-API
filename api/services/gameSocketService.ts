@@ -14,7 +14,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 export const gameWorkers = new Map<string, GameWorkerData>();
 
-export function createGame(app: TemplatedApp, roomId: string, players: Array<{id: string, username: string}>): boolean
+export function createGame(app: TemplatedApp, roomId: string, players: Array<{id: string, username: string, alias?: string}>): boolean
 {
 	// stopGame(roomId);
 
@@ -28,6 +28,7 @@ export function createGame(app: TemplatedApp, roomId: string, players: Array<{id
 			players: players.map((player) =>
 			({
 				id: player.id,
+				alias: player.alias,
 				username: player.username,
 				position: 0.5,
 				isActive: true,

@@ -6,7 +6,7 @@ import { StringDecoder } from "string_decoder";
 import { getUserCurrentRoom } from "../services/roomService.ts";
 import { updatePlayerPositionRelative, isGameActive } from "../services/gameSocketService.ts";
 import { createBaseBehavior, handleStartGame } from "../controllers/gameSocketController.ts";
-import { WebSocketUserData } from "../controllers/roomSocketController.ts";
+import { WebSocketUserData, createAlias } from "../controllers/roomSocketController.ts";
 
 const decoder = new StringDecoder("utf8");
 
@@ -80,6 +80,9 @@ export async function gameSocketRoutes(server: FastifyInstance)
 					ws.subscribe(`user:${ws.getUserData().userId}`);
 				case "UNSUBSCRIBE_PRIVATE":
 					ws.unsubscribe(`user:${ws.getUserData().userId}`);
+				case "ALIAS":
+					createAlias(userData, data.alias);
+					getRoom(app, userData, data);
 				default:
 					break;
 			}

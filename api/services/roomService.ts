@@ -39,7 +39,8 @@ export function createRoom(
 	const creatorPlayer: RoomPlayer = {
 		id: creatorUserId,
 		username: creatorUsername,
-		isReady: false
+		isReady: false,
+		alias: undefined
 	};
 	room.players.add(creatorPlayer);
 	rooms.set(id, room);
@@ -89,7 +90,8 @@ export async function joinRoom(
 	const player: RoomPlayer = {
 		id: userId,
 		username: username,
-		isReady: false
+		isReady: false,
+		alias: undefined
 	};
 
 	room.players.add(player);
@@ -269,4 +271,17 @@ function getPlayerFromRoom(room: RoomInfo, userId: string)
 	: RoomPlayer | undefined
 {
 	return Array.from(room.players).find(p => p.id === userId)
+}
+
+export function assignAliasToUser(userId: string, alias: string)
+{
+	const room = getRoomByUserId(userId);
+
+	if (room)
+	{
+		const user = getPlayerFromRoom(room, userId);
+
+		if (user)
+			user.alias = alias;
+	}
 }
