@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { getTransfersSnowrtraceAsync } from "../controllers/blockChainController.ts";
+import { getTransfersSnowrtraceAsync, transferWebhook } from "../controllers/blockChainController.ts";
 
 async function blockChainRoutes(server: FastifyInstance)
 {
@@ -8,6 +8,11 @@ async function blockChainRoutes(server: FastifyInstance)
 		"/snowtrace/owner/transactions/:recipientAddress",
 		getTransfersSnowrtraceAsync
 	);
+
+	server.post(
+		"/webhooks/transfer",
+		transferWebhook
+	)
 }
 
 export default blockChainRoutes;

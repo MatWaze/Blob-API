@@ -3,6 +3,7 @@ import abi from "../abis/Blob.json" with { type: "json" };
 import { config } from "dotenv";
 import { getUserByWalletAddress } from "./userService.ts";
 import { depositBlob } from "./transactionService.ts";
+import { WebhookBody } from "../controllers/blockChainController.ts";
 
 config();
 
@@ -28,17 +29,17 @@ const contract = new ethers.Contract(CONTRACT_ADDRESS, abi.abi, provider);
 const contractWithSigner = new ethers.Contract(CONTRACT_ADDRESS, abi.abi, wallet);
 const decimals = await contract.decimals();
 
-contract.on("Transfer", async (from: string, to: string, amount: ethers.BigNumber) =>
-{
-	if (to === wallet.address)
-	{
-		console.log("someone sent Blobcoin to the owner ");
-		const formattedAmount = parseFloat(ethers.utils.formatUnits(amount, decimals));
-		const user = await getUserByWalletAddress(from);
-		await depositBlob(user, formattedAmount);
-		console.log(`[Deposit] Received ${formattedAmount} tokens from ${from}`);
-	}
-});
+// contract.on("Transfer", async (from: string, to: string, amount: ethers.BigNumber) =>
+// {
+// 	if (to === wallet.address)
+// 	{
+// 		console.log("someone sent Blobcoin to the owner ");
+// 		const formattedAmount = parseFloat(ethers.utils.formatUnits(amount, decimals));
+// 		const user = await getUserByWalletAddress(from);
+// 		await depositBlob(user, formattedAmount);
+// 		console.log(`[Deposit] Received ${formattedAmount} tokens from ${from}`);
+// 	}
+// });
 
 export async function getTransfersSnowTrace(recipientAddress: string): Promise<TransferEvent[] | undefined>
 {
@@ -204,3 +205,96 @@ export async function sendTokens(toAddress: string, amount: number): Promise<str
 		console.error("Error sending tokens:", error);
 	}
 }
+
+export function processEvent(body: WebhookBody)
+{
+	switch (body.eventType)
+	{
+		case "address_activity":
+			body.event.transaction.erc20Transfers.forEach(t =>
+			{
+				const blobSent = parseFloat(ethers.utils.formatUnits(t.value, decimals));
+				console.log(`sent to ${t.to} ${blobSent}BLOB`);
+			})
+			break;
+		default:
+			break;
+	}
+}
+
+/*
+{
+  "webhookId": "3718a368-f4d7-4bab-a790-6eda1b0e6d07",
+  "eventType": "address_activity",
+  "messageId": "6f8ea237-611d-4459-9ae5-750089b56317",
+  "event": {
+    "transaction": {
+      "blockHash": "0xb3729a7bb82d07757e06b318d47fff7c496fb5feef1e39ace476e42d719550c8",
+      "blockNumber": "47689400",
+      "from": "0x47a2c5701DB0D39408fef68A4d0c1e628B1c35ff",
+      "gas": "35494",
+      "gasPrice": "3",
+      "maxFeePerGas": "3",
+      "maxPriorityFeePerGas": "1",
+      "txHash": "0xb8ba5e8c941dadac65110b6a23dd662ed713b6ccd30338e810876ed2e81ef468",
+      "txStatus": "1",
+      "input": "0xa9059cbb000000000000000000000000da8770ef037cf2738a79b4478d78d1172ce7f71000000000000000000000000000000000000000000000021e19e0c9bab2400000",
+      "nonce": "15",
+      "to": "0xc4d983c497e45a614c1d9449a8a8214d08f52e6f",
+      "transactionIndex": 0,
+      "value": "0",
+      "type": 2,
+      "chainId": "43113",
+      "receiptCumulativeGasUsed": "35134",
+      "receiptGasUsed": "35134",
+      "receiptEffectiveGasPrice": "2",
+      "receiptRoot": "0xb78a3373b2f342ca859b19e1dbc0c85711be9e04722954b486988a96207d222e",
+      "erc20Transfers": [
+        {
+          "transactionHash": "0xb8ba5e8c941dadac65110b6a23dd662ed713b6ccd30338e810876ed2e81ef468",
+          "type": "ERC20",
+          "from": "0x47a2c5701DB0D39408fef68A4d0c1e628B1c35ff",
+          "to": "0xdA8770ef037cF2738A79b4478D78d1172cE7F710",
+          "value": "10000000000000000000000",
+          "blockTimestamp": 1763111216,
+          "logIndex": 0,
+          "erc20Token": {
+            "address": "0xC4D983c497E45A614C1D9449A8A8214d08F52E6F",
+            "name": "Blobcoin",
+            "symbol": "BLOB",
+            "decimals": 18,
+            "valueWithDecimals": "1.864712049423024"
+          }
+        }
+      ],
+      "erc721Transfers": [],
+      "erc1155Transfers": [],
+      "internalTransactions": [
+        {
+          "from": "0x47a2c5701DB0D39408fef68A4d0c1e628B1c35ff",
+          "to": "0xC4D983c497E45A614C1D9449A8A8214d08F52E6F",
+          "internalTxType": "CALL",
+          "value": "0",
+          "gasUsed": "35134",
+          "gasLimit": "35494",
+          "transactionHash": "0xb8ba5e8c941dadac65110b6a23dd662ed713b6ccd30338e810876ed2e81ef468"
+        }
+      ],
+      "blockTimestamp": 1763111216
+    },
+    "logs": [
+      {
+        "address": "0xC4D983c497E45A614C1D9449A8A8214d08F52E6F",
+        "topic0": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+        "topic1": "0x00000000000000000000000047a2c5701db0d39408fef68a4d0c1e628b1c35ff",
+        "topic2": "0x000000000000000000000000da8770ef037cf2738a79b4478d78d1172ce7f710",
+        "topic3": null,
+        "data": "0x00000000000000000000000000000000000000000000021e19e0c9bab2400000",
+        "transactionIndex": 0,
+        "logIndex": 0,
+        "removed": false
+      }
+    ]
+  }
+}
+*/
