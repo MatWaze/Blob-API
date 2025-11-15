@@ -1,0 +1,16 @@
+node_modules
+.git
+.gitmodules
+**/.git
+**/.gitmodules
+npm-debug.log
+dist
+build
+*.log
+.dockerignore
+node_modules/
+.dockerignore
+.gitattributes
+.gitignore
+Dockerfile
+./api/package-lock.json

@@ -91,19 +91,19 @@ async function buildServer()
 	});
 
 	const CORS_WHITELIST = [
+		'https://blobula',
+		'https://localhost',
+		'https://blobula:443',
+		'https://localhost:443',
 		'http://localhost:4000',
 		'http://localhost:3065',
 		'http://localhost:3000',
-		'http://10.19.245.113:4000',
-		'http://10.19.245.113:3065',
-		'http://10.19.245.113:3000',
-		'https://your-production-domain.com'
 	];
 
 	await server.register(fastifyCors, {
 		// origin can be a function that fastify-cors calls for each request
 		origin: (origin, callback) => {
-
+			console.log(`origin: ${origin}`);
 			// allow requests with no origin (curl, same-origin, mobile apps)
 			if (!origin)
 				return callback(null, true);

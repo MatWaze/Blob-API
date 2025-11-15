@@ -14,7 +14,7 @@ export async function sendEmailAsync(usr: any)
 			confirmationEmail(
 				usr.username,
 				usr.email,
-				"http://localhost:4000/api/users",
+				"https://blobula/api/users",
 				usr.emailVerified.nonce
 			)
 		);
